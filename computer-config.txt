@@ -1,0 +1,3 @@
+[IComputer]
+amnon = amir
+pita = true
