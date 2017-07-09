@@ -12,6 +12,7 @@ Runs as a loop, synchronizing every 30 seconds
 import os
 import argparse
 import time
+import datetime
 
 import dropbox
 
@@ -46,7 +47,7 @@ def synchronize_dropbox(dbx_key, dir_name, files):
                 need_to_pull = True
             else:
                 properties = dbx.files_alpha_get_metadata(cname)
-                if properties.client_modified > os.stat(cfile).st_mtime:
+                if properties.client_modified > datetime.datetime.fromtimestamp(os.stat(cfile).st_mtime):
                     print('file %s is old' % cname)
                     print(properties)
                     need_to_pull = True
