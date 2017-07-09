@@ -40,10 +40,18 @@ def synchronize_dropbox(dbx_key, dir_name, files):
         for cfile in files:
             cname = os.path.join(dir_name, cfile)
             print('testing %s' % cname)
-            properties = dbx.files_alpha_get_metadata(cname)
-            if properties.client_modified < properties.server_modified:
-                print('aha %s' % cname)
-                print(properties)
+            need_to_pull = False
+            if not os.path.isfile(cfile):
+                print('file %s does not exist')
+                need_to_pull = True
+            else:
+                properties = dbx.files_alpha_get_metadata(cname)
+                if properties.client_modified > os.stat(cfile).st_mtime:
+                    print('file %s is old' % cname)
+                    print(properties)
+                    need_to_pull = True
+            if need_to_pull:
+                print('need to pull')
         time.sleep(30)
 
 parser = argparse.ArgumentParser()
