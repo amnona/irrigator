@@ -71,7 +71,7 @@ class SingleTimer(Timer):
     def __init__(self, duration, cfaucet, start_datetime):
         super().__init__(duration=duration, cfaucet=cfaucet)
         self.start_datetime = start_datetime
-        self.end_datetime = start_datetime + datetime.timedelta(minutes=duration)
+        self.end_datetime = start_datetime + datetime.timedelta(minutes=int(duration))
         self.timer_type = 'single'
         logger.debug('timer %s initialized' % self)
 
