@@ -2,4 +2,4 @@ type	faucet	duration	start_day	start_hour	start_minute	start_year	start_month	st
 weekly	faucet1	100	7	10	51	0	0	0
 weekly	faucet2	200	1	12	05	0	0	0
 weekly	faucet1	10	7	10	52	0	0	0
-single	faucet2	4	-1	12	19	2017	7	8
+single	faucet2	3	-1	12	19	2017	7	8
