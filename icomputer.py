@@ -7,7 +7,7 @@ import os
 from collections import defaultdict
 
 from faucet import get_faucet_class
-from timers import Timer, WeeklyTimer
+from timers import Timer, WeeklyTimer, SingleTimer
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -65,6 +65,8 @@ class IComputer:
 				port (str): the port on the relay for the faucet
 		'''
 		logger.debug('read faucets from file %s' % faucets_file)
+		self.close_all()
+		self.faucets = {}
 		with open(faucets_file) as fl:
 			ffile = csv.DictReader(fl, delimiter='\t')
 			for row in ffile:
@@ -94,6 +96,8 @@ class IComputer:
 				duration (int): the duration of the timer irrigation in minutes
 		'''
 		logger.debug('read timers from file %s' % timers_file)
+		self.close_all()
+		self.timers = []
 		with open(timers_file) as fl:
 			ffile = csv.DictReader(fl, delimiter='\t')
 			for row in ffile:
@@ -105,6 +109,10 @@ class IComputer:
 				if ttype == 'weekly':
 					start_time = datetime.time(hour=int(row['start_hour']), minute=int(row['start_minute']))
 					ctimer = WeeklyTimer(duration=row['duration'], cfaucet=self.faucets[cfaucetname], start_day=row['start_day'], start_time=start_time)
+				elif ttype == 'single':
+					start_datetime = datetime.datetime(year=int(row['start_year']), month=int(row['start_month']), day=int(row['start_date']), hour=int(row['start_hour']), minute=int(row['start_minute']))
+					ctimer = SingleTimer(duration=row['duration'], cfaucet=self.faucets[cfaucetname],
+										 start_datetime=start_datetime)
 				else:
 					ctimer = Timer(row['duration'], self.faucets[cfaucetname])
 				logger.debug('added timer %s' % ctimer)
@@ -158,6 +166,13 @@ class IComputer:
 		if self.computer_name == faucet.computer_name:
 			return True
 		return False
+
+	def close_all(self):
+		'''Close all faucets on the computer
+		'''
+		logger.debug('closing all faucets')
+		for cfaucet in self.faucets.values():
+			cfaucet.close()
 
 	def main_loop(self):
 		done = False
