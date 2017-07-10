@@ -16,6 +16,17 @@ import datetime
 
 import dropbox
 
+def get_file(dbx, dir_name, file_name):
+    '''
+    read a file from dropbox to local directory
+    '''
+#    print(´getting file´)
+    dbx.files_download_to_file(file_name, os.path.join(dir_name, file_name))
+#    out = open(file_name, 'wb')
+#    out.write(f.read())
+#    out.close()
+#    print(´got file´)
+
 
 def synchronize_dropbox(dbx_key, dir_name, files):
     '''
@@ -52,7 +63,8 @@ def synchronize_dropbox(dbx_key, dir_name, files):
                     print(properties)
                     need_to_pull = True
             if need_to_pull:
-                print('need to pull')
+                print('pulling')
+                get_file(dbx, dir_name, cfile)
         time.sleep(30)
 
 parser = argparse.ArgumentParser()
