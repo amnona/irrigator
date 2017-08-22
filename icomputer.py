@@ -45,6 +45,8 @@ class IComputer:
 		self.read_faucets()
 		# load the timers file
 		self.read_timers()
+		# load the water counters file
+		self.read_counters()
 
 	def __repr__(self):
 		return "Computer: " + ', '.join("%s: %s" % item for item in vars(self).items())
@@ -59,6 +61,7 @@ class IComputer:
 				type (str) : type of counter. can be:
 					'numato' : io pins of the numato relay board
 					'pi' : gpio pins of the raspberry pi
+					'arduino' : arduino connected counter (use image button_test)
 				channel : int
 					the channel the counter is connected to (0 is pin #0, etc.)
 				voltage : int or 'none'
@@ -70,14 +73,14 @@ class IComputer:
 		with open(counters_file) as fl:
 			ffile = csv.DictReader(fl, delimiter='\t')
 			for row in ffile:
-				if row['voltage'] == 'none':
+				if 'voltage' not in row:
 					voltage_pin = None
 				else:
 					voltage_pin = row['voltage']
 				ttype = row['type']
 				if ttype == 'arduino':
 					from counter_arduino import CounterArduino
-					ccounter = CounterArduino(iopin = row['iopin'])
+					ccounter = CounterArduino(iopin = row['channel'])
 				elif ttype == 'numato':
 					from counter_numato import CounterNumato
 					ccounter = CounterNumato(iopin = row['channel'], voltage_pin=voltage_pin)
@@ -249,6 +252,8 @@ class IComputer:
 						self.write_action_log('opened faucet %s' % cfaucet.name)
 
 			# go over water counters
+			for ccounter in self.counters:
+				print(ccounter.get_count())
 			# write water log
 
 			# check for changed files
