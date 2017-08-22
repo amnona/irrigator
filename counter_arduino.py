@@ -7,7 +7,7 @@ logger = getLogger(__name__)
 from counter import Counter
 
 class CounterArduino(Counter):
-    def __init__(self, iopin, serial_name='/dev/ttyACM0'):
+    def __init__(self, iopin, serial_name='/dev/ttyAMA0'):
         super().__init__()
         self.iopin = iopin
         self.serial_name = serial_name
@@ -15,7 +15,7 @@ class CounterArduino(Counter):
 
     def get_count(self):
         try:
-            ser = serial.Serial('/dev/ttyAMA0', 9600, timeout=1)
+            ser = serial.Serial(self.serial_name, 9600, timeout=1)
         except:
             logger.warning('cannot connect to water counter %s' % self.serial_name)
             return self.count
@@ -35,7 +35,7 @@ class CounterArduino(Counter):
 
     def clear_count(self):
         '''Set the count to 0'''
-        ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+        ser = serial.Serial(self.serial_name, 9600, timeout=1)
         command = 'c'+str(self.iopin)+'\n'
         ser.write(command.encode())
         new_count = self.get_count()
