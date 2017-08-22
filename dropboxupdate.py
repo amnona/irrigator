@@ -79,6 +79,8 @@ def synchronize_dropbox(dbx_key, dir_name, files):
             else:
                 properties = dbx.files_alpha_get_metadata(cname)
                 print(properties)
+                print('local file time stamp:')
+                print(datetime.datetime.fromtimestamp(os.stat(cfile).st_mtime))
                 if properties.client_modified > datetime.datetime.fromtimestamp(os.stat(cfile).st_mtime):
                     print('file %s is old' % cname)
                     print(properties)
