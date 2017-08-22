@@ -27,17 +27,12 @@ logger.addHandler(fh)
 logger.addHandler(ch)
 
 
-# cn = CounterNumato('0', '1')
+
+# ca = CounterArduino(iopin='2')
 # while True:
-#     b = cn.get_current_value()
+#     b = ca.get_count()
 #     print(b)
-
-
-ca = CounterArduino(iopin='2')
-while True:
-    b = ca.get_count()
-    print(b)
-    time.sleep(1)
+#     time.sleep(1)
 
 
 
