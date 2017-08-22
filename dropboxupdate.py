@@ -35,7 +35,7 @@ def upload_file(dbx_key, dir_name, files):
         print('uploading file %s' % cfile)
         with open(cfile,'rb') as fl:
             dat = fl.read()
-            dbx.files_alpha_upload(dat, os.path.join(dir_name, cfile))
+            dbx.files_alpha_upload(dat, path=os.path.join(dir_name, cfile), mode=dropbox.dropbox.files.WriteMode('overwrite', None))
         print('file %s uploaded' % cfile)
 
 
@@ -77,6 +77,7 @@ def synchronize_dropbox(dbx_key, dir_name, files):
                 print('file %s does not exist')
                 need_to_pull = True
             else:
+                print(properties)
                 properties = dbx.files_alpha_get_metadata(cname)
                 if properties.client_modified > datetime.datetime.fromtimestamp(os.stat(cfile).st_mtime):
                     print('file %s is old' % cname)
