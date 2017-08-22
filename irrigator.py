@@ -2,6 +2,7 @@
 
 import logging
 from logging import getLogger
+import time
 
 import icomputer
 import timers
@@ -36,6 +37,8 @@ ca = CounterArduino(iopin='2')
 while True:
     b = ca.get_count()
     print(b)
+    time.sleep(1)
+
 
 
 logger.info('Starting irrigator')
