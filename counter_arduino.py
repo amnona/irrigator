@@ -19,7 +19,7 @@ class CounterArduino(Counter):
         except:
             logger.warning('cannot connect to water counter %s' % self.serial_name)
             return self.count
-        command = 'r'+str(iopin)
+        command = 'r'+str(self.iopin)
         ser.write(command.encode())
         try:
             count = ser.readline()
