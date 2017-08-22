@@ -15,7 +15,7 @@ class CounterArduino(Counter):
 
     def get_count(self):
         try:
-            ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+            ser = serial.Serial('/dev/ttyAMA0', 9600, timeout=1)
         except:
             logger.warning('cannot connect to water counter %s' % self.serial_name)
             return self.count
