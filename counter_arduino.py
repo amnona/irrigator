@@ -12,7 +12,7 @@ class CounterArduino(Counter):
         self.iopin = iopin
         self.serial_name = serial_name
         self.clear_count()
-\
+
     def get_count(self):
         try:
             ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
