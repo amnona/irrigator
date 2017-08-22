@@ -33,7 +33,7 @@ class CounterArduino(Counter):
     def clear_count(self):
         '''Set the count to 0'''
         ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
-        command = 'c'+str(iopin)
+        command = 'c'+str(self.iopin)
         ser.write(command)
         new_count = self.get_count()
         if new_count != 0:
