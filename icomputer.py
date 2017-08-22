@@ -75,7 +75,10 @@ class IComputer:
 				else:
 					voltage_pin = row['voltage']
 				ttype = row['type']
-				if ttype == 'numato':
+				if ttype == 'arduino':
+					from counter_arduino import CounterArduino
+					ccounter = CounterArduino(iopin = row['iopin'])
+				elif ttype == 'numato':
 					from counter_numato import CounterNumato
 					ccounter = CounterNumato(iopin = row['channel'], voltage_pin=voltage_pin)
 				elif ttype == 'pi':

@@ -5,7 +5,7 @@ from logging import getLogger
 
 import icomputer
 import timers
-from counter_numato import CounterNumato
+from counter_arduino import CounterArduino
 
 logger = getLogger(__name__)
 # logger.addHandler(logging.StreamHandler())
@@ -31,6 +31,11 @@ logger.addHandler(ch)
 #     b = cn.get_current_value()
 #     print(b)
 
+
+ca = CounterArduino(iopin='2')
+while True:
+    b = cn.get_current_value()
+    print(b)
 
 
 logger.info('Starting irrigator')
