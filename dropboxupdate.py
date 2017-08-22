@@ -16,16 +16,29 @@ import datetime
 
 import dropbox
 
+
+def upload_file(dbx, dir_name, file_name):
+    '''
+    Upload a local file (file_name) to dropbox server
+    :param dbx:
+    :param dir_name:
+    :param file_name:
+    :return:
+    '''
+    print('uploading file %s' % file_name)
+    with open(file_name,'rb') as fl:
+        dat = fl.read()
+        dbx.files_upload_alpha(dat, os.path.join(dir_name, file_name))
+    print('file %s uploaded' % file_name)
+
+
 def get_file(dbx, dir_name, file_name):
     '''
     read a file from dropbox to local directory
     '''
-#    print(´getting file´)
+    print('getting file %s' % file_name)
     dbx.files_download_to_file(file_name, os.path.join(dir_name, file_name))
-#    out = open(file_name, 'wb')
-#    out.write(f.read())
-#    out.close()
-#    print(´got file´)
+    print('got file %s' % file_name)
 
 
 def synchronize_dropbox(dbx_key, dir_name, files):

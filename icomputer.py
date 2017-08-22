@@ -49,6 +49,45 @@ class IComputer:
 	def __repr__(self):
 		return "Computer: " + ', '.join("%s: %s" % item for item in vars(self).items())
 
+	def read_counters(self, counters_file='counter-list.txt'):
+		'''
+		Load the water counters cofiguration file in to the computer class counter list
+		:param counters_file: str (optional)
+			name of the TSV file containing the water counter information. should contain the following columns:
+				name (str) : name of the counter
+				computer (str) : name of the computer the counter is connected to
+				type (str) : type of counter. can be:
+					'numato' : io pins of the numato relay board
+					'pi' : gpio pins of the raspberry pi
+				channel : int
+					the channel the counter is connected to (0 is pin #0, etc.)
+				voltage : int or 'none'
+					the pin used to output voltage for counter, or 'none' to not output voltage
+		:return:
+		'''
+		logger.debug('read counters from file %s' % counters_file)
+		self.counters = []
+		with open(counters_file) as fl:
+			ffile = csv.DictReader(fl, delimiter='\t')
+			for row in ffile:
+				if row['voltage'] == 'none':
+					voltage_pin = None
+				else:
+					voltage_pin = row['voltage']
+				ttype = row['type']
+				if ttype == 'numato':
+					from counter_numato import CounterNumato
+					ccounter = CounterNumato(iopin = row['channel'], voltage_pin=voltage_pin)
+				elif ttype == 'pi':
+					from counter_pi import CounterPi
+					ccounter = CounterPi()
+				else:
+					logger.warning('counter type %s for counter %s unknown' % (ttype, row['name']))
+					continue
+				self.counters.append(ccounter)
+		self.counters_file = counters_file
+		self.counters_file_timestamp = os.stat(self.counters_file).st_mtime
+
 	def read_faucets(self, faucets_file='faucet-list.txt'):
 		'''Load faucets information from config file into the computer class faucet dict
 		
