@@ -11,16 +11,12 @@ class CounterArduino(Counter):
         super().__init__()
         self.iopin = iopin
         self.serial_name = serial_name
+        self.serial = serial.Serial(self.serial_name, 9600, timeout=1)
         self.clear_count()
 
     def get_count(self):
-        try:
-            ser = serial.Serial(self.serial_name, 9600, timeout=1)
-        except:
-            logger.warning('cannot connect to water counter %s' % self.serial_name)
-            return self.count
         command = 'r'+str(self.iopin)+'\n'
-        ser.write(command.encode())
+        self.serial.write(command.encode())
         try:
             count = ser.readline()
         except serial.SerialTimeoutException:
@@ -35,9 +31,8 @@ class CounterArduino(Counter):
 
     def clear_count(self):
         '''Set the count to 0'''
-        ser = serial.Serial(self.serial_name, 9600, timeout=1)
         command = 'c'+str(self.iopin)+'\n'
-        ser.write(command.encode())
+        self.serial.write(command.encode())
         new_count = self.get_count()
         if new_count != 0:
             logger.warning('clear counts failed for %s port %s. count is %d' % (self.serial_name, self.iopin, self.count))
