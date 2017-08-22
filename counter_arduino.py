@@ -26,7 +26,10 @@ class CounterArduino(Counter):
         except:
             logger.warning('did not get response from serial %s' % self.serial_name)
             return self.count
-        self.count = int(count)
+        try:
+            self.count = int(count)
+        except:
+            print('count read failed %s' % count)
         logger.debug('new count for %s pin %s: %d' % (self.serial_name, self.iopin, self.count))
         return self.count
 
