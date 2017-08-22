@@ -23,7 +23,7 @@ class CounterArduino(Counter):
         ser.write(command.encode())
         try:
             count = ser.readline()
-        except:
+        except serial.SerialTimeoutException:
             logger.warning('did not get response from serial %s' % self.serial_name)
             return self.count
         try:
