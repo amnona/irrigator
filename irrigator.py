@@ -34,7 +34,7 @@ logger.addHandler(ch)
 
 ca = CounterArduino(iopin='2')
 while True:
-    b = ca.get_current_value()
+    b = ca.get_count()
     print(b)
 
 
