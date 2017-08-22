@@ -17,7 +17,7 @@ import datetime
 import dropbox
 
 
-def upload_file(dbx, dir_name, file_name):
+def upload_file(dbx_key, dir_name, files):
     '''
     Upload a local file (file_name) to dropbox server
     :param dbx:
@@ -25,11 +25,18 @@ def upload_file(dbx, dir_name, file_name):
     :param file_name:
     :return:
     '''
-    print('uploading file %s' % file_name)
-    with open(file_name,'rb') as fl:
-        dat = fl.read()
-        dbx.files_upload_alpha(dat, os.path.join(dir_name, file_name))
-    print('file %s uploaded' % file_name)
+    if dbx_key is None:
+        try:
+            dbx_key = os.environ['DROPBOXKEY']
+        except:
+            ValueError('no dropbox key supplied in env. variable DROPBOXKEY')
+    dbx = dropbox.dropbox.Dropbox(dbx_key)
+    for cfile in files:
+        print('uploading file %s' % cfile)
+        with open(cfile,'rb') as fl:
+            dat = fl.read()
+            dbx.files_alpha_upload(dat, os.path.join(dir_name, cfile))
+        print('file %s uploaded' % cfile)
 
 
 def get_file(dbx, dir_name, file_name):
@@ -83,9 +90,15 @@ def synchronize_dropbox(dbx_key, dir_name, files):
 parser = argparse.ArgumentParser()
 parser.add_argument('--dbkey','-k',help='dropbox app token')
 parser.add_argument('--dir','-d',help='dropbox dir for app', default='/pita')
+parser.add_argument('--action','-a',help='action (sync or upload)', default='sync')
 parser.add_argument('--files','-f',help='file names', nargs='*',default=['timer-list.txt'])
 
 ns = parser.parse_args()
 
-synchronize_dropbox(dbx_key=ns.dbkey, dir_name=ns.dir, files=ns.files)
+if ns.action == 'upload':
+    upload_file(dbx_key=ns.dbkey, dir_name=ns.dir, files=ns.files)
+elif ns.action == 'sync':
+    synchronize_dropbox(dbx_key=ns.dbkey, dir_name=ns.dir, files=ns.files)
+else:
+    print('action %s not supported - please use "upload" or "sync"' % ns.action)
 

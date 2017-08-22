@@ -16,6 +16,8 @@ logger.setLevel(logging.DEBUG)
 #     b = cn.get_current_value()
 #     print(b)
 
+
+
 logger.info('Starting irrigator')
 icomp = icomputer.IComputer()
 icomp.main_loop()
