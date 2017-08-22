@@ -20,7 +20,7 @@ class CounterArduino(Counter):
             logger.warning('cannot connect to water counter %s' % self.serial_name)
             return self.count
         command = 'r'+str(iopin)
-        ser.write(command)
+        ser.write(command.encode())
         try:
             count = ser.readline()
         except:
@@ -34,7 +34,7 @@ class CounterArduino(Counter):
         '''Set the count to 0'''
         ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
         command = 'c'+str(self.iopin)
-        ser.write(command)
+        ser.write(command.encode())
         new_count = self.get_count()
         if new_count != 0:
             logger.warning('clear counts failed for %s port %s. count is %d' % (self.serial_name, self.iopin, self.count))
