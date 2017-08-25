@@ -273,7 +273,7 @@ class IComputer:
 						continue
 					# write water log
 					with open('water-log-%s-%s.txt' % (self.computer_name, ccounter.name),'a') as cfl:
-						cfl.write('%s\t%d\n' % (time.asctime(), counter.get_count()))
+						cfl.write('%s\t%d\n' % (time.asctime(), ccounter.get_count()))
 						print(ccounter.get_count())
 
 			# check for changed files
