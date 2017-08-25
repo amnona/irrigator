@@ -266,10 +266,9 @@ class IComputer:
 						self.write_action_log('opened faucet %s' % cfaucet.name)
 
 			# go over water counters
-			if ticks % 2 == 0:
+			if ticks % 60 == 0:
 				for ccounter in self.counters:
 					if ccounter.computer_name != self.computer_name:
-						print('ccounter %s computer %s' % (ccounter.name, self.computer_name))
 						continue
 					# write water log
 					with open('water-log-%s-%s.txt' % (self.computer_name, ccounter.name),'a') as cfl:
