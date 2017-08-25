@@ -267,6 +267,7 @@ class IComputer:
 
 			# go over water counters
 			if ticks % 2 == 0:
+				print('lala')
 				for ccounter in self.counters:
 					if ccounter.name != self.computer_name:
 						continue
