@@ -237,7 +237,7 @@ class IComputer:
 		done = False
 		ticks = 0
 		while not done:
-			logger.debug('tick')
+			# logger.debug('tick')
 			# find out which faucets should be open (OR on all timers)
 			should_be_open = set()
 			for ctimer in self.timers:
@@ -266,7 +266,7 @@ class IComputer:
 						self.write_action_log('opened faucet %s' % cfaucet.name)
 
 			# go over water counters
-			if ticks % 60 == 0:
+			if ticks % 2 == 0:
 				for ccounter in self.counters:
 					if ccounter.name != self.computer_name:
 						continue
