@@ -1,3 +1,3 @@
 name	computer	type	channel
-main-garden	danadina	arduino	2
+main-garden	local	arduino	2
 fake	ziva	arduino	4
