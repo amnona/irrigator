@@ -267,13 +267,13 @@ class IComputer:
 
 			# go over water counters
 			if ticks % 60 == 0:
-			for ccounter in self.counters:
-				if ccounter.name != self.computer_name:
-					continue
-				with open('water-log-%s-%s.txt' % (self.computer_name, ccounter.name),'a') as cfl:
-					cfl.write('%s\t%d\n' % (time.asctime(), counter.get_count()))
-					print(ccounter.get_count())
-			# write water log
+				for ccounter in self.counters:
+					if ccounter.name != self.computer_name:
+						continue
+					# write water log
+					with open('water-log-%s-%s.txt' % (self.computer_name, ccounter.name),'a') as cfl:
+						cfl.write('%s\t%d\n' % (time.asctime(), counter.get_count()))
+						print(ccounter.get_count())
 
 			# check for changed files
 			# check manual open/close file
