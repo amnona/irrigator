@@ -267,9 +267,9 @@ class IComputer:
 
 			# go over water counters
 			if ticks % 2 == 0:
-				print('lala')
 				for ccounter in self.counters:
 					if ccounter.name != self.computer_name:
+						print('ccounter %s computer %s' %ccounter.name, self.computer_name)
 						continue
 					# write water log
 					with open('water-log-%s-%s.txt' % (self.computer_name, ccounter.name),'a') as cfl:
