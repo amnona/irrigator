@@ -7,8 +7,8 @@ logger = getLogger(__name__)
 from counter import Counter
 
 class CounterArduino(Counter):
-    def __init__(self, iopin, serial_name='/dev/ttyACM0'):
-        super().__init__()
+    def __init__(self, name, computer_name, iopin, serial_name='/dev/ttyACM0'):
+        super().__init__(name=name, computer_name=computer_name)
         self.iopin = iopin
         self.serial_name = serial_name
         self.serial = serial.Serial(self.serial_name, 9600, timeout=1)

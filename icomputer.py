@@ -64,7 +64,7 @@ class IComputer:
 					'arduino' : arduino connected counter (use image button_test)
 				channel : int
 					the channel the counter is connected to (0 is pin #0, etc.)
-				voltage : int or 'none'
+				voltage (optional) : int or 'none'
 					the pin used to output voltage for counter, or 'none' to not output voltage
 		:return:
 		'''
@@ -78,9 +78,11 @@ class IComputer:
 				else:
 					voltage_pin = row['voltage']
 				ttype = row['type']
+				computer_name = row['computer']
+				name = row['name']
 				if ttype == 'arduino':
 					from counter_arduino import CounterArduino
-					ccounter = CounterArduino(iopin = row['channel'])
+					ccounter = CounterArduino(name=name, computer_name=computer_name, iopin = row['channel'])
 				elif ttype == 'numato':
 					from counter_numato import CounterNumato
 					ccounter = CounterNumato(iopin = row['channel'], voltage_pin=voltage_pin)
@@ -212,6 +214,18 @@ class IComputer:
 			return True
 		return False
 
+	def is_counter_on_computer(self, counter):
+		'''
+		Check if the counter is connected to this irrigation computer
+		:param counter:
+		:return:
+		True if counter is on self irrigation computer
+		False otherwise
+		'''
+		if self.computer_name == counter.computer_name:
+			return True
+		return False
+
 	def close_all(self):
 		'''Close all faucets on the computer
 		'''
@@ -252,8 +266,13 @@ class IComputer:
 						self.write_action_log('opened faucet %s' % cfaucet.name)
 
 			# go over water counters
+			if ticks % 60 == 0:
 			for ccounter in self.counters:
-				print(ccounter.get_count())
+				if ccounter.name != self.computer_name:
+					continue
+				with open('water-log-%s-%s.txt' % (self.computer_name, ccounter.name),'a') as cfl:
+					cfl.write('%s\t%d\n' % (time.asctime(), counter.get_count()))
+					print(ccounter.get_count())
 			# write water log
 
 			# check for changed files
@@ -272,11 +291,12 @@ class IComputer:
 
 			# update keepalive file
 			if ticks % 60 == 0:
-				logger.debug('keepalive')
+				# logger.debug('keepalive')
+				pass
 
 			if ticks % 2 == 0:
-				logger.debug('tick2')
-
+				# logger.debug('tick2')
+				pass
 			# sleep
 			time.sleep(1)
 			ticks += 1
