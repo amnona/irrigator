@@ -250,7 +250,7 @@ class IComputer:
 						should_be_open.add(ctimer.faucet.name)
 
 			# add the indication for faucets that were open but with another on the same water counter
-			for ccounter, faucets in nun_open.items():
+			for ccounter, faucets in num_open.items():
 				if len(faucets) > 0:
 					for cfaucet in faucets:
 						cfaucet.all_alone = False
