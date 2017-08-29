@@ -16,7 +16,7 @@ class Faucet:
 	# timers associated with the faucet
 	timers = []
 
-	def __init__(self, name, computer_name, faucet_type='generic', relay='0', **kwargs):
+	def __init__(self, name, computer_name, faucet_type='generic', relay='0', counter='none', **kwargs):
 		'''Init the faucet
 
 		Parameters
@@ -35,6 +35,9 @@ class Faucet:
 		self.computer_name = computer_name
 		self.faucet_type = faucet_type
 		self.relay_idx = relay
+		self.counter = counter
+		# all_alone is set to True when opened, and turns False if more than one open on the same water counter
+		self.all_alone = False
 		logger.debug('Init faucet %s on computer %s' % (name, computer_name))
 
 	def __repr__(self):
@@ -45,6 +48,7 @@ class Faucet:
 		'''
 		self.isopen = True
 		logger.debug('open faucet %s' % self.name)
+		self.all_alone = True
 
 	def close(self):
 		'''Close the faucet (water off)

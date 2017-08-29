@@ -238,14 +238,22 @@ class IComputer:
 		ticks = 0
 		while not done:
 			# logger.debug('tick')
+
 			# find out which faucets should be open (OR on all timers)
 			should_be_open = set()
+			num_open = defaultdict(list)
 			for ctimer in self.timers:
-				# if on another computer, ignore this timer
-				if not self.is_faucet_on_computer(ctimer.faucet):
-					continue
 				if ctimer.should_be_open():
-					should_be_open.add(ctimer.faucet.name)
+					num_open[ctimer.faucet.counter_name].append(ctimer.faucet.name)
+					# if on another computer, ignore this timer
+					if self.is_faucet_on_computer(ctimer.faucet):
+						should_be_open.add(ctimer.faucet.name)
+
+			# add the indication for faucets that were open but with another on the same water counter
+			for ccounter, faucets in nun_open.items():
+				if len(faucets) > 0:
+					for cfaucet in faucets:
+						cfaucet.all_alone = False
 
 			# go over all faucets and open/close as needed
 			for cfaucet in self.faucets.values():
@@ -258,12 +266,23 @@ class IComputer:
 					# if it is open and should close, close it
 					if cfaucet.name not in should_be_open:
 						cfaucet.close()
-						self.write_action_log('closed faucet %s' % cfaucet.name)
+						if cfaucet.counter != 'none':
+							total_water = cfaucet.counter.get_count() - cfaucet.start_water
+						else:
+							total_water = -1
+						if cfaucet.all_alone:
+							self.write_action_log('closed faucet %s water %d' % (cfaucet.name, total_water))
+						else:
+							self.write_action_log('closed faucet %s not alone water %d' % (cfaucet.name, total_water))
 				else:
 					# if it is closed and should open, open it
 					if cfaucet.name in should_be_open:
 						cfaucet.open()
-						self.write_action_log('opened faucet %s' % cfaucet.name)
+						cfaucet.start_water = -1
+						for ccounter in self.counters:
+							if ccounter.name = cfaucet.counter:
+								cfaucet.start_water = ccounter.get_count()
+						self.write_action_log('opened faucet %s start water=%d' % (cfaucet.name, cfaucet.start_water))
 
 			# go over water counters
 			if ticks % 60 == 0:
@@ -274,6 +293,22 @@ class IComputer:
 					with open('water-log-%s-%s.txt' % (self.computer_name, ccounter.name),'a') as cfl:
 						cfl.write('%s\t%d\n' % (time.asctime(), ccounter.get_count()))
 						print(ccounter.get_count())
+
+			# per line water usage
+			if ticks % 60 == 0:
+				for ccounter in self.counters:
+					if ccounter.computer_name != self.computer_name:
+						continue
+					# are any faucets on this counter open?
+					if ccounter.name not in num_open:
+						continue
+					# is more than one faucet on this counter open?
+					if len(num_open[ccounter.name]) > 1:
+						continue
+					# write water log
+					with open('water-log-faucet-%s-%s.txt' % (num_open[0].name, self.computer_name), 'a') as cfl:
+						cfl.write('%s\t%d\n' % (time.asctime(), ccounter.get_count()))
+						print('open faucet %s count %d' % (num_open[0].name, ccounter.get_count()))
 
 			# check for changed files
 			# check manual open/close file

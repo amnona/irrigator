@@ -1,3 +1,3 @@
-name	computer_name	relay	faucet_type	default_duration
-faucet1	local	1	NumatoFaucet	60
-faucet2	local	4	NumatoFaucet	1
+name	computer_name	relay	faucet_type	default_duration	counter
+faucet1	local	1	NumatoFaucet	60	main-garden
+faucet2	local	4	NumatoFaucet	1	none
