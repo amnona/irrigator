@@ -280,7 +280,7 @@ class IComputer:
 						cfaucet.open()
 						cfaucet.start_water = -1
 						for ccounter in self.counters:
-							if ccounter.name = cfaucet.counter:
+							if ccounter.name == cfaucet.counter:
 								cfaucet.start_water = ccounter.get_count()
 						self.write_action_log('opened faucet %s start water=%d' % (cfaucet.name, cfaucet.start_water))
 
