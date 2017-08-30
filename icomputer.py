@@ -306,8 +306,7 @@ class IComputer:
 					if len(num_open[ccounter.name]) > 1:
 						continue
 					# write water log
-					print(num_open[0])
-					with open('water-log-faucet-%s-%s.txt' % (self.faucets[num_open[0]].name, self.computer_name), 'a') as cfl:
+					with open('water-log-faucet-%s-%s.txt' % (self.faucets[num_open[ccounter.name][0]].name, self.computer_name), 'a') as cfl:
 						cfl.write('%s\t%d\n' % (time.asctime(), ccounter.get_count()))
 						print('open faucet %s count %d' % (num_open[0].name, ccounter.get_count()))
 
