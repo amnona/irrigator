@@ -253,7 +253,7 @@ class IComputer:
 			for ccounter, faucets in num_open.items():
 				if len(faucets) > 0:
 					for cfaucet in faucets:
-						cfaucet.all_alone = False
+						self.faucets[cfaucet].all_alone = False
 
 			# go over all faucets and open/close as needed
 			for cfaucet in self.faucets.values():
