@@ -31,7 +31,7 @@ class IComputer:
 
 	def __init__(self, icomputer_conf_file=None):
 		logger.debug('init icomputer')
-		self.computer_name = 'local'
+		self.computer_name = 'dani'
 		# load the irrigation computer config file
 		if icomputer_conf_file is not None:
 			self.read_config_file(conf_file)
