@@ -244,7 +244,7 @@ class IComputer:
 			num_open = defaultdict(list)
 			for ctimer in self.timers:
 				if ctimer.should_be_open():
-					num_open[ctimer.faucet.counter_name].append(ctimer.faucet.name)
+					num_open[ctimer.faucet.counter].append(ctimer.faucet.name)
 					# if on another computer, ignore this timer
 					if self.is_faucet_on_computer(ctimer.faucet):
 						should_be_open.add(ctimer.faucet.name)
