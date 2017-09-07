@@ -1,3 +1,0 @@
-[IComputer]
-computer_name = local
-
