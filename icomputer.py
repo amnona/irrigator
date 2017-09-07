@@ -34,7 +34,7 @@ class IComputer:
 		self.computer_name = 'local'
 		# load the irrigation computer config file
 		if icomputer_conf_file is not None:
-			self.read_config_file(conf_file)
+			self.read_config_file(icomputer_conf_file)
 		print(self.computer_name)
 		if self.actions_log_file is None:
 			self.actions_log_file = self.computer_name + '_actions.txt'
