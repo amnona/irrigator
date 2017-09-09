@@ -15,10 +15,10 @@ class CounterArduino(Counter):
         self.iopin = iopin
         self.serial_name = serial_name
         self.serial = serial.Serial(self.serial_name, 9600, timeout=1)
-        self.clear_count()
         self.last_water_read = None
         self.last_water_time = datetime.datetime.now()
         self.flow = None
+        self.clear_count()
 
     def get_count(self):
         command = 'r'+str(self.iopin)+'\n'
