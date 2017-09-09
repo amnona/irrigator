@@ -36,7 +36,7 @@ class CounterArduino(Counter):
         ctime = datetime.datetime.now()
         time_delta = (ctime - self.last_water_time).seconds
         if time_delta > MIN_FLOW_INTERVAL:
-            self.flow = (self.count - self.last_water_read)/time_delta
+            self.flow = (self.count - self.last_water_read) * 60 / time_delta
             self.last_water_time = ctime
             self.last_water_read = self.count
         return self.count
