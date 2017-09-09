@@ -309,8 +309,8 @@ class IComputer:
 					# write water log
 					cur_faucet_name = num_open[ccounter.name][0]
 					with open('water-log-faucet-%s-%s.txt' % (cur_faucet_name, self.computer_name), 'a') as cfl:
-						cfl.write('%s\t%d\n' % (time.asctime(), ccounter.get_count()))
-						print('open faucet %s count %d' % (cur_faucet_name, ccounter.get_count()))
+						cfl.write('%s\t%d\t%f\n' % (time.asctime(), ccounter.get_count(), ccounter.flow))
+						print('open faucet %s count %d flow %f' % (cur_faucet_name, ccounter.get_count(), ccounter.flow))
 
 			# check for changed files
 			# check manual open/close file
