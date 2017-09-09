@@ -34,8 +34,8 @@ class CounterArduino(Counter):
             print('count read failed %s' % count)
         logger.debug('new count for %s pin %s: %d' % (self.serial_name, self.iopin, self.count))
         ctime = datetime.datetime.now()
-        time_delta = ctime - self.last_water_time
-        if time_delta.seconds > MIN_FLOW_INTERVAL:
+        time_delta = (ctime - self.last_water_time).seconds
+        if time_delta > MIN_FLOW_INTERVAL:
             self.flow = (self.count - self.last_water_read)/time_delta
             self.last_water_time = ctime
             self.last_water_read = self.count
