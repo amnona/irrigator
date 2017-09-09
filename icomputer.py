@@ -292,8 +292,8 @@ class IComputer:
 						continue
 					# write water log
 					with open('water-log-%s-%s.txt' % (self.computer_name, ccounter.name),'a') as cfl:
-						cfl.write('%s\t%d\n' % (time.asctime(), ccounter.get_count()))
-						print(ccounter.get_count())
+						cfl.write('%s\t%d\n' % (time.asctime(), ccounter.get_count(), ccounter.flow))
+						print('Counter %s count %d flow %f' % (ccounter.name, ccounter.last_water_read, ccounter.flow)
 
 			# per line water usage
 			if ticks % 60 == 0:
