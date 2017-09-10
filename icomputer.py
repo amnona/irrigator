@@ -305,6 +305,7 @@ class IComputer:
 						continue
 					# is more than one faucet on this counter open?
 					if len(num_open[ccounter.name]) > 1:
+						print('more than one open for counter %s: %s' % (ccounter.name, num_open[ccounter.name]))
 						continue
 					# write water log
 					cur_faucet_name = num_open[ccounter.name][0]
