@@ -245,12 +245,17 @@ class IComputer:
 			num_open = defaultdict(list)
 			for ctimer in self.timers:
 				if ctimer.should_be_open():
+					# add this faucet to the list of open faucets for this timer
 					num_open[ctimer.faucet.counter].append(ctimer.faucet.name)
-					# if on another computer, ignore this timer
+					# if on this computer, add to the list of timers that should be opened locally
 					if self.is_faucet_on_computer(ctimer.faucet):
 						should_be_open.add(ctimer.faucet.name)
 
-			# add the indication for faucets that were open but with another on the same water counter
+			# add the indication for faucets that are open but with another faucet on the same water counter
+			# first all are alone
+			for cfaucet in self.faucets.values():
+				cfaucet.all_alone = True
+			# now mark as not alone ones on a counter with more than one faucet open
 			for ccounter, faucets in num_open.items():
 				if len(faucets) > 0:
 					for cfaucet in faucets:
@@ -261,8 +266,6 @@ class IComputer:
 				# if on another computer, ignore this timer
 				if not self.is_faucet_on_computer(cfaucet):
 					continue
-				# res = cfaucet.read_relay()
-				# print(res)
 				if cfaucet.isopen:
 					# if it is open and should close, close it
 					if cfaucet.name not in should_be_open:
@@ -295,13 +298,14 @@ class IComputer:
 						cfl.write('%s\t%d\t%f\n' % (time.asctime(), ccounter.get_count(), ccounter.flow))
 						print('Counter %s count %d flow %f' % (ccounter.name, ccounter.last_water_read, ccounter.flow))
 
-			# per line water usage
+			# per line water usage (if open alone on a counter)
 			if ticks % 60 == 0:
 				for ccounter in self.counters:
 					if ccounter.computer_name != self.computer_name:
 						continue
 					# are any faucets on this counter open?
 					if ccounter.name not in num_open:
+						print('no open faucets for this counter (not in num_open)')
 						continue
 					# is more than one faucet on this counter open?
 					if len(num_open[ccounter.name]) > 1:
