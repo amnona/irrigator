@@ -80,6 +80,8 @@ class IComputer:
 					voltage_pin = row['voltage']
 				ttype = row['type']
 				computer_name = row['computer']
+				if computer_name != self.computer_name:
+					continue
 				name = row['name']
 				if ttype == 'arduino':
 					from counter_arduino import CounterArduino
