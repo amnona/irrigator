@@ -26,7 +26,9 @@ ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
 
-
+import datetime
+zz=timers.next_weekday(datetime.datetime.now(), 4)
+print(zz.date())
 
 # ca = CounterArduino(iopin='2')
 # while True:

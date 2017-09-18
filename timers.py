@@ -9,6 +9,24 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
 
+def next_weekday(d, weekday):
+    '''
+    Find the closest occurence of weekday following date d
+    :param d: datetime.datetime
+        the start date from where to look for the next day occurance
+    :param weekday: int
+        the day to look for (1-sunday,....,7-saturday)
+    :return:
+    datetime.datetime
+        The closest datetime to d which is day weekday
+    '''
+    weekday = weekday + 1
+    days_ahead = weekday - d.weekday()
+    if days_ahead <= 0: # Target day already happened this week
+        days_ahead += 7
+    return d + datetime.timedelta(days_ahead)
+
+
 def time_in_range(start_hour, start_minute, duration, test_time=None):
     '''Check whether the current_time is within the time window specified
 
@@ -47,27 +65,73 @@ class Timer:
     def __repr__(self):
         return "Timer: " + ', '.join("%s: %s" % item for item in vars(self).items())
 
+    def should_be_open(self):
+        '''
+        Test if timer should be open or closed now
+
+        :return: bool
+            True if timer should be open now, False if not
+        '''
+        raise ValueError('Base class timer - not implemented')
+
 
 class WeeklyTimer(Timer):
+    # Timer that repeats every week on same day/time
     def __init__(self, duration, cfaucet, start_day, start_time):
+        '''
+
+        :param duration: int
+            duration (minutes)
+
+        :param cfaucet: Faucet
+            The Faucet the timer is associated with
+        :param start_day: int
+            The day to open in (1-sunday...7-saturday)
+        :param start_time: datetime.time
+            The time (hour:min) to open in
+        '''
         super().__init__(duration=duration, cfaucet=cfaucet)
         self.timer_type = 'weekly'
         self.start_day = int(start_day)
         self.start_time = start_time
+        # set the overnight flag if the faucet starts before midnight and ends after midnight
+        self.overnight = False
+        test_start = datetime.datetime.combine(datetime.date.today(), self.start_time)
+        test_end = test_start + datetime.timedelta(minutes=self.duration)
+        if test_end.day != test_start.day:
+            logger.debug('timer %s is overnight' % self)
+            self.overnight = True
         logger.debug('timer %s initialized' % self)
 
     def should_be_open(self):
+        '''
+        Test if timer should be open or closed now
+
+        :return: bool
+            True if timer should be open now, False if not
+        '''
         now = datetime.datetime.now()
-        # is it the correct day now?
-        # BUG: should fix if switches to next day during...
-        if now.isoweekday()+1 != self.start_day:
-            return False
-        if not time_in_range(self.start_time.hour, self.start_time.minute, self.duration):
-            return False
-        return True
+        if not self.overnight:
+            # if not overnight timer, just check day and then time
+            # is it the correct day now?
+            if now.isoweekday()+1 != self.start_day:
+                return False
+            if not time_in_range(self.start_time.hour, self.start_time.minute, self.duration):
+                return False
+            return True
+        else:
+            # overnight timer, so check if current
+            next_start = datetime.datetime.combine(next_weekday(now, self.start_day).date(), self.start_time)
+            if now < next_start:
+                return False
+            next_end = next_start + datetime.timedelta(minutes=self.duration)
+            if now > next_end:
+                return False
+            return True
 
 
 class SingleTimer(Timer):
+    #
     def __init__(self, duration, cfaucet, start_datetime):
         super().__init__(duration=duration, cfaucet=cfaucet)
         self.start_datetime = start_datetime
