@@ -11,8 +11,8 @@ logger.setLevel(logging.DEBUG)
 
 class NumatoFaucet(Faucet):
 #    def __init__(self, port_name = '/dev/tty.usbmodem1421', **kwargs):
-def __init__(self, port_name='/dev/ttyACM0', **kwargs):
-    super().__init__(**kwargs)
+    def __init__(self, port_name='/dev/ttyACM0', **kwargs):
+        super().__init__(**kwargs)
         # if the relay is a number, convert to hex letter
         if isinstance(self.relay_idx, int):
             self.relay_idx = self.relay_idx_from_num(self.relay_idx)
