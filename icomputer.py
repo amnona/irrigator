@@ -273,7 +273,11 @@ class IComputer:
 					if cfaucet.name not in should_be_open:
 						cfaucet.close()
 						if cfaucet.counter != 'none':
-							total_water = cfaucet.counter.get_count() - cfaucet.start_water
+							if cfaucet.counter in self.counters:
+								total_water = self.counters[cfaucet.counter].get_count() - cfaucet.start_water
+							else:
+								logger.debug('counter %s for faucet %s not found' % (cfaucet.counter, cfaucet.name))
+								total_water = -1
 						else:
 							total_water = -1
 						if cfaucet.all_alone:
