@@ -144,6 +144,7 @@ class SingleTimer(Timer):
             the datetime when to open the faucet or None to open now
         '''
         super().__init__(duration=duration, cfaucet=cfaucet)
+        print('creating timer')
         if start_datetime is None:
             start_datetime = datetime.datetime.now()
         self.start_datetime = start_datetime
