@@ -216,8 +216,8 @@ class IComputer:
 						continue
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
 						new_faucet = SingleTimer(duration=60, cfaucet=cfaucet, start_datetime=None)
-						self.faucets[cfaucet].open()
-						logger.info('manually opened faucet %s' % cfaucet)
+						# self.faucets[cfaucet].open()
+						logger.info('created single timer for faucet %s' % cfaucet)
 					else:
 						logger.warning('cannot open. faucet %s not on this computer' % cfaucet)
 				elif ccommand[0].lower()=='close':
