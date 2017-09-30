@@ -215,7 +215,7 @@ class IComputer:
 						logger.warning('cannot open faucet %s - not found' % cfaucet)
 						continue
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
-						new_timer = SingleTimer(duration=60, cfaucet=self.faucets[cfaucet], start_datetime=None)
+						new_timer = SingleTimer(duration=1, cfaucet=self.faucets[cfaucet], start_datetime=None)
 						self.timers.append(new_timer)
 						# self.faucets[cfaucet].open()
 						logger.info('created single timer for faucet %s' % cfaucet)
