@@ -40,7 +40,11 @@ class IComputer:
 			self.actions_log_file = self.computer_name + '_actions.txt'
 		if self.commands_file is None:
 			self.commands_file = self.computer_name + '_commands.txt'
-		self.commands_file_timestamp = None
+		# for the manual commands file, do not read it if already exists - just the updates
+		try:
+			self.commands_file_timestamp = os.stat(self.commands_file).st_mtime
+		except:
+			self.commands_file = None
 
 		# load the faucets file
 		self.read_faucets()
@@ -190,6 +194,49 @@ class IComputer:
 		for k, v in config['IComputer'].items():
 			setattr(self, k, v)
 
+	def read_manual_commands(self, commands_file=None):
+		'''
+		Read the manual commands file
+		:param commands_file:  str or None (optional)
+			file name of the commands file. None to use the default (computer_name + '_commands.txt')
+		:return:
+		'''
+		if commands_file is None:
+			commands_file = self.commands_file
+		with open(commands_file) as cf:
+			for cline in cf:
+				ccommand = cline.strip().split('\t')
+				if len(ccommand)!=2:
+					logger.warning('Manual command %s does not contain 2 columns' % cline)
+					continue
+				cfaucet = ccommand[1]
+				if ccommand[0].lower()=='open':
+					if cfaucet not in self.faucets:
+						logger.warning('cannot open faucet %s - not found' % cfaucet)
+						continue
+					if self.is_faucet_on_computer(self.faucets[cfaucet]):
+						self.faucets[cfaucet].open()
+						logger.info('manually opened faucet %s' % cfaucet)
+					else:
+						logger.warning('cannot open. faucet %s not on this computer' % cfaucet)
+				elif ccommand[0].lower()=='close':
+					if cfaucet not in self.faucets:
+						logger.warning('cannot close faucet %s - not found' % cfaucet)
+						continue
+					if self.is_faucet_on_computer(self.faucets[cfaucet]):
+						self.faucets[cfaucet].open()
+						logger.info('manually closed faucet %s' % cfaucet)
+					else:
+						logger.warning('cannot close. faucet %s not on this computer' % cfaucet)
+				elif command[0].lower()=='closeall':
+					self.close_all()
+					logger.info('closed all faucets (manual)')
+				else:
+					logger.warning('Manual command %s not recognized' % cline)
+					continue
+		self.commands_file_timestamp = 	os.stat(commands_file).st_mtime
+		self.commands_file = commands_file
+
 	def write_action_log(self, msg):
 		with open(self.actions_log_file, 'a') as fl:
 			fl.write(msg)
@@ -325,6 +372,12 @@ class IComputer:
 
 			# check for changed files
 			# check manual open/close file
+			try:
+				if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
+					logger.debug('Loading manual commands file')
+					self.read_manual_commands(self.commands_file)
+			except:
+				logger.warning('manual commands file %s load failed' % self.commands_file)
 			# if not self.faucets_file_timestamp == os.stat(self.faucets_file).st_mtime:
 			# 	pass
 			# check faucet list file
