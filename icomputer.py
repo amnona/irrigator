@@ -224,7 +224,9 @@ class IComputer:
 						logger.warning('cannot close faucet %s - not found' % cfaucet)
 						continue
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
-						new_faucet = get_faucet_class('single')(duration=60, cfaucet=cfaucet, start_datetime=None)
+						print('a')
+						new_faucet = SingleTimer(duration=60, cfaucet=cfaucet, start_datetime=None)
+						print('b')
 						self.faucets[cfaucet].open()
 						logger.info('manually closed faucet %s' % cfaucet)
 					else:
