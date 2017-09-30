@@ -133,7 +133,19 @@ class WeeklyTimer(Timer):
 class SingleTimer(Timer):
     #
     def __init__(self, duration, cfaucet, start_datetime):
+        '''
+        Create a single event timer
+
+        :param duration: int
+            irrigation duration (minutes)
+        :param cfaucet: str
+            the faucet name to open
+        :param start_datetime: datetime.datetime or None
+            the datetime when to open the faucet or None to open now
+        '''
         super().__init__(duration=duration, cfaucet=cfaucet)
+        if start_datetime is None:
+            start_datetime = datetime.datetime.now()
         self.start_datetime = start_datetime
         self.end_datetime = start_datetime + datetime.timedelta(minutes=int(duration))
         self.timer_type = 'single'

@@ -224,6 +224,7 @@ class IComputer:
 						logger.warning('cannot close faucet %s - not found' % cfaucet)
 						continue
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
+						new_faucet = get_faucet_class('single')(duration=60, cfaucet=cfaucet, start_datetime=None)
 						self.faucets[cfaucet].open()
 						logger.info('manually closed faucet %s' % cfaucet)
 					else:
@@ -234,8 +235,8 @@ class IComputer:
 				else:
 					logger.warning('Manual command %s not recognized' % cline)
 					continue
-		self.commands_file_timestamp = 	os.stat(commands_file).st_mtime
 		self.commands_file = commands_file
+		self.commands_file_timestamp = 	os.stat(commands_file).st_mtime
 
 	def write_action_log(self, msg):
 		with open(self.actions_log_file, 'a') as fl:
