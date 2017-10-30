@@ -412,12 +412,12 @@ class IComputer:
 			if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
 				logger.debug('Loading manual commands file')
 				self.read_manual_commands(self.commands_file)
-			# try:
-			# 	if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
-			# 		logger.debug('Loading manual commands file')
-			# 		self.read_manual_commands(self.commands_file)
-			# except:
-			# 	logger.warning('manual commands file %s load failed' % self.commands_file)
+			try:
+				if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
+					logger.debug('Loading manual commands file')
+					self.read_manual_commands(self.commands_file)
+			except:
+				logger.warning('manual commands file %s load failed' % self.commands_file)
 			# if not self.faucets_file_timestamp == os.stat(self.faucets_file).st_mtime:
 			# 	pass
 			# check faucet list file
