@@ -239,7 +239,7 @@ class IComputer:
 							continue
 						delete_list.append(ctimer)
 					self.delete_timers(delete_list)
-				elif command[0].lower() == 'closeall':
+				elif ccommand[0].lower() == 'closeall':
 					self.close_all()
 					delete_list=[]
 					for ctimer in self.timers:
