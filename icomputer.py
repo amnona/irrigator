@@ -217,7 +217,6 @@ class IComputer:
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
 						new_timer = SingleTimer(duration=self.faucets[cfaucet].default_duration, cfaucet=self.faucets[cfaucet], start_datetime=None, is_manual=True)
 						self.timers.append(new_timer)
-						# self.faucets[cfaucet].open()
 						logger.info('created single timer for faucet %s' % cfaucet)
 					else:
 						logger.warning('cannot open. faucet %s not on this computer' % cfaucet)
@@ -410,12 +409,15 @@ class IComputer:
 
 			# check for changed files
 			# check manual open/close file
-			try:
-				if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
-					logger.debug('Loading manual commands file')
-					self.read_manual_commands(self.commands_file)
-			except:
-				logger.warning('manual commands file %s load failed' % self.commands_file)
+			if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
+				logger.debug('Loading manual commands file')
+				self.read_manual_commands(self.commands_file)
+			# try:
+			# 	if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
+			# 		logger.debug('Loading manual commands file')
+			# 		self.read_manual_commands(self.commands_file)
+			# except:
+			# 	logger.warning('manual commands file %s load failed' % self.commands_file)
 			# if not self.faucets_file_timestamp == os.stat(self.faucets_file).st_mtime:
 			# 	pass
 			# check faucet list file
