@@ -16,7 +16,7 @@ class Faucet:
 	# timers associated with the faucet
 	timers = []
 
-	def __init__(self, name, computer_name, faucet_type='generic', relay='0', counter='none', **kwargs):
+	def __init__(self, name, computer_name, faucet_type='generic', relay='0', counter='none', default_duration=30, **kwargs):
 		'''Init the faucet
 
 		Parameters
@@ -29,13 +29,16 @@ class Faucet:
 			the relay type - can be 'numato'
 		relay_idx : str or int
 			the relay in the faucet controller (i.e. 0-F for numato 16 relay board
-
+		default_duration: int (optional)
+			the default duration of the faucet when opened manually/new timer added
 		'''
 		self.name = name
 		self.computer_name = computer_name
 		self.faucet_type = faucet_type
 		self.relay_idx = relay
 		self.counter = counter
+		self.default_duration = default_duration
+
 		# all_alone is set to True when opened, and turns False if more than one open on the same water counter
 		self.all_alone = False
 		logger.debug('Init faucet %s on computer %s' % (name, computer_name))

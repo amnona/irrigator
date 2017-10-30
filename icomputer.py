@@ -215,13 +215,13 @@ class IComputer:
 						logger.warning('cannot open faucet %s - not found' % cfaucet)
 						continue
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
-						new_timer = SingleTimer(duration=1, cfaucet=self.faucets[cfaucet], start_datetime=None)
+						new_timer = SingleTimer(duration=self.faucets[cfaucet].default_duration, cfaucet=self.faucets[cfaucet], start_datetime=None, is_manual=True)
 						self.timers.append(new_timer)
 						# self.faucets[cfaucet].open()
 						logger.info('created single timer for faucet %s' % cfaucet)
 					else:
 						logger.warning('cannot open. faucet %s not on this computer' % cfaucet)
-				elif ccommand[0].lower()=='close':
+				elif ccommand[0].lower() == 'close':
 					if cfaucet not in self.faucets:
 						logger.warning('cannot close faucet %s - not found' % cfaucet)
 						continue
@@ -230,8 +230,26 @@ class IComputer:
 						logger.info('manually closed faucet %s' % cfaucet)
 					else:
 						logger.warning('cannot close. faucet %s not on this computer' % cfaucet)
-				elif command[0].lower()=='closeall':
+					delete_list=[]
+					for ctimer in self.timers:
+						if ctimer.faucet!=self.faucets[cfaucet]:
+							continue
+						if not isinstance(ctimer, SingleTimer):
+							continue
+						if not ctimer.is_manual:
+							continue
+						delete_list.append(ctimer)
+					self.delete_timers(delete_list)
+				elif command[0].lower() == 'closeall':
 					self.close_all()
+					delete_list=[]
+					for ctimer in self.timers:
+						if not isinstance(ctimer, SingleTimer):
+							continue
+						if not ctimer.is_manual:
+							continue
+						delete_list.append(ctimer)
+					self.delete_timers(delete_list)
 					logger.info('closed all faucets (manual)')
 				else:
 					logger.warning('Manual command %s not recognized' % cline)
@@ -243,6 +261,18 @@ class IComputer:
 		with open(self.actions_log_file, 'a') as fl:
 			fl.write(msg)
 			fl.write('\n')
+
+	def delete_timers(self, delete_list):
+		'''
+		Delete timers from the timer list
+		:param delete_list: list of timers
+			timers to delete
+		:return:
+		'''
+		if len(delete_list) == 0:
+			return
+		self.timers = [x for x in self.timers if x not in delete_list]
+		logger.debug('deleted %d timers' % len(delete_list))
 
 	def get_name(self):
 		'''Get the computer name
@@ -294,6 +324,7 @@ class IComputer:
 			# find out which faucets should be open (OR on all timers)
 			should_be_open = set()
 			num_open = defaultdict(list)
+			delete_list = []
 			for ctimer in self.timers:
 				if ctimer.should_be_open():
 					# add this faucet to the list of open faucets for this timer
@@ -301,6 +332,8 @@ class IComputer:
 					# if on this computer, add to the list of timers that should be opened locally
 					if self.is_faucet_on_computer(ctimer.faucet):
 						should_be_open.add(ctimer.faucet.name)
+				if ctimer.should_remove():
+					delete_list.append(ctimer)
 
 			# add the indication for faucets that are open but with another faucet on the same water counter
 			# first all are alone
@@ -342,6 +375,9 @@ class IComputer:
 							if ccounter.name == cfaucet.counter:
 								cfaucet.start_water = ccounter.get_count()
 						self.write_action_log('opened faucet %s start water=%d' % (cfaucet.name, cfaucet.start_water))
+
+			# delete timers in the delete list
+			self.delete_timers(delete_list)
 
 			# go over water counters
 			if ticks % 60 == 0:

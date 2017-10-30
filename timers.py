@@ -74,6 +74,12 @@ class Timer:
         '''
         raise ValueError('Base class timer - not implemented')
 
+    def should_remove(self):
+        '''
+        return True if timer should be deleted (i.e. single timer and past the time) otherwise False
+        :return:
+        '''
+        return False
 
 class WeeklyTimer(Timer):
     # Timer that repeats every week on same day/time
@@ -129,10 +135,14 @@ class WeeklyTimer(Timer):
                 return False
             return True
 
+    def should_remove(self):
+        # since always there's another week, don't delete
+        return False
+
 
 class SingleTimer(Timer):
     #
-    def __init__(self, duration, cfaucet, start_datetime):
+    def __init__(self, duration, cfaucet, start_datetime, is_manual=False):
         '''
         Create a single event timer
 
@@ -142,6 +152,8 @@ class SingleTimer(Timer):
             the faucet name to open
         :param start_datetime: datetime.datetime or None
             the datetime when to open the faucet or None to open now
+        :param is_manual: bool (optional)
+            True to indicate timer is related to manual open command, False it is not
         '''
         super().__init__(duration=duration, cfaucet=cfaucet)
         print('creating timer')
@@ -150,6 +162,7 @@ class SingleTimer(Timer):
         self.start_datetime = start_datetime
         self.end_datetime = start_datetime + datetime.timedelta(minutes=int(duration))
         self.timer_type = 'single'
+        self.is_manual = is_manual
         logger.debug('timer %s initialized' % self)
 
     def should_be_open(self):
@@ -158,3 +171,14 @@ class SingleTimer(Timer):
             if now <= self.end_datetime:
                 return True
         return False
+
+    def should_remove(self):
+        '''
+        Return True if close time is less than the current time
+        :return:
+        '''
+        now = datetime.datetime.now()
+        if now <= self.end_datetime:
+            return False
+        logger.debug('Single timer %s should be deleted since past bedtime' % self)
+        return True
