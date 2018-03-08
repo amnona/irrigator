@@ -45,6 +45,7 @@ class IComputer:
 			self.commands_file_timestamp = os.stat(self.commands_file).st_mtime
 		except:
 			self.commands_file = None
+			self.commands_file_timestamp = os.stat(self.commands_file).st_mtime
 
 		# load the faucets file
 		self.read_faucets()
@@ -255,7 +256,7 @@ class IComputer:
 					logger.warning('Manual command %s not recognized' % cline)
 					continue
 		self.commands_file = commands_file
-		self.commands_file_timestamp = 	os.stat(commands_file).st_mtime
+		self.commands_file_timestamp = os.stat(commands_file).st_mtime
 
 	def write_action_log(self, msg):
 		with open(self.actions_log_file, 'a') as fl:
@@ -419,6 +420,7 @@ class IComputer:
 					self.read_manual_commands(self.commands_file)
 			except:
 				logger.warning('manual commands file %s load failed' % self.commands_file)
+				self.commands_file_timestamp = int(time.time())
 			# if not self.faucets_file_timestamp == os.stat(self.faucets_file).st_mtime:
 			# 	pass
 			# check faucet list file
