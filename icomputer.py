@@ -45,7 +45,7 @@ class IComputer:
 			self.commands_file_timestamp = os.stat(self.commands_file).st_mtime
 		except:
 			self.commands_file = None
-			self.commands_file_timestamp = os.stat(self.commands_file).st_mtime
+			self.commands_file_timestamp = int(time.time())
 
 		# load the faucets file
 		self.read_faucets()
