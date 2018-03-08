@@ -89,10 +89,10 @@ class IComputer:
 				name = row['name']
 				if ttype == 'arduino':
 					from counter_arduino import CounterArduino
-					ccounter = CounterArduino(name=name, computer_name=computer_name, iopin = row['channel'])
+					ccounter = CounterArduino(name=name, computer_name=computer_name, iopin=row['channel'])
 				elif ttype == 'numato':
 					from counter_numato import CounterNumato
-					ccounter = CounterNumato(iopin = row['channel'], voltage_pin=voltage_pin)
+					ccounter = CounterNumato(iopin=row['channel'], voltage_pin=voltage_pin)
 				elif ttype == 'pi':
 					from counter_pi import CounterPi
 					ccounter = CounterPi()
@@ -105,7 +105,7 @@ class IComputer:
 
 	def read_faucets(self, faucets_file='faucet-list.txt'):
 		'''Load faucets information from config file into the computer class faucet dict
-		
+
 		Parameters
 		----------
 		faucets_file : str (optional)
@@ -213,6 +213,7 @@ class IComputer:
 				if ccommand[0].lower()=='open':
 					if cfaucet not in self.faucets:
 						logger.warning('cannot open faucet %s - not found' % cfaucet)
+						logger.warning('current faucets: %s' % self.faucets)
 						continue
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
 						new_timer = SingleTimer(duration=self.faucets[cfaucet].default_duration, cfaucet=self.faucets[cfaucet], start_datetime=None, is_manual=True)
