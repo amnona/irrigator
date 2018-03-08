@@ -411,9 +411,9 @@ class IComputer:
 
 			# check for changed files
 			# check manual open/close file
-			if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
-				logger.debug('Loading manual commands file')
-				self.read_manual_commands(self.commands_file)
+			# if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
+			# 	logger.debug('Loading manual commands file')
+			# 	self.read_manual_commands(self.commands_file)
 			try:
 				if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
 					logger.debug('Loading manual commands file')
