@@ -18,7 +18,7 @@ class CounterArduino(Counter):
         self.last_water_read = -1
         self.last_water_time = datetime.datetime.now()
         self.flow = -1
-        self.open_serial()
+        self.serial = None
         self.clear_count()
 
     def open_serial(self):
