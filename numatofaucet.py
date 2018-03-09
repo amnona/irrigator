@@ -33,15 +33,19 @@ class NumatoFaucet(Faucet):
         found_port = None
         for cport in port_names:
             try:
+                logger.debug('trying port %s' % cport)
                 ser_port = serial.Serial(cport, 19200, timeout=1)
+                logger.debug('opened')
                 ser_port.write(("ver\n\r").encode('utf-8'))
+                logger.debug('wrote ver')
                 response = ser_port.read(8)
+                logger.debug('got response %s' % response)
                 ser_port.close()
                 found_port = cport
                 logger.info('USB/serial port %s responded, version=%s' % (cport, response))
                 break
-            except:
-                logger.debug('port %s not found.' % cport)
+            except Exception as e:
+                logger.debug('port %s not found. error %s' % (cport, e))
         if found_port is None:
             logger.warning('USB/Serial port not found. Unable to connect to USB')
         return found_port
