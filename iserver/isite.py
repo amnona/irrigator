@@ -3,6 +3,7 @@ import os
 import csv
 from logging import getLogger
 from functools import wraps
+import configparser
 
 logger = getLogger(__name__)
 
@@ -44,7 +45,7 @@ def requires_auth(f):
 	return decorated
 
 
-def get_manual_file_name():
+def get_manual_file_name(config_file_name='computer-config.txt'):
 	'''Get the file name for the manual commands file
 
 	Parameters
@@ -55,7 +56,15 @@ def get_manual_file_name():
 	file_name : str
 		the manual commands file name
 	'''
-	return 'amnon_commands.txt'
+	logger.debug('reading config file %s' % config_file_name)
+	config = configparser.ConfigParser()
+	config.read(config_file_name)
+	if 'computer_name' not in config['IComputer']:
+		logger.warning('computer_name not found in %s - cannot find manual commands file' % config_file_name)
+		return 'commands.txt'
+	computer_name = config['IComputer']['computer_name']
+	logger.debug('computer name is %s' % computer_name)
+	return '%s_commands.txt' % computer_name
 
 
 def get_faucets_file_name():
