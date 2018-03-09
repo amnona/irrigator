@@ -29,7 +29,7 @@ class NumatoFaucet(Faucet):
 
     def get_serial_port(self):
         # find and set the correct port name
-        port_names = ['/dev/ttyACM0', '/dev/tty.usbmodem1421', '/dev/tty.usbmodem1421', '/dev/ttyACM0']
+        port_names = ['/dev/ttyACM0', '/dev/tty.usbmodem1421', '/dev/tty.usbmodem1421', '/dev/ttyAMA0']
         found_port = None
         for cport in port_names:
             try:
