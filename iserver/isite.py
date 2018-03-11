@@ -134,7 +134,34 @@ def get_faucets():
 	with open(get_faucets_file_name()) as fl:
 		ffile = csv.DictReader(fl, delimiter='\t')
 		for row in ffile:
-			faucet_type = row['faucet_type']
 			fname = row['name']
 			faucet_list += fname+';'
 	return faucet_list
+
+
+@Site_Main_Flask_Obj.route('/faucet_info/<faucet>', methods=['GET'])
+@requires_auth
+def faucet_info(faucet):
+	'''Get all the details about a given faucet
+
+	Parameters:
+	-----------
+	faucet: str
+		the name of the faucet to get the info for
+
+	Returns
+	-------
+	str: made of key:val;
+	'''
+	logger.debug('getting faucet info for faucet %s' % faucet)
+	info=''
+	with open(get_faucets_file_name()) as fl:
+		ffile = csv.DictReader(fl, delimiter='\t')
+		for row in ffile:
+			if row['name'] != faucet:
+				continue
+			for ck,cv in row.items():
+				info += '%s:%s;' % (ck,cv)
+	if info=='':
+		info='%s not found' % faucet
+	return info
