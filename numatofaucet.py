@@ -14,8 +14,10 @@ class NumatoFaucet(Faucet):
     def __init__(self, port_name='/dev/ttyACM0', **kwargs):
         super().__init__(**kwargs)
         # if the relay is a number, convert to hex letter
-        if isinstance(self.relay_idx, int):
+        try:
             self.relay_idx = self.relay_idx_from_num(self.relay_idx)
+        except:
+            self.relay_idx = str(self.relay_idx)
         self.port_name = self.get_serial_port()
 
     def relay_idx_from_num(self, relay_num):
@@ -29,7 +31,7 @@ class NumatoFaucet(Faucet):
 
     def get_serial_port(self):
         # find and set the correct port name
-        port_names = ['/dev/ttyACM0', '/dev/tty.usbmodem1421', '/dev/tty.usbmodem1421', '/dev/ttyAMA0']
+        port_names = ['/dev/ttyACM0', '/dev/tty.usbmodem1421']
         found_port = None
         for cport in port_names:
             try:
