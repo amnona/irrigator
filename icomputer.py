@@ -28,6 +28,8 @@ class IComputer:
 	actions_log_file = None
 	# the name for the immediate commands file
 	commands_file = None
+	# file containing the expected status of the faucets
+	status_file = None
 
 	def __init__(self, icomputer_conf_file='computer-config.txt'):
 		logger.debug('init icomputer')
@@ -38,6 +40,8 @@ class IComputer:
 		print(self.computer_name)
 		if self.actions_log_file is None:
 			self.actions_log_file = self.computer_name + '_actions.txt'
+		if self.status_file is None:
+			self.status_file = self.computer_name + '_status.txt'
 		if self.commands_file is None:
 			self.commands_file = self.computer_name + '_commands.txt'
 		# for the manual commands file, do not read it if already exists - just the updates
@@ -263,6 +267,11 @@ class IComputer:
 			fl.write(msg)
 			fl.write('\n')
 
+	def write_status_file(self, should_be_open):
+		with open(self.status_file, 'w') as fl:
+			for cfaucet_name in should_be_open:
+				fl.write(cfaucet_name+'\n')
+
 	def delete_timers(self, delete_list):
 		'''
 		Delete timers from the timer list
@@ -319,6 +328,7 @@ class IComputer:
 	def main_loop(self):
 		done = False
 		ticks = 0
+		old_should_be_open = set()
 		while not done:
 			# logger.debug('tick')
 
@@ -335,6 +345,11 @@ class IComputer:
 						should_be_open.add(ctimer.faucet.name)
 				if ctimer.should_remove():
 					delete_list.append(ctimer)
+
+			# if the faucets that should be opened changed, write the status file
+			if should_be_open != old_should_be_open:
+				self.write_status_file(should_be_open)
+				old_should_be_open = should_be_open
 
 			# add the indication for faucets that are open but with another faucet on the same water counter
 			# first all are alone

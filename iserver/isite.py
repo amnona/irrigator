@@ -45,7 +45,20 @@ def requires_auth(f):
 	return decorated
 
 
-def get_manual_file_name(config_file_name='computer-config.txt'):
+def get_computer_name(config_file_name='computer-config.txt'):
+	'''Get the name of the current irrigation computer based on the config file'''
+	logger.debug('reading config file %s' % config_file_name)
+	config = configparser.ConfigParser()
+	config.read(config_file_name)
+	if 'computer_name' not in config['IComputer']:
+		logger.warning('computer_name not found in config file %s' % config_file_name)
+		return 'local'
+	computer_name = config['IComputer']['computer_name']
+	logger.debug('computer name is %s' % computer_name)
+	return computer_name
+
+
+def get_manual_file_name():
 	'''Get the file name for the manual commands file
 
 	Parameters
@@ -56,15 +69,13 @@ def get_manual_file_name(config_file_name='computer-config.txt'):
 	file_name : str
 		the manual commands file name
 	'''
-	logger.debug('reading config file %s' % config_file_name)
-	config = configparser.ConfigParser()
-	config.read(config_file_name)
-	if 'computer_name' not in config['IComputer']:
-		logger.warning('computer_name not found in %s - cannot find manual commands file' % config_file_name)
-		return 'commands.txt'
-	computer_name = config['IComputer']['computer_name']
-	logger.debug('computer name is %s' % computer_name)
+	computer_name = get_computer_name()
 	return '%s_commands.txt' % computer_name
+
+
+def get_status_file_name():
+	computer_name = get_computer_name()
+	return '%s_status.txt' % computer_name
 
 
 def get_faucets_file_name():
@@ -79,6 +90,25 @@ def get_faucets_file_name():
 		the manual commands file name
 	'''
 	return 'faucet-list.txt'
+
+
+def get_status():
+	'''Get the open/close status of the faucets
+
+	Returns
+	-------
+	set of faucets that are open
+	'''
+	open_faucets = set()
+	try:
+		with open(get_status_file_name) as fl:
+			for cline in fl:
+				open_faucets.add(cline)
+		logger.debug('found %d open faucets' % len(open_faucets))
+		return open_faucets
+	except:
+		logger.warning('could not find the status file')
+		return open_faucets
 
 
 @Site_Main_Flask_Obj.route('/manual_open/<faucet>', methods=['GET'])
@@ -194,11 +224,15 @@ def main_site():
 	wpage += '<thead><tr><th>Name</th><th>Relay</th><th>Duration</th><th>Status</th></tr></thead>'
 	wpage += '<tbody>'
 	faucets = _faucets_info()
+	open_faucets = get_status()
 	for cfaucet in faucets:
 		cname = cfaucet.get('name','NA')
 		crelay = cfaucet.get('relay','NA')
 		cduration = cfaucet.get('default_duration','NA')
-		cstatus = 'Unknown'
+		if cname in open_faucets:
+			cstatus = 'Open'
+		else:
+			cstatus = 'Closed'
 		wpage += '<tr>'
 		wpage += '<td>%s</td>' % cname
 		wpage += '<td>%s</td>' % crelay
