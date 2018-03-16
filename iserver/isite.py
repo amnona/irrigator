@@ -99,7 +99,7 @@ def get_status():
 	'''
 	open_faucets = set()
 	try:
-		with open(get_status_file_name) as fl:
+		with open(get_status_file_name()) as fl:
 			for cline in fl:
 				open_faucets.add(cline.rstrip())
 		logger.debug('found %d open faucets' % len(open_faucets))
