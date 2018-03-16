@@ -17,10 +17,11 @@ class LabelWidget(tkinter.Entry):
                     bg="#ffffff000", fg="#000000fff",
                     readonlybackground="#ffffff000",
                     justify='center',
+                    highlightthickness=0,
                     # width=8,
                     textvariable=self.text,
                     state="readonly")
-        self.grid(column=x, row=y, padx=1, pady=1)
+        self.grid(column=x, row=y, padx=0, pady=0, sticky=tkinter.W+tkinter.E+tkinter.S+tkinter.N)
 
 
 class EntryWidget(tkinter.Entry):
@@ -29,16 +30,18 @@ class EntryWidget(tkinter.Entry):
         self.value = tkinter.StringVar()
         self.config(textvariable=self.value,
                     # width=8,
-                    relief="ridge", font=textFont1,
+                    relief="ridge",
+                    font=textFont1,
                     bg="#ddddddddd", fg="#000000000",
+                    highlightthickness=0,
                     justify='center')
-        self.grid(column=x, row=y, padx=1, pady=1)
+        self.grid(column=x, row=y, padx=0, pady=0, sticky=tkinter.W+tkinter.E+tkinter.S+tkinter.N)
         self.value.set("")
 
 
 class EntryGrid(tkinter.Tk):
     ''' Dialog box with Entry widgets arranged in columns and rows.'''
-    def __init__(self, colList, rowList, title="Entry Grid"):
+    def __init__(self, colList, rowList, title="Irrigator"):
         self.cols = colList[:]
         self.colList = colList[:]
         self.colList.insert(0, "")
@@ -46,10 +49,14 @@ class EntryGrid(tkinter.Tk):
         tkinter.Tk.__init__(self)
         self.title(title)
 
-        self.mainFrame = tkinter.Frame(self, borderwidth=0)
+        self.commands_frame = tkinter.Frame(self, bg="orange", width=300)
+        self.commands_frame.pack(side=tkinter.RIGHT)
+
+        self.mainFrame = tkinter.Frame(self, borderwidth=0, width=500)
         # self.mainFrame.config(padx='3.0m', pady='3.0m')
         self.mainFrame.config(padx='0.0m', pady='0.0m')
-        self.mainFrame.grid()
+        self.mainFrame.pack(side=tkinter.LEFT, fill=tkinter.Y)
+        # self.mainFrame.grid()
         self.make_header()
 
         self.gridDict = {}
@@ -61,6 +68,11 @@ class EntryGrid(tkinter.Tk):
                 def handler(event, col=i-1, row=j):
                     return self.__entryhandler(col, row)
                 w.bind(sequence="<FocusOut>", func=handler)
+
+        for i in range(len(self.colList)+1):
+            self.mainFrame.columnconfigure(i,weight=1)
+        for i in range(len(self.rowList)+1):
+            self.mainFrame.rowconfigure(i,weight=1)
 
         newt = tkinter.Button(self.mainFrame, text='pita', width=15)
         newt.grid(row=len(self.rowList)+2, column=4, columnspan=3)
@@ -97,10 +109,6 @@ class EntryGrid(tkinter.Tk):
         ''' enter a number into each Entry field '''
         for i in range(len(self.cols)):
             for j in range(len(self.rowList)):
-                sleep(0.25)
-                self.set(i,j,"")
-                self.update_idletasks()
-                sleep(0.1)
                 self.set(i,j,i+1+j)
                 self.update_idletasks()
 

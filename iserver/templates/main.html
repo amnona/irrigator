@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Irrigator</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<script>
+	// auto reload every 5 seconds
+	setTimeout(function() {window.location.reload(1);}, 5000);
+
+
+	function close_faucet(faucet_name) {
+        $.ajax({ 
+            type:"GET", 
+            url:"/manual_close/" + faucet_name,
+            success:function(data){ 
+                alert('faucet '+faucet_name+' closed\n'+data)
+            },
+            cache: false
+        });		
+	}
+	function open_faucet(faucet_name) {
+        $.ajax({ 
+            type:"GET", 
+            url:"/manual_open/" + faucet_name,
+            success:function(data){ 
+                alert('faucet '+faucet_name+' opened\n'+data)
+            },
+            cache: false
+        });		
+	}
+</script>
+<body>
+<h2>
+	Irrigator v0.1
+</h2>

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, Response
+from flask import Blueprint, request, Response, render_template
 import os
 import csv
 from logging import getLogger
@@ -139,6 +139,25 @@ def get_faucets():
 	return faucet_list
 
 
+def _faucets_info():
+	'''Get the row about all faucet
+
+	Parameters
+	----------
+
+	Returns
+	-------
+	list of dict of type:data
+	'''
+	logger.debug('_getting faucets info')
+	output=[]
+	with open(get_faucets_file_name()) as fl:
+		ffile = csv.DictReader(fl, delimiter='\t')
+		for row in ffile:
+			output.append(row)
+	return output
+
+
 @Site_Main_Flask_Obj.route('/faucet_info/<faucet>', methods=['GET'])
 @requires_auth
 def faucet_info(faucet):
@@ -165,3 +184,30 @@ def faucet_info(faucet):
 	if info=='':
 		info='%s not found' % faucet
 	return info
+
+
+@Site_Main_Flask_Obj.route('/', methods=['GET'])
+@requires_auth
+def main_site():
+	wpage = render_template('main.html')
+	wpage += '<table>'
+	wpage += '<thead><tr><th>Name</th><th>Relay</th><th>Duration</th><th>Status</th></tr></thead>'
+	wpage += '<tbody>'
+	faucets = _faucets_info()
+	for cfaucet in faucets:
+		cname = cfaucet.get('name','NA')
+		crelay = cfaucet.get('relay','NA')
+		cduration = cfaucet.get('default_duration','NA')
+		cstatus = 'Unknown'
+		wpage += '<tr>'
+		wpage += '<td>%s</td>' % cname
+		wpage += '<td>%s</td>' % crelay
+		wpage += '<td>%s</td>' % cduration
+		wpage += '<td>%s</td>' % cstatus
+		wpage += '<td><button id=".button-test" type="button" onclick="open_faucet(\'%s\')">open</button></td>' % cname
+		wpage += '<td><button id=".button-test" type="button" onclick="close_faucet(\'%s\')">close</button></td>' % cname
+		wpage += '</tr>'
+	wpage += '</tbody></table>'
+	wpage += '</body>'
+	wpage += '</html>'
+	return wpage
