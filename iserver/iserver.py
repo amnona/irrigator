@@ -4,6 +4,7 @@ from logging import getLogger
 import sys
 
 logger = getLogger(__name__)
+logger.setLevel('DEBUG')
 
 print('hello', file=sys.stderr)
 
