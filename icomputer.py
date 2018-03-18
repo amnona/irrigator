@@ -10,7 +10,7 @@ from faucet import get_faucet_class
 from timers import Timer, WeeklyTimer, SingleTimer
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler())
+# logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
 
