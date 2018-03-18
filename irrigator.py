@@ -2,18 +2,17 @@
 
 import logging
 from logging import getLogger
-import datetime
 from pkg_resources import resource_filename
 from logging.config import fileConfig
 
 
 import icomputer
-import timers
 
 logger = getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-log = resource_filename(__package__, 'log.cfg')
+log = 'log.cfg'
+# log = resource_filename(__package__, 'log.cfg')
 
 # setting False allows other logger to print log.
 fileConfig(log, disable_existing_loggers=False)
