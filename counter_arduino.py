@@ -1,11 +1,13 @@
-from logging import getLogger
+import logging
 import datetime
 
 import serial
 
 from counter import Counter
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 MIN_FLOW_INTERVAL = 60
 
@@ -60,7 +62,7 @@ class CounterArduino(Counter):
         try:
             self.count = int(count)
         except:
-            print('count read conversion to int failed. count was: %s (counter %s, serial %s)' % (count, self.name, self.serial_name))
+            logger.debug('count read conversion to int failed. count was: %s (counter %s, serial %s)' % (count, self.name, self.serial_name))
         logger.debug('new count for %s pin %s: %d' % (self.serial_name, self.iopin, self.count))
         ctime = datetime.datetime.now()
         time_delta = (ctime - self.last_water_time).seconds
