@@ -5,8 +5,7 @@ import serial
 from faucet import Faucet
 
 logger = logging.getLogger(__name__)
-# logger.addHandler(logging.StreamHandler())
-# logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
 
 
 class NumatoFaucet(Faucet):
