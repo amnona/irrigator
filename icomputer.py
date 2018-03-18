@@ -387,8 +387,10 @@ class IComputer:
 					if cfaucet.name in should_be_open:
 						cfaucet.open()
 						cfaucet.start_water = -1
+						logger.debug('opening faucet %s' % cfaucet.name)
 						for ccounter in self.counters:
 							if ccounter.name == cfaucet.counter:
+								logger.debug('found counter %s. start water for faucet %s: %s' % (ccounter.name, cfaucet.name, cfaucet.start_water))
 								cfaucet.start_water = ccounter.get_count()
 						self.write_action_log('opened faucet %s start water=%d' % (cfaucet.name, cfaucet.start_water))
 

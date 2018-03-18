@@ -5,8 +5,8 @@ import serial
 from faucet import Faucet
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+# logger.addHandler(logging.StreamHandler())
+# logger.setLevel(logging.DEBUG)
 
 
 class NumatoFaucet(Faucet):
@@ -64,7 +64,7 @@ class NumatoFaucet(Faucet):
             logger.warning('read_relay for %s idx %s failed' % (self.name, relay_idx))
             return None
 
-    def  write_relay(self, relay_idx, relay_cmd):
+    def write_relay(self, relay_idx, relay_cmd):
         '''
         :param relay_idx:
             "1"-"9","A"-"F"
