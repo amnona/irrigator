@@ -264,7 +264,7 @@ class IComputer:
 
 	def write_action_log(self, msg):
 		with open(self.actions_log_file, 'a') as fl:
-			fl.write('%s' % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+			fl.write('%s ' % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 			fl.write(msg)
 			fl.write('\n')
 
