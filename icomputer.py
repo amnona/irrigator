@@ -170,8 +170,7 @@ class IComputer:
 					ctimer = WeeklyTimer(duration=row['duration'], cfaucet=self.faucets[cfaucetname], start_day=row['start_day'], start_time=start_time)
 				elif ttype == 'single':
 					start_datetime = datetime.datetime(year=int(row['start_year']), month=int(row['start_month']), day=int(row['start_date']), hour=int(row['start_hour']), minute=int(row['start_minute']))
-					ctimer = SingleTimer(duration=row['duration'], cfaucet=self.faucets[cfaucetname],
-										 start_datetime=start_datetime)
+					ctimer = SingleTimer(duration=row['duration'], cfaucet=self.faucets[cfaucetname], start_datetime=start_datetime)
 				else:
 					ctimer = Timer(row['duration'], self.faucets[cfaucetname])
 				logger.debug('added timer %s' % ctimer)
@@ -413,7 +412,7 @@ class IComputer:
 						continue
 					# are any faucets on this counter open?
 					if ccounter.name not in num_open:
-						print('no open faucets for this counter (not in num_open)')
+						print('no open faucets for counter %s (not in num_open)' % ccounter.name)
 						continue
 					# is more than one faucet on this counter open?
 					if len(num_open[ccounter.name]) > 1:
@@ -423,7 +422,7 @@ class IComputer:
 					cur_faucet_name = num_open[ccounter.name][0]
 					with open('water-log-faucet-%s-%s.txt' % (cur_faucet_name, self.computer_name), 'a') as cfl:
 						cfl.write('%s\t%d\t%f\n' % (time.asctime(), ccounter.get_count(), ccounter.flow))
-						print('open faucet %s count %d flow %f' % (cur_faucet_name, ccounter.get_count(), ccounter.flow))
+						print('open faucet %s count %d flow %f (counter %s)' % (cur_faucet_name, ccounter.get_count(), ccounter.flow, ccounter.name))
 
 			# check for changed files
 			# check manual open/close file

@@ -60,7 +60,7 @@ class CounterArduino(Counter):
         try:
             self.count = int(count)
         except:
-            print('count read conversion to int failed. count was: %s' % count)
+            print('count read conversion to int failed. count was: %s (counter %s, serial %s)' % (count, self.name, self.serial_name))
         logger.debug('new count for %s pin %s: %d' % (self.serial_name, self.iopin, self.count))
         ctime = datetime.datetime.now()
         time_delta = (ctime - self.last_water_time).seconds
