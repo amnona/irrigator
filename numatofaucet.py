@@ -55,6 +55,10 @@ class NumatoFaucet(Faucet):
         try:
             relay_idx = self.relay_idx
             ser_port = serial.Serial(self.port_name, 19200, timeout=1)
+
+            # empty the read buffer (don't need old output)
+            ser_port.reset_input_buffer()
+
             ser_port.write(("relay read " + relay_idx + "\n\r").encode('utf-8'))
             response = ser_port.read(25)
             ser_port.close()
