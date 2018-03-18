@@ -87,6 +87,8 @@ class NumatoFaucet(Faucet):
         res = self.write_relay(self.relay_idx, 'on')
         if res:
             self.isopen = True
+        status = self.read_relay()
+        logger.debug('open. got response %s' % status)
         return res
 
     def close(self):
@@ -94,4 +96,6 @@ class NumatoFaucet(Faucet):
         res = self.write_relay(self.relay_idx, 'off')
         if res:
             self.isopen = False
+        status = self.read_relay()
+        logger.debug('close. got response %s' % status)
         return res
