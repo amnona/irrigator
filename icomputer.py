@@ -36,7 +36,7 @@ class IComputer:
 		# load the irrigation computer config file
 		if icomputer_conf_file is not None:
 			self.read_config_file(icomputer_conf_file)
-		print(self.computer_name)
+		logger.debug('initializing computer %s' % self.computer_name)
 		if self.actions_log_file is None:
 			self.actions_log_file = self.computer_name + '_actions.txt'
 		if self.status_file is None:
@@ -404,7 +404,7 @@ class IComputer:
 					# write water log
 					with open('water-log-%s-%s.txt' % (self.computer_name, ccounter.name),'a') as cfl:
 						cfl.write('%s\t%d\t%f\n' % (time.asctime(), ccounter.get_count(), ccounter.flow))
-						print('Counter %s count %d flow %f' % (ccounter.name, ccounter.last_water_read, ccounter.flow))
+						logger.debug('Counter %s count %d flow %f' % (ccounter.name, ccounter.last_water_read, ccounter.flow))
 
 			# per line water usage (if open alone on a counter)
 			if ticks % 60 == 0:
@@ -413,17 +413,17 @@ class IComputer:
 						continue
 					# are any faucets on this counter open?
 					if ccounter.name not in num_open:
-						print('no open faucets for counter %s (not in num_open)' % ccounter.name)
+						logger.debug('no open faucets for counter %s (not in num_open)' % ccounter.name)
 						continue
 					# is more than one faucet on this counter open?
 					if len(num_open[ccounter.name]) > 1:
-						print('more than one open for counter %s: %s' % (ccounter.name, num_open[ccounter.name]))
+						logger.debug('more than one open for counter %s: %s' % (ccounter.name, num_open[ccounter.name]))
 						continue
 					# write water log
 					cur_faucet_name = num_open[ccounter.name][0]
 					with open('water-log-faucet-%s-%s.txt' % (cur_faucet_name, self.computer_name), 'a') as cfl:
 						cfl.write('%s\t%d\t%f\n' % (time.asctime(), ccounter.get_count(), ccounter.flow))
-						print('open faucet %s count %d flow %f (counter %s)' % (cur_faucet_name, ccounter.get_count(), ccounter.flow, ccounter.name))
+						logger.debug('open faucet %s count %d flow %f (counter %s)' % (cur_faucet_name, ccounter.get_count(), ccounter.flow, ccounter.name))
 
 			# check for changed files
 			# check manual open/close file
