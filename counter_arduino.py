@@ -2,6 +2,7 @@ import logging
 import datetime
 
 import serial
+import os
 
 from counter import Counter
 
@@ -13,15 +14,32 @@ MIN_FLOW_INTERVAL = 60
 
 
 class CounterArduino(Counter):
-    def __init__(self, name, computer_name, iopin, serial_name='/dev/ttyACM0'):
+    def __init__(self, name, computer_name, iopin, serial_name=None):
         super().__init__(name=name, computer_name=computer_name)
         self.iopin = iopin
+        if serial_name is None:
+            serial_name = self.get_serial_port()
         self.serial_name = serial_name
         self.last_water_read = -1
         self.last_water_time = datetime.datetime.now()
         self.flow = -1
         self.serial = None
         self.clear_count()
+
+    def get_serial_port(self):
+        # find and set the correct port name
+        dev_list_dir = '/dev/serial/by-id/'
+        port_names = [os.path.join(dev_list_dir,x) for x in os.listdir(dev_list_dir)]
+        port_names = [x for x in port_names if 'usb-Arduino' in x]
+        if len(port_names) == 0:
+            logger.warning('no Arduino connected. cannot contact counter %s' % self.name)
+            return None
+        if len(port_names)>1:
+            logger.warning('found more than one Arduino (%d) connected to counter %s' % (len(port_names), self.name))
+        found_port = port_names[0]
+        logger.debug('Found serial port %s for counter %s' % (found_port, self.name))
+        return found_port
+
 
     def open_serial(self):
         '''Get the USB(serial) port connection for the arduino and set it in self.serial
@@ -34,6 +52,7 @@ class CounterArduino(Counter):
         '''
         if self.serial is not None:
             return self.serial
+        self.serial_name = self.get_serial_port()
         try:
             self.serial = serial.Serial(self.serial_name, 9600, timeout=1)
         except serial.serialutil.SerialException:

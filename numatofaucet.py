@@ -1,6 +1,7 @@
 import logging
 
 import serial
+import os
 
 from faucet import Faucet
 
@@ -9,15 +10,16 @@ logger.setLevel(logging.DEBUG)
 
 
 class NumatoFaucet(Faucet):
-#    def __init__(self, port_name = '/dev/tty.usbmodem1421', **kwargs):
-    def __init__(self, port_name='/dev/ttyACM0', **kwargs):
+    def __init__(self, port_name=None, **kwargs):
         super().__init__(**kwargs)
         # if the relay is a number, convert to hex letter
         try:
             self.relay_idx = self.relay_idx_from_num(self.relay_idx)
         except:
             self.relay_idx = str(self.relay_idx)
-        self.port_name = self.get_serial_port()
+        if port_name is None:
+            port_name = self.get_serial_port()
+        self.port_name = port_name
 
     def relay_idx_from_num(self, relay_num):
         '''Get the relay index string from the relay number
@@ -30,8 +32,14 @@ class NumatoFaucet(Faucet):
 
     def get_serial_port(self):
         # find and set the correct port name
-        port_names = ['/dev/ttyACM0']
+        # port_names = ['/dev/serial/by-id/usb-Numato_Systems_Pvt._Ltd._Numato_Lab_16_Channel_USB_Relay_Module-if00']
         # port_names = ['/dev/ttyACM0', '/dev/tty.usbmodem1421']
+        dev_list_dir = '/dev/serial/by-id/'
+        port_names = [os.path.join(dev_list_dir,x) for x in os.listdir(dev_list_dir)]
+        port_names = [x for x in port_names if 'usb-Numato_Systems_Pvt._Ltd._Numato_Lab_16_Channel_USB_Relay' in x]
+        if len(port_names) == 0:
+            logger.warning('no Numato 16 channel relays connected. cannot contact faucet %s' % self.name)
+            return None
         found_port = None
         for cport in port_names:
             try:
