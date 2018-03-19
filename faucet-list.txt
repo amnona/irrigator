@@ -1,20 +1,20 @@
 name	idx	computer_name	relay	faucet_type	default_duration	counter
-east fence	2	dani	1	NumatoFaucet	20	none
-east drips	1	dani	2	NumatoFaucet	45	none
-north sprinklers	3	dani	3	NumatoFaucet	30	main-garden
-north matazim	4	dani	4	NumatoFaucet	30	main-garden
-north pingpong	5	dani	5	NumatoFaucet	30	main-garden
-south pingpong	6	dani	6	NumatoFaucet	30	main-garden
-south pool	7	dani	7	NumatoFaucet	30	main-garden
-main drips	8	dani	8	NumatoFaucet	120	main-garden
-tapuz pecan	9	dani	9	NumatoFaucet	30	main-garden
-tapuz satsuma	10	dani	10	NumatoFaucet	30	main-garden
-between houses	11	dani	11	NumatoFaucet	45	main-garden
-eyal entrance drips	12	dani	12	NumatoFaucet	60	main-garden
-pecan	13	dani	13	NumatoFaucet	120	main-garden
-dani rose drips	14	dani	14	NumatoFaucet	150	main-garden
-studio drips	15	dani	15	NumatoFaucet	25	main-garden
-afarsermon drips	16	dani	16	NumatoFaucet	60	main-garden
+east fence	2	dani	0	NumatoFaucet	20	none
+east drips	1	dani	1	NumatoFaucet	45	none
+north sprinklers	3	dani	2	NumatoFaucet	30	main-garden
+north matazim	4	dani	3	NumatoFaucet	30	main-garden
+north pingpong	5	dani	4	NumatoFaucet	30	main-garden
+south pingpong	6	dani	5	NumatoFaucet	30	main-garden
+south pool	7	dani	6	NumatoFaucet	30	main-garden
+main drips	8	dani	7	NumatoFaucet	120	main-garden
+tapuz pecan	9	dani	8	NumatoFaucet	30	main-garden
+tapuz satsuma	10	dani	9	NumatoFaucet	30	main-garden
+between houses	11	dani	10	NumatoFaucet	45	main-garden
+eyal entrance drips	12	dani	11	NumatoFaucet	60	main-garden
+pecan	13	dani	12	NumatoFaucet	120	main-garden
+dani rose drips	14	dani	13	NumatoFaucet	150	main-garden
+studio drips	15	dani	14	NumatoFaucet	25	main-garden
+afarsermon drips	16	dani	15	NumatoFaucet	60	main-garden
 ziva roses sprinkler	21	amnon	1	NumatoFaucet	25	main-garden
 ziva roses drips	23	amnon	3	NumatoFaucet	150	main-garden
 ziva entrance drips	24	amnon	4	NumatoFaucet	120	main-garden
