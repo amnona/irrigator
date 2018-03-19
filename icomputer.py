@@ -229,9 +229,9 @@ class IComputer:
 						logger.warning('cannot close faucet %s - not found' % cfaucet)
 						continue
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
-						self.write_action_log('manually closed faucet %s' % cfaucet.name)
+						self.write_action_log('manually closed faucet %s' % cfaucet)
 						self.faucets[cfaucet].close()
-						logger.info('manually closed faucet %s' % cfaucet.name)
+						logger.info('manually closed faucet %s' % cfaucet)
 					else:
 						logger.warning('cannot close. faucet %s not on this computer' % cfaucet)
 					delete_list=[]
