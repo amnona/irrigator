@@ -4,6 +4,7 @@ import csv
 from logging import getLogger
 from functools import wraps
 import configparser
+from collections import defaultdict
 
 logger = getLogger(__name__)
 
@@ -76,8 +77,22 @@ def get_status_file_name():
 	return '%s_status.txt' % computer_name
 
 
+def get_timers_file_name():
+	'''Get the file name for irrigation timers file
+
+	Parameters
+	----------
+
+	Returns
+	-------
+	file_name : str
+		the manual commands file name
+	'''
+	return 'timer-list.txt'
+
+
 def get_faucets_file_name():
-	'''Get the file name for the manual commands file
+	'''Get the file name for faucets info file
 
 	Parameters
 	----------
@@ -88,6 +103,19 @@ def get_faucets_file_name():
 		the manual commands file name
 	'''
 	return 'faucet-list.txt'
+
+
+def get_timers(timers_file=None):
+	if timers_file is None:
+		timers_file = get_timers_file_name()
+
+	timers = []
+	with open(timers_file) as fl:
+			ffile = csv.DictReader(fl, delimiter='\t')
+			for row in ffile:
+				timers.append(row)
+	logger.debug('loaded %d timers' % len(timers))
+	return timers
 
 
 def get_status():
@@ -238,6 +266,57 @@ def main_site():
 		wpage += '<td>%s</td>' % cstatus
 		wpage += '<td><button id=".button-test" type="button" onclick="open_faucet(\'%s\')">open</button></td>' % cname
 		wpage += '<td><button id=".button-test" type="button" onclick="close_faucet(\'%s\')">close</button></td>' % cname
+		wpage += '</tr>'
+	wpage += '</tbody></table>'
+	wpage += '</body>'
+	wpage += '</html>'
+	return wpage
+
+
+@Site_Main_Flask_Obj.route('/schedule', methods=['GET'])
+@requires_auth
+def schedule():
+	days = ['Time', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+	timers = get_timers()
+	schedule = {}
+	for cday in days:
+		schedule[cday] = defaultdict(list)
+	for ctimer in timers:
+		cday = int(ctimer.get('start_day',0))
+		if cday == 0:
+			continue
+		if 'start_hour' not in ctimer:
+			continue
+		cstart_hour = int(ctimer['start_hour'])
+		if 'start_minute' not in ctimer:
+			continue
+		cstart_minute = int(ctimer['start_minute'])
+		schedule[days[cday]][cstart_hour].append(ctimer)
+	wpage = render_template('main.html')
+	wpage += '<table border="3px solid purple">'
+	wpage += '<thead><tr>'
+	for cday in days:
+		wpage += '<th>%s</th>' % cday
+	wpage += '</tr></thead>'
+	wpage += '<tbody>'
+	hours = []
+	for chour in range(24):
+		hours.append(chour)
+	for chour in hours:
+		wpage += '<tr>'
+		wpage += '<td>%s</td>' % chour
+		for cday in days:
+			if cday==days[0]:
+				continue
+			else:
+				if chour in schedule[cday]:
+					relay_nums=[]
+					for crelay in schedule[cday][chour]:
+						relay_nums.append(crelay.get('faucet_num','NA'))
+					relay_nums = ','.join(relay_nums)
+					wpage += '<td onClick="document.location.href=\'http://127.0.01:5000\';">%s</td>' % relay_nums
+				else:
+					wpage += '<td onClick="document.location.href=\'http://127.0.01:5000\';"></td>'
 		wpage += '</tr>'
 	wpage += '</tbody></table>'
 	wpage += '</body>'

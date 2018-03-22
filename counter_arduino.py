@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-MIN_FLOW_INTERVAL = 60
+MIN_FLOW_INTERVAL = 45
 
 
 class CounterArduino(Counter):
@@ -61,7 +61,8 @@ class CounterArduino(Counter):
         return self.serial
 
     def get_count(self):
-        '''Get the water count for the counter
+        '''Get the water count for the counter.
+        Also updates the self.flow if time from last read > MIN_FLOW_INTERVAL
 
         Returns:
         --------
@@ -82,11 +83,16 @@ class CounterArduino(Counter):
             self.count = int(count)
         except:
             logger.debug('count read conversion to int failed. count was: %s (counter %s, serial %s)' % (count, self.name, self.serial_name))
+            return self.count
         logger.debug('new count for %s pin %s: %d' % (self.serial_name, self.iopin, self.count))
         ctime = datetime.datetime.now()
         time_delta = (ctime - self.last_water_time).seconds
         if time_delta > MIN_FLOW_INTERVAL:
+            # if we had a problem reading (or first read), flow will be 0
+            if self.last_water_read == -1:
+                self.last_water_read = self.count
             self.flow = (self.count - self.last_water_read) * 60 / time_delta
+            logger.debug('flow for %s: %f (current %f, last %f, time %f)' % (self.name, self.flow, self.count, self.last_water_read, time_delta))
             self.last_water_time = ctime
             self.last_water_read = self.count
         return self.count
