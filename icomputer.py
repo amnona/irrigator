@@ -19,7 +19,7 @@ class IComputer:
 	# timers list (list of timers.Timer)
 	timers = []
 	# water counters. Keyed by name
-	wcounters = {}
+	counters = {}
 	# number of faucets open concurrently for each water counter
 	# key is water counter name
 	num_open = {}
@@ -78,7 +78,7 @@ class IComputer:
 		:return:
 		'''
 		logger.debug('read counters from file %s' % counters_file)
-		self.counters = []
+		self.counters = {}
 		with open(counters_file) as fl:
 			ffile = csv.DictReader(fl, delimiter='\t')
 			for row in ffile:
@@ -103,7 +103,7 @@ class IComputer:
 				else:
 					logger.warning('counter type %s for counter %s unknown' % (ttype, row['name']))
 					continue
-				self.counters.append(ccounter)
+				self.counters[name] = ccounter
 		self.counters_file = counters_file
 		self.counters_file_timestamp = os.stat(self.counters_file).st_mtime
 
@@ -392,10 +392,10 @@ class IComputer:
 						cfaucet.open()
 						cfaucet.start_water = -1
 						logger.debug('opening faucet %s' % cfaucet.name)
-						for ccounter in self.counters:
-							if ccounter.name == cfaucet.counter:
-								logger.debug('found counter %s. start water for faucet %s: %s' % (ccounter.name, cfaucet.name, cfaucet.start_water))
-								cfaucet.start_water = ccounter.get_count()
+						if cfaucet.counter in self.counters:
+							ccounter = self.counters[cfaucet.counter]
+							logger.debug('found counter %s. start water for faucet %s: %s' % (ccounter.name, cfaucet.name, cfaucet.start_water))
+							cfaucet.start_water = ccounter.get_count()
 						self.write_action_log('opened faucet %s start water=%d' % (cfaucet.name, cfaucet.start_water))
 
 			# delete timers in the delete list
@@ -403,7 +403,7 @@ class IComputer:
 
 			# go over water counters
 			if ticks % 60 == 0:
-				for ccounter in self.counters:
+				for ccounter in self.counters.values():
 					if ccounter.computer_name != self.computer_name:
 						continue
 					# write water log
@@ -413,7 +413,7 @@ class IComputer:
 
 			# per line water usage (if open alone on a counter)
 			if ticks % 60 == 0:
-				for ccounter in self.counters:
+				for ccounter in self.counters.values():
 					if ccounter.computer_name != self.computer_name:
 						continue
 					# are any faucets on this counter open?
