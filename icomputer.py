@@ -229,7 +229,16 @@ class IComputer:
 						logger.warning('cannot close faucet %s - not found' % cfaucet)
 						continue
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
-						self.write_action_log('manually closed faucet %s' % cfaucet)
+						the_faucet = self.faucets[cfaucet]
+						if the_faucet.counter != 'none':
+							if the_faucet.counter in self.counters:
+								total_water = self.counters[the_faucet.counter].get_count() - the_faucet.start_water
+							else:
+								logger.debug('counter %s for faucet %s not found' % (the_faucet.counter, cfaucet))
+								total_water = -1
+						else:
+							total_water = -1
+						self.write_action_log('manually closed faucet %s, water=%d' % (cfaucet, total_water))
 						self.faucets[cfaucet].close()
 						logger.info('manually closed faucet %s' % cfaucet)
 					else:
