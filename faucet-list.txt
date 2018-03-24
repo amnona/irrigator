@@ -11,9 +11,9 @@ tapuz pecan	9	dani	8	NumatoFaucet	30	main-garden
 tapuz satsuma	10	dani	9	NumatoFaucet	30	main-garden
 between houses	11	dani	10	NumatoFaucet	45	main-garden
 eyal entrance drips	12	dani	11	NumatoFaucet	60	main-garden
-pecan	13	dani	12	NumatoFaucet	120	main-garden
+studio drips	13	dani	12	NumatoFaucet	25	main-garden
 dani rose drips	14	dani	13	NumatoFaucet	150	main-garden
-studio drips	15	dani	14	NumatoFaucet	25	main-garden
+pecan	15	dani	14	NumatoFaucet	120	main-garden
 afarsermon drips	16	dani	15	NumatoFaucet	60	main-garden
 ziva roses sprinkler	21	amnon	1	NumatoFaucet	25	main-garden
 ziva roses drips	23	amnon	3	NumatoFaucet	150	main-garden
