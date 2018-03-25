@@ -35,7 +35,10 @@ def upload_file(dbx_key, dir_name, files):
         print('uploading file %s' % cfile)
         with open(cfile,'rb') as fl:
             dat = fl.read()
-            dbx.files_alpha_upload(dat, path=os.path.join(dir_name, cfile), mode=dropbox.dropbox.files.WriteMode('overwrite', None))
+            try:
+                dbx.files_alpha_upload(dat, path=os.path.join(dir_name, cfile), mode=dropbox.dropbox.files.WriteMode('overwrite', None))
+            except Exception as err:
+                print('upload %s failed. error=%s' % (cfile, err))
         print('file %s uploaded' % cfile)
 
 
@@ -44,7 +47,10 @@ def get_file(dbx, dir_name, file_name):
     read a file from dropbox to local directory
     '''
     print('getting file %s' % file_name)
-    dbx.files_download_to_file(file_name, os.path.join(dir_name, file_name))
+    try:
+        dbx.files_download_to_file(file_name, os.path.join(dir_name, file_name))
+    except Exception as err:
+        print('error getting file %s. error=%s' % (file_name, err))
     print('got file %s' % file_name)
 
 
@@ -77,7 +83,11 @@ def synchronize_dropbox(dbx_key, dir_name, files):
                 print('file %s does not exist')
                 need_to_pull = True
             else:
-                properties = dbx.files_alpha_get_metadata(cname)
+                try:
+                    properties = dbx.files_alpha_get_metadata(cname)
+                except Exception as err:
+                    print('error getting properties for file %s. error=%s' % (cname, err))
+                    continue
                 print(properties)
                 print('local file time stamp:')
                 print(datetime.datetime.fromtimestamp(os.stat(cfile).st_mtime))

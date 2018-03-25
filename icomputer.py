@@ -77,7 +77,7 @@ class IComputer:
 					the pin used to output voltage for counter, or 'none' to not output voltage
 		:return:
 		'''
-		logger.debug('read counters from file %s' % counters_file)
+		logger.info('read counters from file %s' % counters_file)
 		self.counters = {}
 		with open(counters_file) as fl:
 			ffile = csv.DictReader(fl, delimiter='\t')
@@ -122,7 +122,7 @@ class IComputer:
 				relay (str) : name of the relay
 				port (str): the port on the relay for the faucet
 		'''
-		logger.debug('read faucets from file %s' % faucets_file)
+		logger.info('read faucets from file %s' % faucets_file)
 		self.close_all()
 		self.faucets = {}
 		with open(faucets_file) as fl:
@@ -135,7 +135,7 @@ class IComputer:
 					continue
 				faucet_class = get_faucet_class(faucet_type)
 				cfaucet = faucet_class(**dict(row))
-				logger.debug('added faucet %s' % cfaucet)
+				logger.info('added faucet %s' % cfaucet)
 				self.faucets[fname] = cfaucet
 		self.faucets_file = faucets_file
 		self.faucets_file_timestamp = os.stat(self.faucets_file).st_mtime
@@ -153,7 +153,7 @@ class IComputer:
 					'single' : a timer that goes off once in the given date/time
 				duration (int): the duration of the timer irrigation in minutes
 		'''
-		logger.debug('read timers from file %s' % timers_file)
+		logger.info('read timers from file %s' % timers_file)
 		self.close_all()
 		self.timers = []
 		with open(timers_file) as fl:
@@ -221,7 +221,7 @@ class IComputer:
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
 						new_timer = SingleTimer(duration=self.faucets[cfaucet].default_duration, cfaucet=self.faucets[cfaucet], start_datetime=None, is_manual=True)
 						self.timers.append(new_timer)
-						logger.info('created single timer for faucet: %s' % cfaucet)
+						logger.info('created manual single timer for faucet: %s' % cfaucet)
 					else:
 						logger.warning('cannot open. faucet %s not on this computer' % cfaucet)
 				elif ccommand[0].lower() == 'close':
@@ -379,7 +379,7 @@ class IComputer:
 					# if it is open and should close, close it
 					if cfaucet.name not in should_be_open:
 						cfaucet.close()
-						logger.debug('closing faucet %s' % cfaucet.name)
+						logger.info('closing faucet %s' % cfaucet.name)
 						if cfaucet.counter != 'none':
 							if cfaucet.counter in self.counters:
 								total_water = self.counters[cfaucet.counter].get_count() - cfaucet.start_water
@@ -400,7 +400,7 @@ class IComputer:
 					if cfaucet.name in should_be_open:
 						cfaucet.open()
 						cfaucet.start_water = -1
-						logger.debug('opening faucet %s' % cfaucet.name)
+						logger.info('opening faucet %s' % cfaucet.name)
 						if cfaucet.counter in self.counters:
 							ccounter = self.counters[cfaucet.counter]
 							logger.debug('found counter %s. start water for faucet %s: %s' % (ccounter.name, cfaucet.name, cfaucet.start_water))

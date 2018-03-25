@@ -34,13 +34,17 @@ class NumatoFaucet(Faucet):
         # find and set the correct port name
         # port_names = ['/dev/serial/by-id/usb-Numato_Systems_Pvt._Ltd._Numato_Lab_16_Channel_USB_Relay_Module-if00']
         # port_names = ['/dev/ttyACM0', '/dev/tty.usbmodem1421']
-        dev_list_dir = '/dev/serial/by-id/'
-        port_names = [os.path.join(dev_list_dir,x) for x in os.listdir(dev_list_dir)]
-        port_names = [x for x in port_names if 'usb-Numato_Systems_Pvt._Ltd._Numato_Lab_16_Channel_USB_Relay' in x]
-        if len(port_names) == 0:
-            logger.warning('no Numato 16 channel relays connected. cannot contact faucet %s' % self.name)
+        try:
+            dev_list_dir = '/dev/serial/by-id/'
+            port_names = [os.path.join(dev_list_dir,x) for x in os.listdir(dev_list_dir)]
+            port_names = [x for x in port_names if 'usb-Numato_Systems_Pvt._Ltd._Numato_Lab_16_Channel_USB_Relay' in x]
+            if len(port_names) == 0:
+                logger.warning('no Numato 16 channel relays connected. cannot contact faucet %s' % self.name)
+                return None
+            found_port = None
+        except Exception as err:
+            logger.warning('Cannot get device list for %s. err: %s' % (dev_list_dir, err))
             return None
-        found_port = None
         for cport in port_names:
             try:
                 logger.debug('trying port %s' % cport)
