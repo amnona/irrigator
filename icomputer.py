@@ -38,11 +38,11 @@ class IComputer:
 			self.read_config_file(icomputer_conf_file)
 		logger.debug('initializing computer %s' % self.computer_name)
 		if self.actions_log_file is None:
-			self.actions_log_file = self.computer_name + '_actions.txt'
+			self.actions_log_file = os.path.join('actions', self.computer_name + '_actions.txt')
 		if self.status_file is None:
-			self.status_file = self.computer_name + '_status.txt'
+			self.status_file = os.path.join('actions', self.computer_name + '_status.txt')
 		if self.commands_file is None:
-			self.commands_file = self.computer_name + '_commands.txt'
+			self.commands_file = os.path.join('actions', self.computer_name + '_commands.txt')
 		# for the manual commands file, do not read it if already exists - just the updates
 		try:
 			self.commands_file_timestamp = os.stat(self.commands_file).st_mtime
@@ -60,7 +60,7 @@ class IComputer:
 	def __repr__(self):
 		return "Computer: " + ', '.join("%s: %s" % item for item in vars(self).items())
 
-	def read_counters(self, counters_file='counter-list.txt'):
+	def read_counters(self, counters_file='data/counter-list.txt'):
 		'''
 		Load the water counters cofiguration file in to the computer class counter list
 		:param counters_file: str (optional)
@@ -107,7 +107,7 @@ class IComputer:
 		self.counters_file = counters_file
 		self.counters_file_timestamp = os.stat(self.counters_file).st_mtime
 
-	def read_faucets(self, faucets_file='faucet-list.txt'):
+	def read_faucets(self, faucets_file='data/faucet-list.txt'):
 		'''Load faucets information from config file into the computer class faucet dict
 
 		Parameters
@@ -140,7 +140,7 @@ class IComputer:
 		self.faucets_file = faucets_file
 		self.faucets_file_timestamp = os.stat(self.faucets_file).st_mtime
 
-	def read_timers(self, timers_file='timer-list.txt'):
+	def read_timers(self, timers_file='data/timer-list.txt'):
 		'''Load timers information from config file into the computer class timers list
 
 		Parameters
@@ -334,6 +334,30 @@ class IComputer:
 		for cfaucet in self.faucets.values():
 			cfaucet.close()
 
+	def write_water_log_counter(self, counter, faucet_name=None, water_dir='water'):
+		'''Write the faucet/counter water count to the log file.
+		Note by default it writes the counter file, and if faucet is not None, it writes the faucet file.
+
+		Parameters
+		----------
+		counter: Counter
+			the Counter from where to get the water total/flow values
+		faucet_name: str or None (optional)
+			None to write to faucet file or str to to write the water info for the given faucet name
+		water_dir: str (optional)
+			the directory where to write the file
+		'''
+		# if we don't have the output directory, create it
+		if not os.path.exists(water_dir):
+			os.makedirs(water_dir)
+		if faucet_name is None:
+			file_name = os.path.join(water_dir, 'water-log-%s-%s.txt' % (self.computer_name, counter.name))
+		else:
+			file_name = os.path.join(water_dir, 'water-log-faucet-%s-%s.txt' % (faucet_name, self.computer_name))
+		with open(file_name, 'a') as cfl:
+			cfl.write('%s\t%d\t%f\n' % (time.asctime(), counter.get_count(), counter.flow))
+			logger.debug('logged counter %s count %d flow %f' % (counter.name, counter.last_water_read, counter.flow))
+
 	def main_loop(self):
 		done = False
 		ticks = 0
@@ -416,9 +440,7 @@ class IComputer:
 					if ccounter.computer_name != self.computer_name:
 						continue
 					# write water log
-					with open('water-log-%s-%s.txt' % (self.computer_name, ccounter.name),'a') as cfl:
-						cfl.write('%s\t%d\t%f\n' % (time.asctime(), ccounter.get_count(), ccounter.flow))
-						logger.debug('Counter %s count %d flow %f' % (ccounter.name, ccounter.last_water_read, ccounter.flow))
+					self.write_water_log_counter(ccounter)
 
 			# per line water usage (if open alone on a counter)
 			if ticks % 60 == 0:
@@ -435,9 +457,7 @@ class IComputer:
 						continue
 					# write water log
 					cur_faucet_name = num_open[ccounter.name][0]
-					with open('water-log-faucet-%s-%s.txt' % (cur_faucet_name, self.computer_name), 'a') as cfl:
-						cfl.write('%s\t%d\t%f\n' % (time.asctime(), ccounter.get_count(), ccounter.flow))
-						logger.debug('open faucet %s count %d flow %f (counter %s)' % (cur_faucet_name, ccounter.get_count(), ccounter.flow, ccounter.name))
+					self.write_water_log_counter(ccounter, faucet=cur_faucet_name)
 
 			# check for changed files
 			# check manual open/close file
