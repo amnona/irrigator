@@ -6,11 +6,11 @@ import datetime
 import os
 from collections import defaultdict
 
-from faucet import get_faucet_class
-from timers import Timer, WeeklyTimer, SingleTimer
+from .faucet import get_faucet_class
+from .timers import Timer, WeeklyTimer, SingleTimer
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+# logger.setLevel(logging.DEBUG)
 
 
 class IComputer:

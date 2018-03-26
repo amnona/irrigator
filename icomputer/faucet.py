@@ -5,7 +5,7 @@ logger = getLogger(__name__)
 
 
 def get_faucet_class(faucet_type):
-	faucet_module = importlib.import_module(faucet_type.lower())
+	faucet_module = importlib.import_module('.'+faucet_type.lower(), 'icomputer')
 	faucet_class = getattr(faucet_module, faucet_type)
 	return faucet_class
 

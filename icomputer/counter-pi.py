@@ -1,3 +1,6 @@
+from .counter import Counter
+
+
 class CounterPi(Counter):
     '''
     A water counter class for contact (pulse) flow meter using the gpio pins

@@ -3,10 +3,10 @@ import logging
 import serial
 import os
 
-from faucet import Faucet
+from .faucet import Faucet
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+# logger.setLevel(logging.DEBUG)
 
 
 class NumatoFaucet(Faucet):

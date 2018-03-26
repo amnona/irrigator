@@ -2,7 +2,7 @@ import datetime
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+# logger.setLevel(logging.DEBUG)
 
 
 def next_weekday(d, weekday):
@@ -18,7 +18,7 @@ def next_weekday(d, weekday):
     '''
     weekday = weekday + 1
     days_ahead = weekday - d.weekday()
-    if days_ahead <= 0: # Target day already happened this week
+    if days_ahead <= 0:  # Target day already happened this week
         days_ahead += 7
     return d + datetime.timedelta(days_ahead)
 
@@ -52,6 +52,7 @@ def time_in_range(start_hour, start_minute, duration, test_time=None):
             return False
         return True
 
+
 class Timer:
     def __init__(self, duration, cfaucet):
         self.duration = int(duration)
@@ -76,6 +77,7 @@ class Timer:
         :return:
         '''
         return False
+
 
 class WeeklyTimer(Timer):
     # Timer that repeats every week on same day/time

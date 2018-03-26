@@ -69,12 +69,12 @@ def get_manual_file_name():
 		the manual commands file name
 	'''
 	computer_name = get_computer_name()
-	return '%s_commands.txt' % computer_name
+	return 'actions/%s_commands.txt' % computer_name
 
 
 def get_status_file_name():
 	computer_name = get_computer_name()
-	return '%s_status.txt' % computer_name
+	return 'actions/%s_status.txt' % computer_name
 
 
 def get_timers_file_name():
@@ -88,7 +88,7 @@ def get_timers_file_name():
 	file_name : str
 		the manual commands file name
 	'''
-	return 'timer-list.txt'
+	return 'data/timer-list.txt'
 
 
 def get_faucets_file_name():
@@ -102,7 +102,7 @@ def get_faucets_file_name():
 	file_name : str
 		the manual commands file name
 	'''
-	return 'faucet-list.txt'
+	return 'data/faucet-list.txt'
 
 
 def get_timers(timers_file=None):

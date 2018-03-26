@@ -4,7 +4,7 @@ import datetime
 import serial
 import os
 
-from counter import Counter
+from .counter import Counter
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

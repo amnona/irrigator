@@ -1,13 +1,13 @@
 import serial
 
-from counter import Counter
+from .counter import Counter
 
 
 class CounterNumato(Counter):
     '''
     A water counter class for contact (pulse) flow meter using the numato usb relay board
     '''
-    def __init__(self, iopin, voltage_pin=None, port_name = '/dev/tty.usbmodem1421'):
+    def __init__(self, iopin, voltage_pin=None, port_name='/dev/tty.usbmodem1421'):
         '''
 
         :param iopin: str
