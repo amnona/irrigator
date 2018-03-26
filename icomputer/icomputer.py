@@ -92,13 +92,13 @@ class IComputer:
 					continue
 				name = row['name']
 				if ttype == 'arduino':
-					from counter_arduino import CounterArduino
+					from .counter_arduino import CounterArduino
 					ccounter = CounterArduino(name=name, computer_name=computer_name, iopin=row['channel'])
 				elif ttype == 'numato':
-					from counter_numato import CounterNumato
+					from .counter_numato import CounterNumato
 					ccounter = CounterNumato(iopin=row['channel'], voltage_pin=voltage_pin)
 				elif ttype == 'pi':
-					from counter_pi import CounterPi
+					from .counter_pi import CounterPi
 					ccounter = CounterPi()
 				else:
 					logger.warning('counter type %s for counter %s unknown' % (ttype, row['name']))
