@@ -457,7 +457,7 @@ class IComputer:
 						continue
 					# write water log
 					cur_faucet_name = num_open[ccounter.name][0]
-					self.write_water_log_counter(ccounter, faucet=cur_faucet_name)
+					self.write_water_log_counter(ccounter, faucet_name=cur_faucet_name)
 
 			# check for changed files
 			# check manual open/close file
