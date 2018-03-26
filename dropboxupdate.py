@@ -13,8 +13,17 @@ import os
 import argparse
 import time
 import datetime
+import logging
 
 import dropbox
+
+from logging.config import fileConfig
+
+logger = logging.getLogger(__name__)
+
+log = 'log.cfg'
+# setting False allows other logger to print log.
+fileConfig(log, disable_existing_loggers=False)
 
 
 def upload_file(dbx_key, dir_name, files):
@@ -54,7 +63,7 @@ def get_file(dbx, dir_name, file_name):
     print('got file %s' % file_name)
 
 
-def synchronize_dropbox(dbx_key, dir_name, files):
+def synchronize_dropbox(dbx_key, dir_name, files, interval=30):
     '''
     main loop to synchronize with dropbox
 
@@ -64,13 +73,20 @@ def synchronize_dropbox(dbx_key, dir_name, files):
         the name of the app dropbox directory to check (i.e. '/pita')
     :param files: list of str
         list of files to check (i.e. 'timer-list.txt')
+    :param interval: int
+        the interval (seconds) for sleeping between tests
     :return:
     '''
+    logger.debug('synchronize')
     if dbx_key is None:
         try:
+            logger.debug('no dropbox key supplied. trying env')
             dbx_key = os.environ['DROPBOXKEY']
+            logger.debug('got dropbox key in environment')
         except:
-            ValueError('no dropbox key supplied in env. variable DROPBOXKEY')
+            raise ValueError('no dropbox key supplied in env. variable DROPBOXKEY')
+    else:
+        logger.debug('dbkey is: %s' % dbx_key)
     dbx = dropbox.dropbox.Dropbox(dbx_key)
 
     while True:
@@ -98,20 +114,24 @@ def synchronize_dropbox(dbx_key, dir_name, files):
             if need_to_pull:
                 print('pulling')
                 get_file(dbx, dir_name, cfile)
-        time.sleep(30)
+        time.sleep(interval)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dbkey','-k',help='dropbox app token')
+parser.add_argument('--interval','-i', help='the time interval for upload/test (seconds)', default=30, type=int)
 parser.add_argument('--dir','-d',help='dropbox dir for app', default='/pita')
 parser.add_argument('--action','-a',help='action (sync or upload)', default='sync')
 parser.add_argument('--files','-f',help='file names', nargs='*',default=['timer-list.txt'])
+parser.add_argument('--debug-level','-l',help='debug level (DEBUG/INFO/WARNING)',default='DEBUG')
 
 ns = parser.parse_args()
 
+logger.setLevel(ns.debug_level)
+
 if ns.action == 'upload':
-    upload_file(dbx_key=ns.dbkey, dir_name=ns.dir, files=ns.files)
+    upload_file(dbx_key=ns.dbkey, dir_name=ns.dir, files=ns.files, interval=ns.interval)
 elif ns.action == 'sync':
-    synchronize_dropbox(dbx_key=ns.dbkey, dir_name=ns.dir, files=ns.files)
+    synchronize_dropbox(dbx_key=ns.dbkey, dir_name=ns.dir, files=ns.files, interval=ns.interval)
 else:
     print('action %s not supported - please use "upload" or "sync"' % ns.action)
 
