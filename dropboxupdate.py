@@ -13,9 +13,11 @@ import os
 import argparse
 import time
 import datetime
+
 import logging
 
 import dropbox
+import dateutil.tz
 
 from logging.config import fileConfig
 
@@ -24,6 +26,25 @@ logger = logging.getLogger(__name__)
 log = 'log.cfg'
 # setting False allows other logger to print log.
 fileConfig(log, disable_existing_loggers=False)
+
+
+def get_gmt_time(tm):
+    '''get the GMT time for the local event.
+    used since dropbox stores the GMT time instead of local time
+
+    Parameters
+    ----------
+    tm : datetime to get the GMT when it happened
+
+    Returns
+    -------
+    datetime
+        the GMT time when tm happened
+    '''
+    localtz = dateutil.tz.tzlocal()
+    delta = localtz.utcoffset(datetime.datetime.now(localtz))
+    gmt_tm = tm - delta
+    return gmt_tm
 
 
 def watch_files(dbx_key, dir_name, files, interval=2):
@@ -139,7 +160,9 @@ def synchronize_dropbox(dbx_key, dir_name, files, interval=30):
                 logger.debug(properties)
                 logger.debug('local file time stamp:')
                 logger.debug(datetime.datetime.fromtimestamp(os.stat(cfile).st_mtime))
-                if properties.client_modified > datetime.datetime.fromtimestamp(os.stat(cfile).st_mtime):
+                logger.debug('gmt time when modified:')
+                logger.debug(get_gmt_time(datetime.datetime.fromtimestamp(os.stat(cfile).st_mtime)))
+                if properties.client_modified > get_gmt_time(datetime.datetime.fromtimestamp(os.stat(cfile).st_mtime)):
                     logger.info('file %s is old' % cname)
                     logger.debug(properties)
                     need_to_pull = True
