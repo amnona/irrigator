@@ -367,19 +367,22 @@ class IComputer:
 
 			# find out which faucets should be open (OR on all timers)
 			should_be_open = set()
+			should_be_open_all_computers = set()
 			num_open = defaultdict(list)
 			delete_list = []
 			for ctimer in self.timers:
 				if ctimer.should_be_open():
 					# add this faucet to the list of open faucets for this timer
 					num_open[ctimer.faucet.counter].append(ctimer.faucet.name)
-					# if on this computer, add to the list of timers that should be opened locally
+					# add faucet to the list of all faucets which should be open now (on all computers)
+					should_be_open_all_computers.add(ctimer.faucet.name)
+					# if on this computer, add faucet to the list of timers that should be opened locally
 					if self.is_faucet_on_computer(ctimer.faucet):
 						should_be_open.add(ctimer.faucet.name)
 				if ctimer.should_remove():
 					delete_list.append(ctimer)
 
-			# if the faucets that should be opened changed, write the status file
+			# if the faucets that should be opened changed, write the status file (local faucets only?)
 			if should_be_open != old_should_be_open:
 				self.write_status_file(should_be_open)
 				old_should_be_open = should_be_open
@@ -388,22 +391,26 @@ class IComputer:
 			# first all are alone
 			for cfaucet in self.faucets.values():
 				cfaucet.all_alone = True
+			
 			# now mark as not alone ones on a counter with more than one faucet open
 			for ccounter, faucets in num_open.items():
-				if len(faucets) > 0:
+				if len(faucets) > 1:
 					for cfaucet in faucets:
 						self.faucets[cfaucet].all_alone = False
 
 			# go over all faucets and open/close as needed
 			for cfaucet in self.faucets.values():
-				# if on another computer, ignore this timer
-				if not self.is_faucet_on_computer(cfaucet):
-					continue
 				if cfaucet.isopen:
 					# if it is open and should close, close it
-					if cfaucet.name not in should_be_open:
-						cfaucet.close()
-						logger.info('closing faucet %s' % cfaucet.name)
+					if cfaucet.name not in should_be_open_all_computers:
+						# if faucet on local computer, actually close it
+						if self.is_faucet_on_computer(cfaucet):
+							cfaucet.close()
+							action_str = 'closed'
+						else:
+							action_str = 'closed remotely'
+						logger.info('%s faucet %s' % (action_str, cfaucet.name))
+
 						if cfaucet.counter != 'none':
 							if cfaucet.counter in self.counters:
 								total_water = self.counters[cfaucet.counter].get_count() - cfaucet.start_water
@@ -415,26 +422,31 @@ class IComputer:
 						logger.debug('total water %d' % total_water)
 						if cfaucet.all_alone:
 							logger.debug('was all alone')
-							self.write_action_log('closed faucet %s water %d' % (cfaucet.name, total_water))
+							self.write_action_log('%s faucet %s water %d' % (action_str, cfaucet.name, total_water))
 						else:
 							logger.debug('was NOT all alone')
-							self.write_action_log('closed faucet %s not alone water %d' % (cfaucet.name, total_water))
+							self.write_action_log('%s faucet %s not alone water %d' % (action_str, cfaucet.name, total_water))
 				else:
 					# if it is closed and should open, open it
-					if cfaucet.name in should_be_open:
-						cfaucet.open()
+					if cfaucet.name in should_be_open_all_computers:
+						# if faucet on local computer, actually open it
+						if self.is_faucet_on_computer(cfaucet):
+							cfaucet.open()
+							action_str = 'opened'
+						else:
+							action_str = 'opened remotely'
 						cfaucet.start_water = -1
-						logger.info('opening faucet %s' % cfaucet.name)
+						logger.info('%s faucet %s' % (action_str, cfaucet.name))
 						if cfaucet.counter in self.counters:
 							ccounter = self.counters[cfaucet.counter]
 							logger.debug('found counter %s. start water for faucet %s: %s' % (ccounter.name, cfaucet.name, cfaucet.start_water))
 							cfaucet.start_water = ccounter.get_count()
-						self.write_action_log('opened faucet %s start water=%d' % (cfaucet.name, cfaucet.start_water))
+						self.write_action_log('%s faucet %s start water=%d' % (action_str, cfaucet.name, cfaucet.start_water))
 
 			# delete timers in the delete list
 			self.delete_timers(delete_list)
 
-			# go over water counters
+			# go over water counters and write the per counter water log file
 			if ticks % 60 == 0:
 				for ccounter in self.counters.values():
 					if ccounter.computer_name != self.computer_name:
@@ -445,6 +457,7 @@ class IComputer:
 			# per line water usage (if open alone on a counter)
 			if ticks % 60 == 0:
 				for ccounter in self.counters.values():
+					# only on counters on this computer
 					if ccounter.computer_name != self.computer_name:
 						continue
 					# are any faucets on this counter open?
@@ -488,9 +501,6 @@ class IComputer:
 				# logger.debug('keepalive')
 				pass
 
-			if ticks % 2 == 0:
-				# logger.debug('tick2')
-				pass
 			# sleep
 			time.sleep(1)
 			ticks += 1
