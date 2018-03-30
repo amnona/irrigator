@@ -443,7 +443,6 @@ class IComputer:
 
 			# find out which faucets should be open (OR on all timers)
 			should_be_open = set()
-			should_be_open_all_computers = set()
 			num_open = defaultdict(list)
 			delete_list = []
 			for ctimer in self.timers:
@@ -451,10 +450,7 @@ class IComputer:
 					# add this faucet to the list of open faucets for this timer
 					num_open[ctimer.faucet.counter].append(ctimer.faucet.name)
 					# add faucet to the list of all faucets which should be open now (on all computers)
-					should_be_open_all_computers.add(ctimer.faucet.name)
-					# if on this computer, add faucet to the list of timers that should be opened locally
-					if self.is_faucet_on_computer(ctimer.faucet):
-						should_be_open.add(ctimer.faucet.name)
+					should_be_open.add(ctimer.faucet.name)
 				if ctimer.should_remove():
 					delete_list.append(ctimer)
 
@@ -478,7 +474,7 @@ class IComputer:
 			for cfaucet in self.faucets.values():
 				if cfaucet.isopen:
 					# if it is open and should close, close it
-					if cfaucet.name not in should_be_open_all_computers:
+					if cfaucet.name not in should_be_open:
 						# if faucet on local computer, actually close it, otherwise pretend to close it
 						cfaucet.close()
 						if self.is_faucet_on_computer(cfaucet):
@@ -504,7 +500,7 @@ class IComputer:
 							self.write_action_log('%s faucet %s not alone water %d' % (action_str, cfaucet.name, total_water))
 				else:
 					# if it is closed and should open, open it
-					if cfaucet.name in should_be_open_all_computers:
+					if cfaucet.name in should_be_open:
 						if self.disabled:
 							if self.is_faucet_on_computer(cfaucet):
 								logger.debug('computer disabled. not opening faucet %s' % cfaucet.name)
