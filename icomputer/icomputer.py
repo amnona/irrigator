@@ -264,29 +264,29 @@ class IComputer:
 						logger.warning('cannot open faucet %s - not found' % cfaucet)
 						logger.warning('current faucets: %s' % self.faucets)
 						continue
+					new_timer = SingleTimer(duration=self.faucets[cfaucet].default_duration, cfaucet=self.faucets[cfaucet], start_datetime=None, is_manual=True)
+					self.timers.append(new_timer)
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
-						new_timer = SingleTimer(duration=self.faucets[cfaucet].default_duration, cfaucet=self.faucets[cfaucet], start_datetime=None, is_manual=True)
-						self.timers.append(new_timer)
 						logger.info('created manual single timer for faucet: %s' % cfaucet)
 					else:
-						logger.warning('cannot open. faucet %s not on this computer' % cfaucet)
+						logger.info('cannot open. faucet %s not on this computer' % cfaucet)
 				elif ccommand == 'close':
 					cfaucet = param
 					if cfaucet not in self.faucets:
 						logger.warning('cannot close faucet %s - not found' % cfaucet)
 						continue
-					if self.is_faucet_on_computer(self.faucets[cfaucet]):
-						the_faucet = self.faucets[cfaucet]
-						if the_faucet.counter != 'none':
-							if the_faucet.counter in self.counters:
-								total_water = self.counters[the_faucet.counter].get_count() - the_faucet.start_water
-							else:
-								logger.debug('counter %s for faucet %s not found' % (the_faucet.counter, cfaucet))
-								total_water = -1
+					the_faucet = self.faucets[cfaucet]
+					if the_faucet.counter != 'none':
+						if the_faucet.counter in self.counters:
+							total_water = self.counters[the_faucet.counter].get_count() - the_faucet.start_water
 						else:
+							logger.debug('counter %s for faucet %s not found' % (the_faucet.counter, cfaucet))
 							total_water = -1
-						self.write_action_log('manually closed faucet %s, water=%d' % (cfaucet, total_water))
-						self.faucets[cfaucet].close()
+					else:
+						total_water = -1
+					self.write_action_log('manually closed faucet %s, water=%d' % (cfaucet, total_water))
+					self.faucets[cfaucet].close()
+					if self.is_faucet_on_computer(self.faucets[cfaucet]):
 						logger.info('manually closed faucet %s' % cfaucet)
 					else:
 						logger.warning('cannot close. faucet %s not on this computer' % cfaucet)
