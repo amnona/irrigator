@@ -5,12 +5,13 @@ import time
 import datetime
 import os
 from collections import defaultdict
+import traceback
 
 from .faucet import get_faucet_class
 from .timers import Timer, WeeklyTimer, SingleTimer
 
 logger = logging.getLogger(__name__)
-# logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
 
 
 class IComputer:
@@ -29,10 +30,13 @@ class IComputer:
 	commands_file = None
 	# file containing the expected status of the faucets
 	status_file = None
+	# True if computer is disabled, False if not disabled (should irrigate)
+	disabled = False
 
 	def __init__(self, icomputer_conf_file='computer-config.txt'):
 		logger.debug('init icomputer')
 		self.computer_name = 'local'
+		self.icomputer_config_file = icomputer_conf_file
 		# load the irrigation computer config file
 		if icomputer_conf_file is not None:
 			self.read_config_file(icomputer_conf_file)
@@ -134,7 +138,7 @@ class IComputer:
 					logger.warning('faucet %s already defined' % fname)
 					continue
 				faucet_class = get_faucet_class(faucet_type)
-				cfaucet = faucet_class(**dict(row))
+				cfaucet = faucet_class(**dict(row), local_computer_name=self.computer_name)
 				logger.info('added faucet %s' % cfaucet)
 				self.faucets[fname] = cfaucet
 		self.faucets_file = faucets_file
@@ -190,16 +194,56 @@ class IComputer:
 				name of the irrigation computer (relays are associated with computer_name)
 			file_check_interval : int
 				interval for checking file change (seconds)
+			disabled : bool
+				True to disable irrigation from this computer, False to enable
 		'''
 		logger.debug('read config file %s' % filename)
 		config = configparser.ConfigParser()
 		config.read(filename)
 		for k, v in config['IComputer'].items():
 			setattr(self, k, v)
+		if config.has_option('IComputer','disabled'):
+			self.disabled = config.getboolean('IComputer','disabled')
+
+	def write_config_file(self):
+		'''Write the computer config from self
+
+		Writes to the config file name stored in self.icomputer_config_file
+		See read_config_file() doc for config file information
+		'''
+		filename = self.icomputer_config_file
+		logger.debug('write config file %s' % filename)
+		if filename is None:
+			logger.warning('no computer config file set. cannot write')
+			return
+		config = configparser.ConfigParser()
+		# first read all values (so we don't accidently something)
+		config.read(filename)
+		config['IComputer']['disabled'] = str(self.disabled)
+		config['IComputer']['computer_name'] = self.computer_name
+		with open(filename, 'w') as fl:
+			config.write(fl)
+		logger.debug('wrote config file %s' % filename)
 
 	def read_manual_commands(self, commands_file=None):
 		'''
 		Read the manual commands file
+
+		commands are tab separated between arguments, newline between commands.
+		can include:
+		open faucet_name(str)
+			manually open the faucet for the default faucet duration
+		close faucet_name(str)
+			manually close faucet and delete single timer
+		closeall JUNK(str)
+			manually close all faucets
+		disable computer_name(str)
+			move computer to "disable" mode (close all faucets and don't turn any on until enable)
+		enable computer_name(str)
+			enable irrigation from computer
+		set_percent percent(number+'%'')
+			change all irrigation times by percent compared to the real program (100% - original, <100% less, 200% twice long irrigations...)
+
 		:param commands_file:  str or None (optional)
 			file name of the commands file. None to use the default (computer_name + '_commands.txt')
 		:return:
@@ -208,12 +252,14 @@ class IComputer:
 			commands_file = self.commands_file
 		with open(commands_file) as cf:
 			for cline in cf:
-				ccommand = cline.strip().split('\t')
-				if len(ccommand)!=2:
+				cline = cline.strip().split('\t')
+				if len(cline)!=2:
 					logger.warning('Manual command %s does not contain 2 columns' % cline)
 					continue
-				cfaucet = ccommand[1]
-				if ccommand[0].lower()=='open':
+				ccommand = cline[0].lower()
+				param = cline[1]
+				if ccommand == 'open':
+					cfaucet = param
 					if cfaucet not in self.faucets:
 						logger.warning('cannot open faucet %s - not found' % cfaucet)
 						logger.warning('current faucets: %s' % self.faucets)
@@ -224,7 +270,8 @@ class IComputer:
 						logger.info('created manual single timer for faucet: %s' % cfaucet)
 					else:
 						logger.warning('cannot open. faucet %s not on this computer' % cfaucet)
-				elif ccommand[0].lower() == 'close':
+				elif ccommand == 'close':
+					cfaucet = param
 					if cfaucet not in self.faucets:
 						logger.warning('cannot close faucet %s - not found' % cfaucet)
 						continue
@@ -253,7 +300,7 @@ class IComputer:
 							continue
 						delete_list.append(ctimer)
 					self.delete_timers(delete_list)
-				elif ccommand[0].lower() == 'closeall':
+				elif ccommand == 'closeall':
 					self.close_all()
 					delete_list=[]
 					for ctimer in self.timers:
@@ -264,6 +311,35 @@ class IComputer:
 						delete_list.append(ctimer)
 					self.delete_timers(delete_list)
 					logger.info('closed all faucets (manual)')
+				elif ccommand == 'disable':
+					computer_name = param
+					logger.debug('manual disable computer %s' % computer_name)
+					if computer_name == self.computer_name:
+						self.disabled = True
+						self.write_config_file()
+						logger.info('computer %s disabled' % computer_name)
+						# close all currently open faucets
+						self.close_all()
+						# and delete the manual timers
+						delete_list=[]
+						for ctimer in self.timers:
+							if not isinstance(ctimer, SingleTimer):
+								continue
+							if not ctimer.is_manual:
+								continue
+							delete_list.append(ctimer)
+						self.delete_timers(delete_list)
+					else:
+						logger.debug('cannot disable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
+				elif ccommand == 'enable':
+					computer_name = param
+					logger.debug('manual enable computer %s' % computer_name)
+					if computer_name == self.computer_name:
+						self.disabled = False
+						self.write_config_file()
+						logger.info('computer %s enabled' % computer_name)
+					else:
+						logger.debug('cannot enable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
 				else:
 					logger.warning('Manual command %s not recognized' % cline)
 					continue
@@ -403,9 +479,9 @@ class IComputer:
 				if cfaucet.isopen:
 					# if it is open and should close, close it
 					if cfaucet.name not in should_be_open_all_computers:
-						# if faucet on local computer, actually close it
+						# if faucet on local computer, actually close it, otherwise pretend to close it
+						cfaucet.close()
 						if self.is_faucet_on_computer(cfaucet):
-							cfaucet.close()
 							action_str = 'closed'
 						else:
 							action_str = 'closed remotely'
@@ -429,9 +505,13 @@ class IComputer:
 				else:
 					# if it is closed and should open, open it
 					if cfaucet.name in should_be_open_all_computers:
-						# if faucet on local computer, actually open it
+						if self.disabled:
+							if self.is_faucet_on_computer(cfaucet):
+								logger.debug('computer disabled. not opening faucet %s' % cfaucet.name)
+								continue
+						# if faucet on local computer, actually open it. otherwise, pretend to open it
+						cfaucet.open()
 						if self.is_faucet_on_computer(cfaucet):
-							cfaucet.open()
 							action_str = 'opened'
 						else:
 							action_str = 'opened remotely'
@@ -481,8 +561,9 @@ class IComputer:
 				if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
 					logger.debug('Loading manual commands file')
 					self.read_manual_commands(self.commands_file)
-			except:
-				logger.warning('manual commands file %s load failed' % self.commands_file)
+			except Exception as err:
+				logger.warning('manual commands file %s load failed. error: %s' % (self.commands_file, err))
+				logger.warning(traceback.format_exc())
 				self.commands_file_timestamp = int(time.time())
 			# if not self.faucets_file_timestamp == os.stat(self.faucets_file).st_mtime:
 			# 	pass

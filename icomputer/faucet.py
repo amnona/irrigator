@@ -16,7 +16,7 @@ class Faucet:
 	# timers associated with the faucet
 	timers = []
 
-	def __init__(self, name, computer_name, faucet_type='generic', relay='0', counter='none', default_duration=30, **kwargs):
+	def __init__(self, name, computer_name, local_computer_name, faucet_type='generic', relay='0', counter='none', default_duration=30, **kwargs):
 		'''Init the faucet
 
 		Parameters
@@ -25,6 +25,8 @@ class Faucet:
 			name of the faucet (i.e. 'roses drips')
 		computer_name : str or None
 			name of the computer the faucet is connected to or None for current computer name
+		local_computer : IComputer
+			the current computer this faucet is connected to
 		faucet_type : str (optional)
 			the relay type - can be 'numato'
 		relay_idx : str or int
@@ -33,6 +35,7 @@ class Faucet:
 			the default duration of the faucet when opened manually/new timer added
 		'''
 		self.name = name
+		self.local_computer_name = local_computer_name
 		self.computer_name = computer_name
 		self.faucet_type = faucet_type
 		self.relay_idx = relay
@@ -50,11 +53,19 @@ class Faucet:
 		'''Open the faucet (water on)
 		'''
 		self.isopen = True
-		logger.debug('open faucet %s' % self.name)
+		if self.local_computer_name == self.computer_name:
+			logger.debug('generic open faucet %s' % self.name)
+		else:
+			logger.debug('generic remotely open faucet %s' % self.name)
 		self.all_alone = True
+		return False
 
 	def close(self):
 		'''Close the faucet (water off)
 		'''
 		self.isopen = False
-		logger.debug('close faucet %s' % self.name)
+		if self.local_computer_name == self.computer_name:
+			logger.debug('generic close faucet %s' % self.name)
+		else:
+			logger.debug('generic remotely close faucet %s' % self.name)
+		return False
