@@ -138,7 +138,7 @@ class IComputer:
 					logger.warning('faucet %s already defined' % fname)
 					continue
 				faucet_class = get_faucet_class(faucet_type)
-				cfaucet = faucet_class(**dict(row), local_computer_name=self.computer_name)
+				cfaucet = faucet_class(local_computer_name=self.computer_name, **dict(row))
 				logger.info('added faucet %s' % cfaucet)
 				self.faucets[fname] = cfaucet
 		self.faucets_file = faucets_file
