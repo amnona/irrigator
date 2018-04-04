@@ -115,6 +115,32 @@ def get_file(dbx, dir_name, file_name):
     print('got file %s' % file_name)
 
 
+def sync2(dbx_key, dir_name):
+    '''Update local files from remote when remote changes
+
+    Parameters
+    ----------
+    dbx_key: str
+        the dropbox API token
+    dir_name: str
+        the dropbox directory to watch
+    '''
+    logger.debug('synchronize dir')
+
+    if dbx_key is None:
+        try:
+            logger.debug('no dropbox key supplied. trying env')
+            dbx_key = os.environ['DROPBOXKEY']
+            logger.debug('got dropbox key in environment')
+        except:
+            raise ValueError('no dropbox key supplied in env. variable DROPBOXKEY')
+    else:
+        logger.debug('dbkey is: %s' % dbx_key)
+    dbx = dropbox.dropbox.Dropbox(dbx_key)
+    while True:
+        logger.debug('testing files')
+
+
 def synchronize_dropbox(dbx_key, dir_name, files, interval=30):
     '''
     main loop to synchronize with dropbox

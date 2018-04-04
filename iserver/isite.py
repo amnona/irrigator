@@ -117,6 +117,28 @@ def get_timers(timers_file=None):
 	logger.debug('loaded %d timers' % len(timers))
 	return timers
 
+def get_current_water_file_name():
+	return 'water/current_water_%s.txt' % get_computer_name()
+
+def get_current_water():
+	'''Get the current water status
+
+	Returns
+	-------
+	dict {counter (str):  dict {'total': int, 'flow': int}}
+	the current total water and water count for each counter on the computer
+	'''
+	water = {}
+	try:
+		with open(get_current_water_file_name()) as fl:
+			wfile = csv.DictReader(fl, delimiter='\t')
+			for row in wfile:
+				water[row['counter']]={}
+				water[row['counter']]['total'] = row['total']
+				water[row['counter']]['flow'] = row['flow']
+	except Exception as err:
+		logger.warning('error reading water file. %s' % err)
+	return water
 
 def get_status():
 	'''Get the open/close status of the faucets
@@ -247,12 +269,13 @@ def faucet_info(faucet):
 def main_site():
 	wpage = render_template('main.html')
 	wpage += '<table>'
-	wpage += '<thead><tr><th>Name</th><th>Relay</th><th>Duration</th><th>Status</th></tr></thead>'
+	wpage += '<thead><tr><th>Name</th><th>Computer</th><th>Relay</th><th>Duration</th><th>Status</th></tr></thead>'
 	wpage += '<tbody>'
 	faucets = _faucets_info()
 	open_faucets = get_status()
 	for cfaucet in faucets:
 		cname = cfaucet.get('name','NA')
+		ccomputer = cfaucet.get('computer_name','NA')
 		crelay = cfaucet.get('relay','NA')
 		cduration = cfaucet.get('default_duration','NA')
 		if cname in open_faucets:
@@ -261,6 +284,7 @@ def main_site():
 			cstatus = 'Closed'
 		wpage += '<tr>'
 		wpage += '<td>%s</td>' % cname
+		wpage += '<td>%s</td>' % ccomputer
 		wpage += '<td>%s</td>' % crelay
 		wpage += '<td>%s</td>' % cduration
 		wpage += '<td>%s</td>' % cstatus
@@ -319,6 +343,10 @@ def schedule():
 					wpage += '<td onClick="document.location.href=\'http://127.0.01:5000\';"></td>'
 		wpage += '</tr>'
 	wpage += '</tbody></table>'
+	counter_water= get_current_water()
+	wpage += 'Water:<br>'
+	for ccounter, cvals in counter_water.items():
+		wpage += 'Counter: %s, Water: %s, Flow: %s' % (ccounter, cvals['water'], cvals['flow'])
 	wpage += '</body>'
 	wpage += '</html>'
 	return wpage

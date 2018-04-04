@@ -11,7 +11,10 @@ from .faucet import get_faucet_class
 from .timers import Timer, WeeklyTimer, SingleTimer
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
+
+def set_log_level(level):
+	logger.setLevel(level)
 
 
 class IComputer:
@@ -529,6 +532,16 @@ class IComputer:
 						continue
 					# write water log
 					self.write_water_log_counter(ccounter)
+
+			# write the current per-counter water details to the current water status file (for website)
+			if ticks % 60 == 0:
+				with open('water/current_water_%s.txt' % self.computer_name,'w') as fl:
+					fl.write('counter\ttotal\tflow\n')
+					for ccounter in self.counters.values():
+						if ccounter.computer_name != self.computer_name:
+							continue
+						# write counter info
+						fl.write('%s\t%s\t%s\n' % (ccounter.name, ccounter.last_water_read, ccounter.flow))
 
 			# per line water usage (if open alone on a counter)
 			if ticks % 60 == 0:

@@ -2,12 +2,46 @@ import datetime
 import logging
 
 logger = logging.getLogger(__name__)
-# logger.setLevel(logging.DEBUG)
+
+
+def sane_day(dt):
+    '''Get sane (sun=1,...,sat=7) from isoweekday()
+
+    Parameters
+    ----------
+    d: datetime.datetime
+        the datetime to get the day for
+
+    Returns
+    -------
+    int:
+        the hebrew day num (1=sunday,...,7=sat)
+    '''
+    return sane_day_from_isoweekday(dt.isoweekday())
+
+
+def sane_day_from_isoweekday(day):
+    '''Convert iso day (1 is monday,..., 7 is sunday) to sane day (1=sunday,...7=saturaday)
+
+    Parameters
+    ----------
+    day: int
+        the isoweekday()
+
+    Returns
+    int:
+        the hebrew day num (1=sunday,...,7=sat)
+    '''
+    day = day+1
+    if day == 8:
+        day = 1
+    return day
 
 
 def next_weekday(d, weekday):
     '''
-    Find the closest occurence of weekday following date d
+    Find the closest occurence of weekday following date d.
+    if the weekday is the same as the day in d, return d.
     :param d: datetime.datetime
         the start date from where to look for the next day occurance
     :param weekday: int
@@ -16,9 +50,8 @@ def next_weekday(d, weekday):
     datetime.datetime
         The closest datetime to d which is day weekday
     '''
-    weekday = weekday + 1
-    days_ahead = weekday - d.weekday()
-    if days_ahead <= 0:  # Target day already happened this week
+    days_ahead = weekday - sane_day(d)
+    if days_ahead < 0:  # Target day already happened this week
         days_ahead += 7
     return d + datetime.timedelta(days_ahead)
 
@@ -45,12 +78,12 @@ def time_in_range(start_hour, start_minute, duration, test_time=None):
     '''
     if test_time is None:
         test_time = datetime.datetime.now()
-        start_time = datetime.datetime(test_time.year, test_time.month, test_time.day, start_hour, start_minute)
-        if start_time > test_time:
-            return False
-        if start_time + datetime.timedelta(minutes=duration) < test_time:
-            return False
-        return True
+    start_time = datetime.datetime(test_time.year, test_time.month, test_time.day, start_hour, start_minute)
+    if start_time > test_time:
+        return False
+    if start_time + datetime.timedelta(minutes=duration) < test_time:
+        return False
+    return True
 
 
 class Timer:
@@ -118,7 +151,7 @@ class WeeklyTimer(Timer):
         if not self.overnight:
             # if not overnight timer, just check day and then time
             # is it the correct day now?
-            if now.isoweekday()+1 != self.start_day:
+            if sane_day(now) != self.start_day:
                 return False
             if not time_in_range(self.start_time.hour, self.start_time.minute, self.duration):
                 return False

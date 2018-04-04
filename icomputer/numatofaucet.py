@@ -6,7 +6,6 @@ import os
 from .faucet import Faucet
 
 logger = logging.getLogger(__name__)
-# logger.setLevel(logging.DEBUG)
 
 
 class NumatoFaucet(Faucet):
