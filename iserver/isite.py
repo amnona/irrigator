@@ -11,6 +11,30 @@ logger = getLogger(__name__)
 Site_Main_Flask_Obj = Blueprint('Site_Main_Flask_Obj', __name__)
 
 
+def get_last_lines(filename, num_lines, max_line_len=200):
+	'''Get the last lines of a large file
+
+	Parameters
+	----------
+	filename: str
+	num_lines: int
+		number of lines to get from end of file
+	max_line_len: int, optional
+		going back max_line_len*num_lines and scans forward
+
+	Returns
+	-------
+	list of str (one per line)
+	'''
+	with open(filename, 'rb') as fl:
+		fl.seek(-num_lines * max_line_len, os.SEEK_END)
+		lines = fl.readlines()
+		out_lines=[]
+		for x in range(min(num_lines, len(lines))):
+			out_lines.append(lines[-x].decode().strip())
+	return out_lines
+
+
 def check_auth(username, password):
 	"""This function is called to check if a username /
 	password combination is valid.
@@ -75,6 +99,11 @@ def get_manual_file_name():
 def get_status_file_name():
 	computer_name = get_computer_name()
 	return 'actions/%s_status.txt' % computer_name
+
+
+def get_actions_file_name():
+	computer_name = get_computer_name()
+	return 'actions/%s_actions.txt' % computer_name
 
 
 def get_timers_file_name():
@@ -321,6 +350,7 @@ def schedule():
 		cstart_minute = int(ctimer['start_minute'])
 		schedule[days[cday]][cstart_hour].append(ctimer)
 	wpage = render_template('main.html')
+	wpage += '<div>'
 	wpage += '<table border="3px solid purple">'
 	wpage += '<thead><tr>'
 	for cday in days:
@@ -347,10 +377,20 @@ def schedule():
 					wpage += '<td onClick="document.location.href=\'http://127.0.01:5000\';"></td>'
 		wpage += '</tr>'
 	wpage += '</tbody></table>'
+	wpage += '</div>'
+	wpage += '<div>'
 	wpage += 'Water:<br>'
 	counter_water = get_current_water()
 	for ccounter, cvals in counter_water.items():
 		wpage += 'Counter: %s, Water: %s, Flow: %s' % (ccounter, cvals['total'], cvals['flow'])
+	wpage += 'last actions:<br>'
+	wpage += '<select size="10">'
+	last_actions = get_last_lines(get_actions_file_name(), 20)
+	for caction in last_actions:
+		wpage += "<option>%s</option>" % caction
+	wpage += "</select>"
+	wpage += '</div>'
+	wpage += '</div>'
 	wpage += '</body>'
 	wpage += '</html>'
 	return wpage
