@@ -292,6 +292,10 @@ def main_site():
 		wpage += '<td><button id=".button-test" type="button" onclick="close_faucet(\'%s\')">close</button></td>' % cname
 		wpage += '</tr>'
 	wpage += '</tbody></table>'
+	wpage += 'Water:<br>'
+	counter_water = get_current_water()
+	for ccounter, cvals in counter_water.items():
+		wpage += 'Counter: %s, Water: %s, Flow: %s' % (ccounter, cvals['water'], cvals['flow'])
 	wpage += '</body>'
 	wpage += '</html>'
 	return wpage
@@ -336,15 +340,15 @@ def schedule():
 				if chour in schedule[cday]:
 					relay_nums=[]
 					for crelay in schedule[cday][chour]:
-						relay_nums.append(crelay.get('faucet_num','NA'))
+						relay_nums.append(crelay.get('faucet_num', 'NA'))
 					relay_nums = ','.join(relay_nums)
 					wpage += '<td onClick="document.location.href=\'http://127.0.01:5000\';">%s</td>' % relay_nums
 				else:
 					wpage += '<td onClick="document.location.href=\'http://127.0.01:5000\';"></td>'
 		wpage += '</tr>'
 	wpage += '</tbody></table>'
-	counter_water= get_current_water()
 	wpage += 'Water:<br>'
+	counter_water = get_current_water()
 	for ccounter, cvals in counter_water.items():
 		wpage += 'Counter: %s, Water: %s, Flow: %s' % (ccounter, cvals['water'], cvals['flow'])
 	wpage += '</body>'
