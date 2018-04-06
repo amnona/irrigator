@@ -295,7 +295,7 @@ def main_site():
 	wpage += 'Water:<br>'
 	counter_water = get_current_water()
 	for ccounter, cvals in counter_water.items():
-		wpage += 'Counter: %s, Water: %s, Flow: %s' % (ccounter, cvals['water'], cvals['flow'])
+		wpage += 'Counter: %s, Water: %s, Flow: %s' % (ccounter, cvals['total'], cvals['flow'])
 	wpage += '</body>'
 	wpage += '</html>'
 	return wpage
@@ -350,7 +350,7 @@ def schedule():
 	wpage += 'Water:<br>'
 	counter_water = get_current_water()
 	for ccounter, cvals in counter_water.items():
-		wpage += 'Counter: %s, Water: %s, Flow: %s' % (ccounter, cvals['water'], cvals['flow'])
+		wpage += 'Counter: %s, Water: %s, Flow: %s' % (ccounter, cvals['total'], cvals['flow'])
 	wpage += '</body>'
 	wpage += '</html>'
 	return wpage
