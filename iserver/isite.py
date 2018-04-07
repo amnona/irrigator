@@ -383,7 +383,7 @@ def schedule():
 	counter_water = get_current_water()
 	for ccounter, cvals in counter_water.items():
 		wpage += 'Counter: %s, Water: %s, Flow: %s' % (ccounter, cvals['total'], cvals['flow'])
-	wpage += 'last actions:<br>'
+	wpage += '<br>last actions:<br>'
 	wpage += '<select size="10">'
 	last_actions = get_last_lines(get_actions_file_name(), 20)
 	for caction in last_actions:

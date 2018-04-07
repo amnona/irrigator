@@ -7,6 +7,8 @@ import os
 from collections import defaultdict
 import traceback
 
+import numpy as np
+
 from .faucet import get_faucet_class
 from .timers import Timer, WeeklyTimer, SingleTimer
 
@@ -466,7 +468,7 @@ class IComputer:
 			# first all are alone
 			for cfaucet in self.faucets.values():
 				cfaucet.all_alone = True
-			
+
 			# now mark as not alone ones on a counter with more than one faucet open
 			for ccounter, faucets in num_open.items():
 				if len(faucets) > 1:
@@ -492,15 +494,24 @@ class IComputer:
 							else:
 								logger.debug('counter %s for faucet %s not found' % (cfaucet.counter, cfaucet.name))
 								total_water = -1
+							if len(cfaucet.flow_counts)>0:
+								median_flow = np.median(cfaucet.flow_counts)
+							else:
+								median_flow = 'was not alone'
 						else:
 							total_water = -1
+							median_flow = 'no counter'
 						logger.debug('total water %d' % total_water)
 						if cfaucet.all_alone:
 							logger.debug('was all alone')
-							self.write_action_log('%s faucet %s water %d' % (action_str, cfaucet.name, total_water))
+							self.write_action_log('%s faucet %s water %d median flow %s' % (action_str, cfaucet.name, total_water, median_flow))
 						else:
 							logger.debug('was NOT all alone')
-							self.write_action_log('%s faucet %s not alone water %d' % (action_str, cfaucet.name, total_water))
+							self.write_action_log('%s faucet %s not alone water %d median flow %s' % (action_str, cfaucet.name, total_water, median_flow))
+					else:
+						if cfaucet.all_alone:
+							if cfaucet.counter != 'none':
+								cfaucet.flow_counts.append(self.counters[cfaucet.counter].flow)
 				else:
 					# if it is closed and should open, open it
 					if cfaucet.name in should_be_open:
@@ -510,6 +521,7 @@ class IComputer:
 								continue
 						# if faucet on local computer, actually open it. otherwise, pretend to open it
 						cfaucet.open()
+						cfaucet.flow_counts = []
 						if self.is_faucet_on_computer(cfaucet):
 							action_str = 'opened'
 						else:

@@ -41,6 +41,7 @@ class Faucet:
 		self.relay_idx = relay
 		self.counter = counter
 		self.default_duration = default_duration
+		self.flow_counts = []
 
 		# all_alone is set to True when opened, and turns False if more than one open on the same water counter
 		self.all_alone = False
@@ -58,6 +59,7 @@ class Faucet:
 		else:
 			logger.debug('generic remotely open faucet %s' % self.name)
 		self.all_alone = True
+		self.flow_counts = []
 		return False
 
 	def close(self):

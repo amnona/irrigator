@@ -39,7 +39,6 @@ class CounterArduino(Counter):
         logger.debug('Found serial port %s for counter %s' % (found_port, self.name))
         return found_port
 
-
     def open_serial(self):
         '''Get the USB(serial) port connection for the arduino and set it in self.serial
 
