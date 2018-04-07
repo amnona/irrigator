@@ -66,7 +66,7 @@ class Faucet:
 		self.isopen = False
 		return False
 
-	def get_median_water_flow(self):
+	def get_median_flow(self):
 		'''Get the median water flow for the faucet
 
 		Returns
