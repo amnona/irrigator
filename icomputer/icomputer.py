@@ -289,7 +289,7 @@ class IComputer:
 							total_water = -1
 					else:
 						total_water = -1
-					self.write_action_log('manually closed faucet %s, water=%d' % (cfaucet, total_water))
+					self.write_action_log('manually closed faucet %s, water=%d, flow=%s' % (cfaucet, total_water, cfuacet.get_median_flow()))
 					self.faucets[cfaucet].close()
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
 						logger.info('manually closed faucet %s' % cfaucet)
@@ -494,20 +494,15 @@ class IComputer:
 							else:
 								logger.debug('counter %s for faucet %s not found' % (cfaucet.counter, cfaucet.name))
 								total_water = -1
-							if len(cfaucet.flow_counts)>0:
-								median_flow = np.median(cfaucet.flow_counts)
-							else:
-								median_flow = 'was not alone'
 						else:
 							total_water = -1
-							median_flow = 'no counter'
 						logger.debug('total water %d' % total_water)
 						if cfaucet.all_alone:
 							logger.debug('was all alone')
-							self.write_action_log('%s faucet %s water %d median flow %s' % (action_str, cfaucet.name, total_water, median_flow))
+							self.write_action_log('%s faucet %s water %d median flow %s' % (action_str, cfaucet.name, total_water, cfaucet.get_median_flow()))
 						else:
 							logger.debug('was NOT all alone')
-							self.write_action_log('%s faucet %s not alone water %d median flow %s' % (action_str, cfaucet.name, total_water, median_flow))
+							self.write_action_log('%s faucet %s not alone water %d median flow %s' % (action_str, cfaucet.name, total_water, cfaucet.get_median_flow()))
 					else:
 						if cfaucet.all_alone:
 							if cfaucet.counter != 'none':

@@ -100,6 +100,7 @@ class NumatoFaucet(Faucet):
 
     def open(self):
         logger.debug('opening faucet %s' % self.name)
+        super().open()
         if self.local_computer_name == self.computer_name:
             res = self.write_relay(self.relay_idx, 'on')
             if res:
@@ -114,6 +115,7 @@ class NumatoFaucet(Faucet):
 
     def close(self):
         logger.debug('closing faucet %s' % self.name)
+        super().close()
         if self.local_computer_name == self.computer_name:
             res = self.write_relay(self.relay_idx, 'off')
             if res:

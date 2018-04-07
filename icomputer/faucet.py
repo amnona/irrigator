@@ -1,6 +1,8 @@
 from logging import getLogger
 import importlib
 
+import numpy as np
+
 logger = getLogger(__name__)
 
 
@@ -54,10 +56,6 @@ class Faucet:
 		'''Open the faucet (water on)
 		'''
 		self.isopen = True
-		if self.local_computer_name == self.computer_name:
-			logger.debug('generic open faucet %s' % self.name)
-		else:
-			logger.debug('generic remotely open faucet %s' % self.name)
 		self.all_alone = True
 		self.flow_counts = []
 		return False
@@ -66,8 +64,18 @@ class Faucet:
 		'''Close the faucet (water off)
 		'''
 		self.isopen = False
-		if self.local_computer_name == self.computer_name:
-			logger.debug('generic close faucet %s' % self.name)
-		else:
-			logger.debug('generic remotely close faucet %s' % self.name)
 		return False
+
+	def get_median_water_flow(self):
+		'''Get the median water flow for the faucet
+
+		Returns
+		-------
+		str
+		The median flow (when the faucet was open alone on t)e counter) or "no counter", or "not alone"
+		'''
+		if self.counter == 'none':
+			return 'no counter'
+		if len(self.flow_counts) < 1:
+			return 'not alone'
+		return '%.2f' % np.median(self.flow_counts)
