@@ -289,7 +289,7 @@ class IComputer:
 							total_water = -1
 					else:
 						total_water = -1
-					self.write_action_log('manually closed faucet %s, water=%d, flow=%s' % (cfaucet, total_water, cfuacet.get_median_flow()))
+					self.write_action_log('manually closed faucet %s, water=%d, flow=%s' % (cfaucet, total_water, cfaucet.get_median_flow()))
 					self.faucets[cfaucet].close()
 					if self.is_faucet_on_computer(self.faucets[cfaucet]):
 						logger.info('manually closed faucet %s' % cfaucet)
