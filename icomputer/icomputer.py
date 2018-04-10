@@ -510,7 +510,8 @@ class IComputer:
 					else:
 						if cfaucet.all_alone:
 							if cfaucet.counter != 'none':
-								cfaucet.flow_counts.append(self.counters[cfaucet.counter].flow)
+								if cfaucet.counter in self.counters:
+									cfaucet.flow_counts.append(self.counters[cfaucet.counter].flow)
 				else:
 					# if it is closed and should open, open it
 					if cfaucet.name in should_be_open:
