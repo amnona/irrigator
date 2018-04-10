@@ -231,6 +231,17 @@ def close_all():
 	return 'closing all faucets!'
 
 
+@Site_Main_Flask_Obj.route('/quit', methods=['GET'])
+@requires_auth
+def close_all():
+	'''Close all faucets now
+	'''
+	logger.debug('quit')
+	with open(get_manual_file_name(),'w') as cf:
+		cf.write('quit\tquit\n')
+	return 'quitting irrigation computer'
+
+
 @Site_Main_Flask_Obj.route('/get_faucets', methods=['GET'])
 @requires_auth
 def get_faucets():
