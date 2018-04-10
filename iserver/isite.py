@@ -233,7 +233,7 @@ def close_all():
 
 @Site_Main_Flask_Obj.route('/quit', methods=['GET'])
 @requires_auth
-def close_all():
+def quit():
 	'''Close all faucets now
 	'''
 	logger.debug('quit')
