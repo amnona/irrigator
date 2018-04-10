@@ -6,7 +6,7 @@ import datetime
 import os
 from collections import defaultdict
 import traceback
-
+import sys
 import numpy as np
 
 from .faucet import get_faucet_class
@@ -345,6 +345,10 @@ class IComputer:
 						logger.info('computer %s enabled' % computer_name)
 					else:
 						logger.debug('cannot enable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
+				elif ccommand == 'quit':
+					logger.warning('quitting')
+					self.close_all()
+					sys.exit()
 				else:
 					logger.warning('Manual command %s not recognized' % cline)
 					continue
@@ -527,7 +531,7 @@ class IComputer:
 							ccounter = self.counters[cfaucet.counter]
 							logger.debug('found counter %s. start water for faucet %s: %s' % (ccounter.name, cfaucet.name, cfaucet.start_water))
 							cfaucet.start_water = ccounter.get_count()
-						self.write_action_log('%s faucet %s start water=%d' % (action_str, cfaucet.name, cfaucet.start_water))
+						self.write_action_log('%s faucet %s' % (action_str, cfaucet.name))
 
 			# delete timers in the delete list
 			self.delete_timers(delete_list)
