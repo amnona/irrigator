@@ -3,9 +3,11 @@ from pkg_resources import resource_filename
 
 from .icomputer import IComputer, set_log_level
 
+
 __version__ = "1.0-dev"
 
-__all__ = ['IComputer', 'set_log_level']
+__all__ = ['IComputer', 'set_log_level', 'numatofaucet']
+from icomputer import *
 
 
 log = resource_filename(__package__, 'log.cfg')
