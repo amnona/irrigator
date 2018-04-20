@@ -7,7 +7,6 @@ import os
 from collections import defaultdict
 import traceback
 import sys
-import numpy as np
 
 from .faucet import get_faucet_class
 from .timers import Timer, WeeklyTimer, SingleTimer
@@ -143,7 +142,7 @@ class IComputer:
 					logger.warning('faucet %s already defined' % fname)
 					continue
 				faucet_class = get_faucet_class(faucet_type)
-				cfaucet = faucet_class(local_computer_name=self.computer_name, **dict(row))
+				cfaucet = faucet_class(local_computer=self, **dict(row))
 				logger.info('added faucet %s' % cfaucet)
 				self.faucets[fname] = cfaucet
 		self.faucets_file = faucets_file
@@ -207,8 +206,8 @@ class IComputer:
 		config.read(filename)
 		for k, v in config['IComputer'].items():
 			setattr(self, k, v)
-		if config.has_option('IComputer','disabled'):
-			self.disabled = config.getboolean('IComputer','disabled')
+		if config.has_option('IComputer', 'disabled'):
+			self.disabled = config.getboolean('IComputer', 'disabled')
 
 	def write_config_file(self):
 		'''Write the computer config from self
@@ -258,7 +257,7 @@ class IComputer:
 		with open(commands_file) as cf:
 			for cline in cf:
 				cline = cline.strip().split('\t')
-				if len(cline)!=2:
+				if len(cline) != 2:
 					logger.warning('Manual command %s does not contain 2 columns' % cline)
 					continue
 				ccommand = cline[0].lower()
@@ -271,33 +270,28 @@ class IComputer:
 						continue
 					new_timer = SingleTimer(duration=self.faucets[cfaucet].default_duration, cfaucet=self.faucets[cfaucet], start_datetime=None, is_manual=True)
 					self.timers.append(new_timer)
-					if self.is_faucet_on_computer(self.faucets[cfaucet]):
+					if self.faucets[cfaucet].is_local():
 						logger.info('created manual single timer for faucet: %s' % cfaucet)
 					else:
 						logger.info('cannot open. faucet %s not on this computer' % cfaucet)
+
 				elif ccommand == 'close':
 					cfaucet = param
 					if cfaucet not in self.faucets:
 						logger.warning('cannot close faucet %s - not found' % cfaucet)
 						continue
-					the_faucet = self.faucets[cfaucet]
-					if the_faucet.counter != 'none':
-						if the_faucet.counter in self.counters:
-							total_water = self.counters[the_faucet.counter].get_count() - the_faucet.start_water
-						else:
-							logger.debug('counter %s for faucet %s not found' % (the_faucet.counter, cfaucet))
-							total_water = -1
-					else:
-						total_water = -1
-					self.write_action_log('manually closed faucet %s, water=%d, flow=%s' % (cfaucet, total_water, the_faucet.get_median_flow()))
 					self.faucets[cfaucet].close()
-					if self.is_faucet_on_computer(self.faucets[cfaucet]):
-						logger.info('manually closed faucet %s' % cfaucet)
-					else:
-						logger.warning('cannot close. faucet %s not on this computer' % cfaucet)
-					delete_list=[]
+					# the_faucet = self.faucets[cfaucet]
+					# self.write_action_log('manually closed faucet %s, water=%d, flow=%s' % (cfaucet, the_faucet.get_total_water(), the_faucet.get_median_flow()))
+					# self.faucets[cfaucet].close()
+
+					# if self.faucets[cfaucet].is_local():
+					# 	logger.info('manually closed faucet %s' % cfaucet)
+					# else:
+					# 	logger.warning('cannot close. faucet %s not on this computer' % cfaucet)
+					delete_list = []
 					for ctimer in self.timers:
-						if ctimer.faucet!=self.faucets[cfaucet]:
+						if ctimer.faucet != self.faucets[cfaucet]:
 							continue
 						if not isinstance(ctimer, SingleTimer):
 							continue
@@ -305,9 +299,10 @@ class IComputer:
 							continue
 						delete_list.append(ctimer)
 					self.delete_timers(delete_list)
+
 				elif ccommand == 'closeall':
 					self.close_all()
-					delete_list=[]
+					delete_list = []
 					for ctimer in self.timers:
 						if not isinstance(ctimer, SingleTimer):
 							continue
@@ -316,6 +311,7 @@ class IComputer:
 						delete_list.append(ctimer)
 					self.delete_timers(delete_list)
 					logger.info('closed all faucets (manual)')
+
 				elif ccommand == 'disable':
 					computer_name = param
 					logger.debug('manual disable computer %s' % computer_name)
@@ -326,7 +322,7 @@ class IComputer:
 						# close all currently open faucets
 						self.close_all()
 						# and delete the manual timers
-						delete_list=[]
+						delete_list = []
 						for ctimer in self.timers:
 							if not isinstance(ctimer, SingleTimer):
 								continue
@@ -336,6 +332,7 @@ class IComputer:
 						self.delete_timers(delete_list)
 					else:
 						logger.debug('cannot disable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
+
 				elif ccommand == 'enable':
 					computer_name = param
 					logger.debug('manual enable computer %s' % computer_name)
@@ -345,10 +342,12 @@ class IComputer:
 						logger.info('computer %s enabled' % computer_name)
 					else:
 						logger.debug('cannot enable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
+
 				elif ccommand == 'quit':
 					logger.warning('quitting')
 					self.close_all()
 					sys.exit()
+
 				else:
 					logger.warning('Manual command %s not recognized' % cline)
 					continue
@@ -364,7 +363,7 @@ class IComputer:
 	def write_status_file(self, should_be_open):
 		with open(self.status_file, 'w') as fl:
 			for cfaucet_name in should_be_open:
-				fl.write(cfaucet_name+'\n')
+				fl.write(cfaucet_name + '\n')
 
 	def delete_timers(self, delete_list):
 		'''
@@ -388,36 +387,20 @@ class IComputer:
 		'''
 		return self.computer_name
 
-	def is_faucet_on_computer(self, faucet):
-		'''
-		Check if the faucet is on this irrigation computer
-		:param faucet:
-		:return:
-		True if faucet is on self irrigation computer
-		False otherwise
-		'''
-		if self.computer_name == faucet.computer_name:
-			return True
-		return False
-
-	def is_counter_on_computer(self, counter):
-		'''
-		Check if the counter is connected to this irrigation computer
-		:param counter:
-		:return:
-		True if counter is on self irrigation computer
-		False otherwise
-		'''
-		if self.computer_name == counter.computer_name:
-			return True
-		return False
-
 	def close_all(self):
 		'''Close all faucets on the computer
 		'''
 		logger.debug('closing all faucets')
 		for cfaucet in self.faucets.values():
 			cfaucet.close()
+
+	def write_keep_alive_file(self):
+		'''write the current time to the keep alive file.
+		So we can see the computer is running.
+		'''
+		file_name = os.path.join('actions', '%s_keep_alive.txt' % self.computer_name)
+		with open(file_name, 'w') as fl:
+			fl.write('%s' % time.asctime())
 
 	def write_water_log_counter(self, counter, faucet_name=None, water_dir='water'):
 		'''Write the faucet/counter water count to the log file.
@@ -469,7 +452,8 @@ class IComputer:
 				old_should_be_open = should_be_open
 
 			# add the indication for faucets that are open but with another faucet on the same water counter
-			# first all are alone
+			# first all are alone.
+			# all_alone is for the current read, all_alone_all_time is for the whole open-close period
 			for cfaucet in self.faucets.values():
 				cfaucet.all_alone = True
 
@@ -478,6 +462,7 @@ class IComputer:
 				if len(faucets) > 1:
 					for cfaucet in faucets:
 						self.faucets[cfaucet].all_alone = False
+						self.faucets[cfaucet].all_alone_all_time = False
 
 			# go over all faucets and open/close as needed
 			for cfaucet in self.faucets.values():
@@ -486,53 +471,37 @@ class IComputer:
 					if cfaucet.name not in should_be_open:
 						# if faucet on local computer, actually close it, otherwise pretend to close it
 						cfaucet.close()
-						if self.is_faucet_on_computer(cfaucet):
-							action_str = 'closed'
-						else:
-							action_str = 'closed remotely'
-						logger.info('%s faucet %s' % (action_str, cfaucet.name))
+						# if cfaucet.is_local():
+						# 	action_str = 'closed'
+						# else:
+						# 	action_str = 'closed remotely'
+						# logger.info('%s faucet %s' % (action_str, cfaucet.name))
 
-						if cfaucet.counter != 'none':
-							if cfaucet.counter in self.counters:
-								total_water = self.counters[cfaucet.counter].get_count() - cfaucet.start_water
-							else:
-								logger.debug('counter %s for faucet %s not found' % (cfaucet.counter, cfaucet.name))
-								total_water = -1
-						else:
-							total_water = -1
-						logger.debug('total water %d' % total_water)
-						if cfaucet.all_alone:
-							logger.debug('was all alone')
-							self.write_action_log('%s faucet %s water %d median flow %s' % (action_str, cfaucet.name, total_water, cfaucet.get_median_flow()))
-						else:
-							logger.debug('was NOT all alone')
-							self.write_action_log('%s faucet %s not alone water %d median flow %s' % (action_str, cfaucet.name, total_water, cfaucet.get_median_flow()))
+						# total_water = cfaucet.get_total_water()
+						# logger.debug('total water %d' % total_water)
+						# self.write_action_log('%s faucet %s water %d median flow %s' % (action_str, cfaucet.name, total_water, cfaucet.get_median_flow()))
 					else:
-						if cfaucet.all_alone:
-							if cfaucet.counter != 'none':
-								if cfaucet.counter in self.counters:
-									cfaucet.flow_counts.append(self.counters[cfaucet.counter].flow)
+						# if open and should be open, if it is alone, add the water count
+						cfaucet.add_flow_count()
+						# if cfaucet.all_alone:
+						# 	cfaucet.add_flow_count()
+						# 	if cfaucet.counter != 'none':
+						# 		if cfaucet.counter in self.counters:
+						# 			cfaucet.flow_counts.append(self.counters[cfaucet.counter].flow)
 				else:
 					# if it is closed and should open, open it
 					if cfaucet.name in should_be_open:
 						if self.disabled:
-							if self.is_faucet_on_computer(cfaucet):
+							if cfaucet.is_local():
 								logger.debug('computer disabled. not opening faucet %s' % cfaucet.name)
 								continue
 						# if faucet on local computer, actually open it. otherwise, pretend to open it
 						cfaucet.open()
-						cfaucet.flow_counts = []
-						if self.is_faucet_on_computer(cfaucet):
-							action_str = 'opened'
-						else:
-							action_str = 'opened remotely'
-						cfaucet.start_water = -1
-						logger.info('%s faucet %s' % (action_str, cfaucet.name))
-						if cfaucet.counter in self.counters:
-							ccounter = self.counters[cfaucet.counter]
-							logger.debug('found counter %s. start water for faucet %s: %s' % (ccounter.name, cfaucet.name, cfaucet.start_water))
-							cfaucet.start_water = ccounter.get_count()
-						self.write_action_log('%s faucet %s' % (action_str, cfaucet.name))
+						# if cfaucet.is_local():
+						# 	action_str = 'opened'
+						# else:
+						# 	action_str = 'opened remotely'
+						# self.write_action_log('%s faucet %s' % (action_str, cfaucet.name))
 
 			# delete timers in the delete list
 			self.delete_timers(delete_list)
@@ -547,7 +516,7 @@ class IComputer:
 
 			# write the current per-counter water details to the current water status file (for website)
 			if ticks % 60 == 0:
-				with open('water/current_water_%s.txt' % self.computer_name,'w') as fl:
+				with open('water/current_water_%s.txt' % self.computer_name, 'w') as fl:
 					fl.write('counter\ttotal\tflow\n')
 					for ccounter in self.counters.values():
 						if ccounter.computer_name != self.computer_name:
@@ -575,9 +544,6 @@ class IComputer:
 
 			# check for changed files
 			# check manual open/close file
-			# if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
-			# 	logger.debug('Loading manual commands file')
-			# 	self.read_manual_commands(self.commands_file)
 			try:
 				if not self.commands_file_timestamp == os.stat(self.commands_file).st_mtime:
 					logger.debug('Loading manual commands file')
@@ -586,21 +552,19 @@ class IComputer:
 				logger.warning('manual commands file %s load failed. error: %s' % (self.commands_file, err))
 				logger.warning(traceback.format_exc())
 				self.commands_file_timestamp = int(time.time())
-			# if not self.faucets_file_timestamp == os.stat(self.faucets_file).st_mtime:
-			# 	pass
 			# check faucet list file
 			if not self.faucets_file_timestamp == os.stat(self.faucets_file).st_mtime:
-				logger.debug('faucets file changed')
+				logger.info('faucets file changed')
 				self.read_faucets(self.faucets_file)
 				self.read_timers(self.timers_file)
 			# check timers file
 			if not self.timers_file_timestamp == os.stat(self.timers_file).st_mtime:
-				logger.debug('timers file changed')
+				logger.info('timers file changed')
 				self.read_timers(self.timers_file)
 
 			# update keepalive file
 			if ticks % 60 == 0:
-				# logger.debug('keepalive')
+				self.write_keep_alive_file()
 				pass
 
 			# sleep

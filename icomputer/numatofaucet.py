@@ -35,7 +35,7 @@ class NumatoFaucet(Faucet):
         # port_names = ['/dev/ttyACM0', '/dev/tty.usbmodem1421']
         try:
             dev_list_dir = '/dev/serial/by-id/'
-            port_names = [os.path.join(dev_list_dir,x) for x in os.listdir(dev_list_dir)]
+            port_names = [os.path.join(dev_list_dir, x) for x in os.listdir(dev_list_dir)]
             port_names = [x for x in port_names if 'usb-Numato_Systems_Pvt._Ltd._Numato_Lab_16_Channel_USB_Relay' in x]
             if len(port_names) == 0:
                 logger.warning('no Numato 16 channel relays connected. cannot contact faucet %s' % self.name)
@@ -64,6 +64,12 @@ class NumatoFaucet(Faucet):
         return found_port
 
     def read_relay(self):
+        '''Read the output from the relay unit
+
+        Returns
+        -------
+        str or None. The response string or None if an error was encountered
+        '''
         try:
             relay_idx = self.relay_idx
             ser_port = serial.Serial(self.port_name, 19200, timeout=1)
@@ -86,6 +92,7 @@ class NumatoFaucet(Faucet):
         :param relay_cmd:
             can be "on" or "off"
         :return:
+        True if ok, False if error encountered
         '''
         try:
             ser_port = serial.Serial(self.port_name, 19200, timeout=1)
@@ -99,31 +106,28 @@ class NumatoFaucet(Faucet):
             return False
 
     def open(self):
-        logger.debug('opening faucet %s' % self.name)
         super().open()
-        if self.local_computer_name == self.computer_name:
+        if self.is_local():
             res = self.write_relay(self.relay_idx, 'on')
-            if res:
-                self.isopen = True
+            if not res:
+                self.isopen = False
             status = self.read_relay()
             logger.debug('open. got response %s' % status)
         else:
             logger.debug('open faucet on remote computer. lets hope it works')
-            self.isopen = True
             res = True
         return res
 
     def close(self):
         logger.debug('closing faucet %s' % self.name)
         super().close()
-        if self.local_computer_name == self.computer_name:
+        if self.is_local():
             res = self.write_relay(self.relay_idx, 'off')
-            if res:
-                self.isopen = False
+            if not res:
+                self.isopen = True
             status = self.read_relay()
             logger.debug('close. got response %s' % status)
         else:
-            self.isopen = False
-            res = True
             logger.debug('close faucet on remote computer. lets hope it works')
+            res = True
         return res
