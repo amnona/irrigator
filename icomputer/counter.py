@@ -1,5 +1,5 @@
 class Counter():
-    def __init__(self,name, computer_name):
+    def __init__(self, name, computer_name):
         self.count = 0
         self.last_val = False
         self.name = name

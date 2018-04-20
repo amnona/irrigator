@@ -6,6 +6,8 @@ from functools import wraps
 import configparser
 from collections import defaultdict
 
+# import numpy as np
+
 logger = getLogger(__name__)
 
 Site_Main_Flask_Obj = Blueprint('Site_Main_Flask_Obj', __name__)
@@ -29,9 +31,9 @@ def get_last_lines(filename, num_lines, max_line_len=200):
 	with open(filename, 'rb') as fl:
 		fl.seek(-num_lines * max_line_len, os.SEEK_END)
 		lines = fl.readlines()
-		out_lines=[]
+		out_lines = []
 		for x in range(min(num_lines, len(lines))):
-			out_lines.append(lines[-x].decode().strip())
+			out_lines.append(lines[-(x + 1)].decode().strip())
 	return out_lines
 
 
@@ -146,8 +148,10 @@ def get_timers(timers_file=None):
 	logger.debug('loaded %d timers' % len(timers))
 	return timers
 
+
 def get_current_water_file_name():
 	return 'water/current_water_%s.txt' % get_computer_name()
+
 
 def get_current_water():
 	'''Get the current water status
@@ -162,12 +166,13 @@ def get_current_water():
 		with open(get_current_water_file_name()) as fl:
 			wfile = csv.DictReader(fl, delimiter='\t')
 			for row in wfile:
-				water[row['counter']]={}
+				water[row['counter']] = {}
 				water[row['counter']]['total'] = row['total']
 				water[row['counter']]['flow'] = row['flow']
 	except Exception as err:
 		logger.warning('error reading water file. %s' % err)
 	return water
+
 
 def get_status():
 	'''Get the open/close status of the faucets
@@ -199,7 +204,7 @@ def manual_open(faucet):
 		NAME of the faucet to open (i.e. cypress)
 	'''
 	logger.debug('manual open faucet %s' % faucet)
-	with open(get_manual_file_name(),'w') as cf:
+	with open(get_manual_file_name(), 'w') as cf:
 		cf.write('open\t%s\n' % faucet)
 	return 'opening faucet %s' % faucet
 
@@ -215,7 +220,7 @@ def manual_close(faucet):
 		NAME of the faucet to open (i.e. cypress)
 	'''
 	logger.debug('manual close faucet %s' % faucet)
-	with open(get_manual_file_name(),'w') as cf:
+	with open(get_manual_file_name(), 'w') as cf:
 		cf.write('close\t%s\n' % faucet)
 	return 'closing  faucet %s' % faucet
 
@@ -226,7 +231,7 @@ def close_all():
 	'''Close all faucets now
 	'''
 	logger.debug('manual close all faucets')
-	with open(get_manual_file_name(),'w') as cf:
+	with open(get_manual_file_name(), 'w') as cf:
 		cf.write('closeall\tcloseall\n')
 	return 'closing all faucets!'
 
@@ -237,7 +242,7 @@ def quit():
 	'''Close all faucets now
 	'''
 	logger.debug('quit')
-	with open(get_manual_file_name(),'w') as cf:
+	with open(get_manual_file_name(), 'w') as cf:
 		cf.write('quit\tquit\n')
 	return 'quitting irrigation computer'
 
@@ -253,7 +258,7 @@ def get_faucets():
 		ffile = csv.DictReader(fl, delimiter='\t')
 		for row in ffile:
 			fname = row['name']
-			faucet_list += fname+';'
+			faucet_list += fname + ';'
 	return faucet_list
 
 
@@ -268,7 +273,7 @@ def _faucets_info():
 	list of dict of type:data
 	'''
 	logger.debug('_getting faucets info')
-	output=[]
+	output = []
 	with open(get_faucets_file_name()) as fl:
 		ffile = csv.DictReader(fl, delimiter='\t')
 		for row in ffile:
@@ -291,16 +296,16 @@ def faucet_info(faucet):
 	str: made of key:val;
 	'''
 	logger.debug('getting faucet info for faucet %s' % faucet)
-	info=''
+	info = ''
 	with open(get_faucets_file_name()) as fl:
 		ffile = csv.DictReader(fl, delimiter='\t')
 		for row in ffile:
 			if row['name'] != faucet:
 				continue
-			for ck,cv in row.items():
-				info += '%s:%s;' % (ck,cv)
-	if info=='':
-		info='%s not found' % faucet
+			for ck, cv in row.items():
+				info += '%s:%s;' % (ck, cv)
+	if info == '':
+		info = '%s not found' % faucet
 	return info
 
 
@@ -314,10 +319,10 @@ def main_site():
 	faucets = _faucets_info()
 	open_faucets = get_status()
 	for cfaucet in faucets:
-		cname = cfaucet.get('name','NA')
-		ccomputer = cfaucet.get('computer_name','NA')
-		crelay = cfaucet.get('relay','NA')
-		cduration = cfaucet.get('default_duration','NA')
+		cname = cfaucet.get('name', 'NA')
+		ccomputer = cfaucet.get('computer_name', 'NA')
+		crelay = cfaucet.get('relay', 'NA')
+		cduration = cfaucet.get('default_duration', 'NA')
 		if cname in open_faucets:
 			cstatus = 'Open'
 		else:
@@ -350,7 +355,7 @@ def schedule():
 	for cday in days:
 		schedule[cday] = defaultdict(list)
 	for ctimer in timers:
-		cday = int(ctimer.get('start_day',0))
+		cday = int(ctimer.get('start_day', 0))
 		if cday == 0:
 			continue
 		if 'start_hour' not in ctimer:
@@ -359,7 +364,10 @@ def schedule():
 		if 'start_minute' not in ctimer:
 			continue
 		cstart_minute = int(ctimer['start_minute'])
-		schedule[days[cday]][cstart_hour].append(ctimer)
+		cduration = int(ctimer['duration'])
+		# for i in range(np.ceil(cduration / 60)):
+		for i in range(round((cduration+30) / 60)):
+			schedule[days[cday]][cstart_hour + i].append(ctimer)
 	wpage = render_template('main.html')
 	wpage += '<div>'
 	wpage += '<table border="3px solid purple">'
@@ -375,11 +383,11 @@ def schedule():
 		wpage += '<tr>'
 		wpage += '<td>%s</td>' % chour
 		for cday in days:
-			if cday==days[0]:
+			if cday == days[0]:
 				continue
 			else:
 				if chour in schedule[cday]:
-					relay_nums=[]
+					relay_nums = []
 					for crelay in schedule[cday][chour]:
 						relay_nums.append(crelay.get('faucet_num', 'NA'))
 					relay_nums = ','.join(relay_nums)

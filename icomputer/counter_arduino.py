@@ -28,12 +28,12 @@ class CounterArduino(Counter):
     def get_serial_port(self):
         # find and set the correct port name
         dev_list_dir = '/dev/serial/by-id/'
-        port_names = [os.path.join(dev_list_dir,x) for x in os.listdir(dev_list_dir)]
+        port_names = [os.path.join(dev_list_dir, x) for x in os.listdir(dev_list_dir)]
         port_names = [x for x in port_names if 'usb-Arduino' in x]
         if len(port_names) == 0:
             logger.warning('no Arduino connected. cannot contact counter %s' % self.name)
             return None
-        if len(port_names)>1:
+        if len(port_names) > 1:
             logger.warning('found more than one Arduino (%d) connected to counter %s' % (len(port_names), self.name))
         found_port = port_names[0]
         logger.debug('Found serial port %s for counter %s' % (found_port, self.name))
@@ -66,7 +66,7 @@ class CounterArduino(Counter):
         --------
             int - the water count
         '''
-        command = 'r'+str(self.iopin)+'\n'
+        command = 'r' + str(self.iopin) + '\n'
         if self.open_serial() is None:
             return self.count
         self.serial.write(command.encode())
@@ -97,7 +97,7 @@ class CounterArduino(Counter):
 
     def clear_count(self):
         '''Set the count to 0'''
-        command = 'c'+str(self.iopin)+'\n'
+        command = 'c' + str(self.iopin) + '\n'
         if self.open_serial() is None:
             return
         self.serial.write(command.encode())
