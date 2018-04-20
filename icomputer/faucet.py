@@ -172,7 +172,7 @@ class Faucet:
 		'''
 		if not self.all_alone:
 			return False
-		cflow = self.get_current_flow
+		cflow = self.get_current_flow()
 		if cflow is None:
 			return False
 		self.flow_counts.append(cflow)
