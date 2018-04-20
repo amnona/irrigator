@@ -215,7 +215,7 @@ class Faucet:
 		if cflow == -1:
 			logger.debug('cannot get total water - no flow reads for faucet %s' % self.name)
 			return -1
-		predicted_water = cflow * (datetime.datetime.now() - self.open_time).total_minutes()
+		predicted_water = cflow * (datetime.datetime.now() - (self.open_time.total_seconds() // 60))
 		logger.debug('predicted total water %f for %s' % (predicted_water, self.name))
 		return predicted_water
 
@@ -232,7 +232,7 @@ class Faucet:
 			# time the faucet was opened
 			fl.write('%s\t' % self.open_time.strftime("%Y-%m-%d %H:%M:%S"))
 			# total open time (minutes)
-			fl.write('%f\t' % (datetime.datetime.now() - self.open_time).total_minutes())
+			fl.write('%f\t' % (datetime.datetime.now() - (self.open_time).total_seconds() // 60))
 			# alone
 			fl.write('%s\t' % self.all_alone)
 			# mean flow
