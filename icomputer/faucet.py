@@ -232,7 +232,8 @@ class Faucet:
 			# time the faucet was opened
 			fl.write('%s\t' % self.open_time.strftime("%Y-%m-%d %H:%M:%S"))
 			# total open time (minutes)
-			fl.write('%f\t' % (datetime.datetime.now() - self.open_time).total_seconds() // 60)
+			open_time = (datetime.datetime.now() - self.open_time).total_seconds() // 60
+			fl.write('%f\t' % open_time)
 			# alone
 			fl.write('%s\t' % self.all_alone)
 			# mean flow
