@@ -146,7 +146,7 @@ class Faucet:
 			action_str = 'closed'
 		else:
 			action_str = 'remotely closed'
-		self.local_computer.write_action_log('%s faucet %s water %d median flow %s' % (action_str, self.name, self.get_total_water(), self.get_median_flow()))
+		self.local_computer.write_action_log('%s faucet %s water %d median flow %f' % (action_str, self.name, self.get_total_water(), self.get_median_flow()))
 
 		# we didn't really close anything here
 		return False
@@ -191,7 +191,7 @@ class Faucet:
 		if len(self.flow_counts) < 1:
 			logger.debug('not enough flow reads for %s' % self.name)
 			return -1
-		return '%.2f' % np.median(self.flow_counts)
+		return np.median(self.flow_counts)
 
 	def get_total_water(self):
 		'''Get the total water amount (real or estimated) for the faucet
