@@ -460,6 +460,7 @@ class IComputer:
 			# now mark as not alone ones on a counter with more than one faucet open
 			for ccounter, faucets in num_open.items():
 				if len(faucets) > 1:
+					logger.info('more than one faucet: %s' % faucets)
 					for cfaucet in faucets:
 						self.faucets[cfaucet].all_alone = False
 						self.faucets[cfaucet].all_alone_all_time = False
@@ -471,23 +472,9 @@ class IComputer:
 					if cfaucet.name not in should_be_open:
 						# if faucet on local computer, actually close it, otherwise pretend to close it
 						cfaucet.close()
-						# if cfaucet.is_local():
-						# 	action_str = 'closed'
-						# else:
-						# 	action_str = 'closed remotely'
-						# logger.info('%s faucet %s' % (action_str, cfaucet.name))
-
-						# total_water = cfaucet.get_total_water()
-						# logger.debug('total water %d' % total_water)
-						# self.write_action_log('%s faucet %s water %d median flow %s' % (action_str, cfaucet.name, total_water, cfaucet.get_median_flow()))
 					else:
 						# if open and should be open, if it is alone, add the water count
 						cfaucet.add_flow_count()
-						# if cfaucet.all_alone:
-						# 	cfaucet.add_flow_count()
-						# 	if cfaucet.counter != 'none':
-						# 		if cfaucet.counter in self.counters:
-						# 			cfaucet.flow_counts.append(self.counters[cfaucet.counter].flow)
 				else:
 					# if it is closed and should open, open it
 					if cfaucet.name in should_be_open:
@@ -497,11 +484,6 @@ class IComputer:
 								continue
 						# if faucet on local computer, actually open it. otherwise, pretend to open it
 						cfaucet.open()
-						# if cfaucet.is_local():
-						# 	action_str = 'opened'
-						# else:
-						# 	action_str = 'opened remotely'
-						# self.write_action_log('%s faucet %s' % (action_str, cfaucet.name))
 
 			# delete timers in the delete list
 			self.delete_timers(delete_list)

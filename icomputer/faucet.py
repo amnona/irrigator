@@ -235,7 +235,7 @@ class Faucet:
 			open_time = (datetime.datetime.now() - self.open_time).total_seconds() // 60
 			fl.write('%f\t' % open_time)
 			# alone
-			fl.write('%s\t' % self.all_alone)
+			fl.write('%s\t' % self.all_alone_all_time)
 			# mean flow
 			fl.write('%f\t' % self.get_median_flow())
 			# total water
