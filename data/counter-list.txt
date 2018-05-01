@@ -1,3 +1,3 @@
-name	computer	type	channel
-main-garden	dani	arduino	2
-fake	pita	arduino	4
+name	computer	type	channel	counts_per_liter
+main-garden	dani	arduino	2	2
+fake	pita	arduino	4	1

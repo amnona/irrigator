@@ -99,12 +99,13 @@ class IComputer:
 				if computer_name != self.computer_name:
 					continue
 				name = row['name']
+				counts_per_liter = row.get('counts_per_liter', 1.0)
 				if ttype == 'arduino':
 					from .counter_arduino import CounterArduino
-					ccounter = CounterArduino(name=name, computer_name=computer_name, iopin=row['channel'])
+					ccounter = CounterArduino(name=name, computer_name=computer_name, iopin=row['channel'], counts_per_liter=counts_per_liter)
 				elif ttype == 'numato':
 					from .counter_numato import CounterNumato
-					ccounter = CounterNumato(iopin=row['channel'], voltage_pin=voltage_pin)
+					ccounter = CounterNumato(iopin=row['channel'], voltage_pin=voltage_pin, counts_per_liter=counts_per_liter)
 				elif ttype == 'pi':
 					from .counter_pi import CounterPi
 					ccounter = CounterPi()

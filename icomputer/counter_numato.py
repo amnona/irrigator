@@ -7,7 +7,7 @@ class CounterNumato(Counter):
     '''
     A water counter class for contact (pulse) flow meter using the numato usb relay board
     '''
-    def __init__(self, iopin, voltage_pin=None, port_name='/dev/tty.usbmodem1421'):
+    def __init__(self, iopin, voltage_pin=None, port_name='/dev/tty.usbmodem1421', counts_per_liter=1.0):
         '''
 
         :param iopin: str
@@ -34,7 +34,7 @@ class CounterNumato(Counter):
         ser_port.write(cmd.encode('utf-8'))
         response = ser_port.readline()
         ser_port.close()
-        if response[1]=='n':
+        if response[1] == 'n':
             return True
         return False
 

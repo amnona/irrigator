@@ -13,12 +13,13 @@ MIN_FLOW_INTERVAL = 45
 
 
 class CounterArduino(Counter):
-    def __init__(self, name, computer_name, iopin, serial_name=None):
+    def __init__(self, name, computer_name, iopin, serial_name=None, counts_per_liter=1):
         super().__init__(name=name, computer_name=computer_name)
         self.iopin = iopin
         if serial_name is None:
             serial_name = self.get_serial_port()
         self.serial_name = serial_name
+        self.counts_per_liter = counts_per_liter
         self.last_water_read = -1
         self.last_water_time = datetime.datetime.now()
         self.flow = -1
@@ -82,6 +83,10 @@ class CounterArduino(Counter):
         except:
             logger.debug('count read conversion to int failed. count was: %s (counter %s, serial %s)' % (count, self.name, self.serial_name))
             return self.count
+
+        # correct for the number of counts per liter, so we are in liter units
+        self.count = self.count / self.counts_per_liter
+
         logger.debug('new count for %s pin %s: %d' % (self.serial_name, self.iopin, self.count))
         ctime = datetime.datetime.now()
         time_delta = (ctime - self.last_water_time).seconds
