@@ -19,7 +19,7 @@ class CounterArduino(Counter):
         if serial_name is None:
             serial_name = self.get_serial_port()
         self.serial_name = serial_name
-        self.counts_per_liter = counts_per_liter
+        self.counts_per_liter = float(counts_per_liter)
         self.last_water_read = -1
         self.last_water_time = datetime.datetime.now()
         self.flow = -1
