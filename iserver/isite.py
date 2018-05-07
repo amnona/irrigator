@@ -5,6 +5,13 @@ from logging import getLogger
 from functools import wraps
 import configparser
 from collections import defaultdict
+import datetime
+import re
+import matplotlib.pyplot as plt
+import numpy as np
+from io import BytesIO
+import base64
+import urllib
 
 # import numpy as np
 
@@ -413,3 +420,102 @@ def schedule():
 	wpage += '</body>'
 	wpage += '</html>'
 	return wpage
+
+
+def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
+	'''Get the per faucet statistics based on the actions log file
+
+	Parameters
+	----------
+	end_time: datetime or None, optional
+		the end time for the analysis period. None for the current datetime
+	period: int, optional
+		the period (back from the end_time) to get the stats (in days).
+	actions_log_file: str or None, optional
+		name of the actions log file to analyze. None to use the current computer log file
+
+	Returns
+	-------
+	dict of {line_name (str): list of dict {'date':datetime, 'flow':list of float, 'water': list of float}}
+	'''
+	if actions_log_file is None:
+		actions_log_file = get_actions_file_name()
+	if end_time is None:
+		end_time = datetime.datetime.now()
+	start_time = end_time - datetime.timedelta(days=period)
+	actions = defaultdict(list)
+	with open(actions_log_file) as fl:
+		for cline in fl:
+			# get the log file parameters.
+			# [0]: datetime of event
+			# [1]: remotely or empty
+			# [2]: faucet name
+			# [3]: water
+			# [4]: flow
+			res = re.search('(\d+-\d+-\d+ \d+:\d+:\d+) (.*)closed faucet (.*) water (.*) median flow (.*)', cline)
+			if res is None:
+				continue
+			try:
+				event_time = datetime.datetime.strptime(res.groups()[0], "%Y-%m-%d %H:%M:%S")
+			except:
+				logger.debug('failed to read date time from actions log file. line is: %s' % cline)
+				continue
+			if event_time <= start_time or event_time > end_time:
+				continue
+			try:
+				cfaucet = res.groups()[2]
+				cwater = float(res.groups()[3])
+				cflow = float(res.groups()[4])
+			except:
+				continue
+			if cflow < 0:
+				continue
+			if cwater < 0:
+				continue
+			caction = {'date': event_time, 'flow': cflow, 'water': cwater}
+			actions[cfaucet].append(caction)
+	return actions
+
+
+def draw_barchart(ydat, labels, ylabel=None):
+	# plt.hold(False)
+	logger.debug('draw bar chart')
+	fig = plt.figure()
+	xdat = np.arange(len(ydat))
+	plt.bar(xdat, ydat, tick_label=labels)
+	plt.xticks(xdat, labels, rotation='vertical')
+	if ylabel:
+		plt.ylabel(ylabel)
+	fig.tight_layout()
+	figfile = BytesIO()
+	fig.savefig(figfile, format='png', bbox_inches='tight')
+	figfile.seek(0)  # rewind to beginning of file
+	figdata_png = base64.b64encode(figfile.getvalue())
+	figfile.close()
+	plt.close()
+	return urllib.parse.quote(figdata_png)
+
+
+@Site_Main_Flask_Obj.route('/stats', methods=['GET'])
+@requires_auth
+def stats():
+	actions = get_stats_from_log()
+	median_flows = []
+	median_water = []
+	lines = []
+	for cline, cactions in actions.items():
+		if len(cactions) == 0:
+			continue
+		lines.append(cline)
+		cflows = [x['flow'] for x in cactions]
+		median_flows.append(np.median(cflows))
+		cwater = [x['water'] for x in cactions]
+		median_water.append(np.sum(cwater))
+
+	flow_bars = draw_barchart(median_flows, lines, 'median flow')
+	water_bars = draw_barchart(median_water, lines, 'total water')
+
+	wpart = ''
+	wpart += render_template('plot.html', flow_plot=flow_bars, water_plot=water_bars)
+
+	return wpart
