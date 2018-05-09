@@ -512,6 +512,10 @@ def stats():
 		cwater = [x['water'] for x in cactions]
 		median_water.append(np.sum(cwater))
 
+	print(median_flows)
+	print(median_water)
+	print(lines)
+
 	flow_bars = draw_barchart(median_flows, lines, 'median flow')
 	water_bars = draw_barchart(median_water, lines, 'total water')
 
