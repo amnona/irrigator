@@ -478,30 +478,32 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 
 
 def draw_barchart(ydat, labels, ylabel=None):
-	# plt.hold(False)
-	logger.debug('draw bar chart')
-	fig = plt.figure()
-	xdat = np.arange(len(ydat))
-	logger.warning('s1')
-	plt.bar(xdat, ydat, tick_label=labels)
-	logger.warning('s2')
-	plt.xticks(xdat, labels, rotation='vertical')
-	logger.warning('s3')
-	if ylabel:
-		plt.ylabel(ylabel)
-	logger.warning('s4')
-	fig.tight_layout()
-	figfile = BytesIO()
-	logger.warning('s5')
-	# fig.savefig(figfile, format='png', bbox_inches='tight')
-	fig.savefig(figfile, format='png')
-	logger.warning('s6')
-	figfile.seek(0)  # rewind to beginning of file
-	figdata_png = base64.b64encode(figfile.getvalue())
-	figfile.close()
-	plt.close()
-	return urllib.parse.quote(figdata_png)
-
+	try:
+		plt.hold(False)
+		logger.debug('draw bar chart')
+		fig = plt.figure()
+		xdat = np.arange(len(ydat))
+		logger.warning('s1')
+		plt.bar(xdat, ydat, tick_label=labels)
+		logger.warning('s2')
+		plt.xticks(xdat, labels, rotation='vertical')
+		logger.warning('s3')
+		if ylabel:
+			plt.ylabel(ylabel)
+		logger.warning('s4')
+		fig.tight_layout()
+		figfile = BytesIO()
+		logger.warning('s5')
+		# fig.savefig(figfile, format='png', bbox_inches='tight')
+		fig.savefig(figfile, format='png')
+		logger.warning('s6')
+		figfile.seek(0)  # rewind to beginning of file
+		figdata_png = base64.b64encode(figfile.getvalue())
+		figfile.close()
+		plt.close()
+		return urllib.parse.quote(figdata_png)
+	except:
+		return None
 
 @Site_Main_Flask_Obj.route('/stats', methods=['GET'])
 @requires_auth
