@@ -493,7 +493,8 @@ def draw_barchart(ydat, labels, ylabel=None):
 	fig.tight_layout()
 	figfile = BytesIO()
 	logger.warning('s5')
-	fig.savefig(figfile, format='png', bbox_inches='tight')
+	# fig.savefig(figfile, format='png', bbox_inches='tight')
+	fig.savefig(figfile, format='png')
 	logger.warning('s6')
 	figfile.seek(0)  # rewind to beginning of file
 	figdata_png = base64.b64encode(figfile.getvalue())
