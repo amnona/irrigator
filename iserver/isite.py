@@ -12,6 +12,7 @@ import numpy as np
 from io import BytesIO
 import base64
 import urllib
+import mpld3
 
 # import numpy as np
 
@@ -113,6 +114,11 @@ def get_status_file_name():
 def get_actions_file_name():
 	computer_name = get_computer_name()
 	return 'actions/%s_actions.txt' % computer_name
+
+
+def get_counter_file_name(counter):
+	computer_name = get_computer_name()
+	return 'water/water-log-%s.txt' % computer_name
 
 
 def get_timers_file_name():
@@ -457,7 +463,7 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 				continue
 			try:
 				event_time = datetime.datetime.strptime(res.groups()[0], "%Y-%m-%d %H:%M:%S")
-			except:
+			except Exception as err:
 				logger.debug('failed to read date time from actions log file. line is: %s' % cline)
 				continue
 			if event_time <= start_time or event_time > end_time:
@@ -477,38 +483,89 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 	return actions
 
 
-def draw_barchart(ydat, labels, ylabel=None):
+def get_water_log(counter, end_time=None, period=14, actions_log_file=None):
+	'''Get the water counter reads log for the counter
+
+	Parameters
+	----------
+	counter: str
+		the water counter name
+	period: int, optional
+		the period in days to get the reads for (back from the end_time)
+	actions_log_file: str, optional
+		the file to get the reads from.
+		If None, use the file for counter
+
+	Returns
+	-------
+	(times: list of int, water_reads: list of float)
+	'''
+	if actions_log_file is None:
+		actions_log_file = get_counter_file_name(counter)
+	if end_time is None:
+		end_time = datetime.datetime.now()
+	start_time = end_time - datetime.timedelta(days=period)
+	times = []
+	water_reads = []
+	with open(actions_log_file) as fl:
+		for cline in fl:
+			try:
+				cres = cline.split('\t')
+				# event_time = datetime.datetime.strptime(cres[0], "%Y-%m-%d %H:%M:%S")
+				event_time = datetime.datetime.strptime(cres[0],"%a %b %d %H:%M:%S %Y")
+				if event_time <= start_time or event_time > end_time:
+					continue
+				cwater = float(cres[1])
+				# cflow = float(cres[2])
+				times.append(event_time.timestamp())
+				water_reads.append(cwater)
+			except Exception as err:
+				print(err)
+				continue
+	return (times, water_reads)
+
+
+def draw_counter_water_plot(xdat, ydat, title=None):
 	try:
 		plt.hold(False)
+		logger.debug('draw counter_water_plot')
+		fig = plt.figure()
+		plt.plot(xdat, ydat, 'o-')
+		plt.ylabel('total water (l)')
+		plt.xlabel('time (secs)')
+		if title:
+			plt.title(title)
+
+		res = mpld3.fig_to_html(fig)
+		plt.close(fig)
+		return res
+	except Exception as err:
+		logger.warning('error when running draw_counter_water_plot:%s' % err)
+		return None
+
+
+def draw_barchart(ydat, labels, xlabel=None):
+	try:
+		# plt.hold(False)
 		logger.debug('draw bar chart')
 		fig = plt.figure()
 		xdat = np.arange(len(ydat))
-		logger.warning('s1')
-		plt.bar(xdat, ydat, tick_label=labels)
-		logger.warning('s2')
-		plt.xticks(xdat, labels, rotation='vertical')
-		logger.warning('s3')
-		if ylabel:
-			plt.ylabel(ylabel)
-		logger.warning('s4')
-		fig.tight_layout()
-		figfile = BytesIO()
-		logger.warning('s5')
-		# fig.savefig(figfile, format='png', bbox_inches='tight')
-		fig.savefig(figfile, format='png')
-		logger.warning('s6')
-		figfile.seek(0)  # rewind to beginning of file
-		figdata_png = base64.b64encode(figfile.getvalue())
-		figfile.close()
-		plt.close()
-		return urllib.parse.quote(figdata_png)
-	except:
+		plt.barh(xdat, ydat, tick_label=labels)
+		if xlabel:
+			plt.ylabel(xlabel)
+
+		res = mpld3.fig_to_html(fig)
+		plt.close(fig)
+		return res
+	except Exception as err:
+		logger.warning('error when running draw_barchart:%s' % err)
 		return None
+
 
 @Site_Main_Flask_Obj.route('/stats', methods=['GET'])
 @requires_auth
 def stats():
-	actions = get_stats_from_log()
+	actions = get_stats_from_log(period=1000)
 	median_flows = []
 	median_water = []
 	lines = []
@@ -521,14 +578,25 @@ def stats():
 		cwater = [x['water'] for x in cactions]
 		median_water.append(np.sum(cwater))
 
-	logger.warning(median_water)
-	logger.warning(median_flows)
-	logger.warning(lines)
-
 	flow_bars = draw_barchart(median_flows, lines, 'median flow')
+	return flow_bars
 	water_bars = draw_barchart(median_water, lines, 'total water')
 
 	wpart = ''
 	wpart += render_template('plot.html', flow_plot=flow_bars, water_plot=water_bars)
+
+	return wpart
+
+
+@Site_Main_Flask_Obj.route('/waterlog/<counter>', methods=['GET'])
+@requires_auth
+def waterlog(counter):
+	times, water_reads = get_water_log(counter)
+	water_bars = draw_counter_water_plot(times, water_reads, 'counter %s' % counter)
+	return water_bars
+
+	wpart = ''
+	# wpart += str(water_reads)
+	wpart += render_template('plot_counter_water.html', water_plot=water_bars)
 
 	return wpart
