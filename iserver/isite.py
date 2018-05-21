@@ -6,6 +6,7 @@ from functools import wraps
 import configparser
 from collections import defaultdict
 import datetime
+import time
 import re
 import matplotlib.pyplot as plt
 import numpy as np
@@ -414,7 +415,7 @@ def schedule():
 	wpage += 'Water:<br>'
 	counter_water = get_current_water()
 	for ccounter, cvals in counter_water.items():
-		wpage += 'Counter: %s, Water: %s, Flow: %s' % (ccounter, cvals['total'], cvals['flow'])
+		wpage += 'Counter: <a href="waterlog/%s">%s</a>, Water: %s, Flow2: %s' % (ccounter, ccounter, cvals['total'], cvals['flow'])
 	wpage += '<br>last actions:<br>'
 	wpage += '<select size="10">'
 	last_actions = get_last_lines(get_actions_file_name(), 20)
@@ -530,13 +531,28 @@ def draw_counter_water_plot(xdat, ydat, title=None):
 		plt.hold(False)
 		logger.debug('draw counter_water_plot')
 		fig = plt.figure()
-		plt.plot(xdat, ydat, 'o-')
+		points = plt.plot(xdat, ydat, 'o-')
 		plt.ylabel('total water (l)')
+		xticks = []
+		currentday = 'na'
+		xtickpos = []
+		xticklabels = []
+		for ctime in xdat:
+			xticks.append(time.strftime('%d/%m/%Y %H:%M', time.gmtime(ctime)))
+			newday = time.strftime('%d', time.gmtime(ctime))
+			if newday != currentday:
+				currentday = newday
+				xtickpos.append(ctime)
+				xticklabels.append(newday)
+				print(newday)
+		# print(xticks)
+		plt.xticks(xtickpos, xticklabels)
+		mpld3.plugins.connect(fig, mpld3.plugins.PointLabelTooltip(points[0], labels=xticks))
 		plt.xlabel('time (secs)')
 		if title:
 			plt.title(title)
 
-		res = mpld3.fig_to_html(fig)
+		res = mpld3.fig_to_html(fig, no_extras=False)
 		plt.close(fig)
 		return res
 	except Exception as err:
@@ -554,7 +570,7 @@ def draw_barchart(ydat, labels, xlabel=None):
 		if xlabel:
 			plt.ylabel(xlabel)
 
-		res = mpld3.fig_to_html(fig)
+		res = mpld3.fig_to_html(fig, no_extras=False)
 		plt.close(fig)
 		return res
 	except Exception as err:
@@ -579,11 +595,14 @@ def stats():
 		median_water.append(np.sum(cwater))
 
 	flow_bars = draw_barchart(median_flows, lines, 'median flow')
-	return flow_bars
 	water_bars = draw_barchart(median_water, lines, 'total water')
 
 	wpart = ''
-	wpart += render_template('plot.html', flow_plot=flow_bars, water_plot=water_bars)
+	wpart += 'Flow<br>'
+	wpart += flow_bars
+	wpart += '<br>Total water<br>'
+	wpart += water_bars
+	# wpart += render_template('plot.html', flow_plot=flow_bars, water_plot=water_bars)
 
 	return wpart
 
@@ -592,11 +611,11 @@ def stats():
 @requires_auth
 def waterlog(counter):
 	times, water_reads = get_water_log(counter)
-	water_bars = draw_counter_water_plot(times, water_reads, 'counter %s' % counter)
-	return water_bars
+	water_lines = draw_counter_water_plot(times, water_reads, 'counter %s' % counter)
+	# return water_bars
 
-	wpart = ''
-	# wpart += str(water_reads)
-	wpart += render_template('plot_counter_water.html', water_plot=water_bars)
+	wpart = 'Flow for counter: %s<br>' % counter
+	wpart += water_lines
+	# wpart += render_template('plot_counter_water.html', water_plot=water_bars)
 
 	return wpart
