@@ -513,7 +513,7 @@ def get_water_log(counter, end_time=None, period=14, actions_log_file=None):
 			try:
 				cres = cline.split('\t')
 				# event_time = datetime.datetime.strptime(cres[0], "%Y-%m-%d %H:%M:%S")
-				event_time = datetime.datetime.strptime(cres[0],"%a %b %d %H:%M:%S %Y")
+				event_time = datetime.datetime.strptime(cres[0], "%a %b %d %H:%M:%S %Y")
 				if event_time <= start_time or event_time > end_time:
 					continue
 				cwater = float(cres[1])
@@ -581,7 +581,7 @@ def draw_barchart(ydat, labels, xlabel=None):
 @Site_Main_Flask_Obj.route('/stats', methods=['GET'])
 @requires_auth
 def stats():
-	actions = get_stats_from_log(period=1000)
+	actions = get_stats_from_log(period=7)
 	median_flows = []
 	median_water = []
 	lines = []
@@ -617,5 +617,32 @@ def waterlog(counter):
 	wpart = 'Flow for counter: %s<br>' % counter
 	wpart += water_lines
 	# wpart += render_template('plot_counter_water.html', water_plot=water_bars)
+
+	return wpart
+
+
+@Site_Main_Flask_Obj.route('/faucetlog/<line>', methods=['GET'])
+@requires_auth
+def faucetlog(line):
+	actions = get_stats_from_log(period=1000)
+	if line not in actions:
+		return('line %s not in actions file')
+	line_actions = actions[line]
+	flows = []
+	times = []
+	water = []
+	for caction in line_actions:
+		flows.append(caction['flow'])
+		water.append(caction['water'])
+		times.append(caction['date'].strftime("%d/%m"))
+	flow_bars = draw_barchart(flows, times, 'flow')
+	water_bars = draw_barchart(water, times, 'flow')
+
+	wpart = ''
+	wpart += 'Actions summary for line %s<br><br>' % line
+	wpart += 'Flow<br>'
+	wpart += flow_bars
+	wpart += '<br>Total water<br>'
+	wpart += water_bars
 
 	return wpart
