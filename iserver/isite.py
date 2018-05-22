@@ -119,7 +119,7 @@ def get_actions_file_name():
 
 def get_counter_file_name(counter):
 	computer_name = get_computer_name()
-	return 'water/water-log-%s.txt' % computer_name
+	return 'water/water-log-%s-%s.txt' % (computer_name, counter)
 
 
 def get_timers_file_name():
