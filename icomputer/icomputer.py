@@ -18,8 +18,15 @@ def set_log_level(level):
 	logger.setLevel(level)
 
 
-def send_email(user, pwd, recipient, subject, body):
+def send_email(recipient, subject, body, user='irrigation.computer.amnon@gmail.com', pwd=None):
 	import smtplib
+
+	if pwd is None:
+		if 'IRRIGATOR_EMAIL_PASSWORD' in os.environ:
+			pwd = os.environ['IRRIGATOR_EMAIL_PASSWORD']
+		else:
+			logger.warning('IRRIGATOR_EMAIL_PASSWORD not in environment variables. please set.')
+			return False
 
 	gmail_user = user
 	gmail_pwd = pwd
@@ -29,8 +36,7 @@ def send_email(user, pwd, recipient, subject, body):
 	TEXT = body
 
 	# Prepare actual message
-	message = """From: %s\nTo: %s\nSubject: %s\n\n%s
-	""" % (FROM, ", ".join(TO), SUBJECT, TEXT)
+	message = """From: %s\nTo: %s\nSubject: %s\n\n%s""" % (FROM, ", ".join(TO), SUBJECT, TEXT)
 	try:
 		server = smtplib.SMTP("smtp.gmail.com", 587)
 		server.ehlo()
@@ -38,9 +44,11 @@ def send_email(user, pwd, recipient, subject, body):
 		server.login(gmail_user, gmail_pwd)
 		server.sendmail(FROM, TO, message)
 		server.close()
-		return ('successfully sent the mail')
-	except:
-		return ('failed to send mail')
+		logger.info('sent email: subject %s to %s' % (SUBJECT, TO))
+		return True
+	except Exception as err:
+		logger.warning('failed to send email: subject %s to %s. error %s' % (SUBJECT, TO, err))
+		return False
 
 
 class IComputer:
@@ -454,8 +462,21 @@ class IComputer:
 
 	def main_loop(self):
 		done = False
+
+		# time counter (seconds)
 		ticks = 0
+		# the faucets that should be open before the closing of needed faucets
 		old_should_be_open = set()
+
+		# a list of water reads per counter. used to detect water leaks
+		leak_check_counter_water = defaultdict(list)
+		# how many non zero counts we need to decide a leak is happening
+		leak_check_nunber_tests = 4
+		# interval for leak checks (seconds)
+		leak_check_interval = 5 * 60
+
+		send_email('amnonim@gmail.com', 'irrigator started', 'computer name is %s' % self.computer_name)
+
 		while not done:
 			# logger.debug('tick')
 
@@ -549,6 +570,38 @@ class IComputer:
 					# write water log
 					cur_faucet_name = num_open[ccounter.name][0]
 					self.write_water_log_counter(ccounter, faucet_name=cur_faucet_name)
+
+			# leak check
+			if ticks % leak_check_interval == 0:
+				logger.debug('leak check')
+				for ccounter in self.counters.values():
+					# only on counters on this computer
+					if ccounter.computer_name != self.computer_name:
+						continue
+					# are any faucets on this counter open?
+					if ccounter.name in num_open:
+						logger.debug('faucets open on counter %s. test skipped' % ccounter.name)
+						continue
+					logger.debug('leak check - no faucets open for %s' % ccounter.name)
+
+					# add current water read
+					cleak = leak_check_counter_water[ccounter.name]
+					cleak.append(ccounter.get_count())
+					if len(cleak) > leak_check_nunber_tests:
+						cleak.pop(0)
+
+					# test if we have a leak
+					num_leak = 0
+					for idx in range(len(cleak - 1)):
+						if cleak[idx + 1] - cleak[idx] <= 0:
+							break
+						num_leak += 1
+					if num_leak >= leak_check_nunber_tests:
+						logger.warning('leak detected for faucet %s')
+						msg = 'computer name: %s\n' % self.computer_name
+						msg += 'counter name: %s\n' % ccounter.name
+						msg += 'reads (read interval is %s):\n%s\n' % (leak_check_interval, cleak)
+						send_email('amnonim@gmail.com', 'leak detected', msg)
 
 			# check for changed files
 			# check manual open/close file
