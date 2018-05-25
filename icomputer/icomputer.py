@@ -112,7 +112,7 @@ class IComputer:
 				elif ttype == 'pi':
 					from .counter_pi import CounterPi
 					ccounter = CounterPi()
-				if ttype == 'fake':
+				elif ttype == 'fake':
 					from .counter_fake import CounterFake
 					ccounter = CounterFake(name=name, computer_name=computer_name, iopin=row['channel'], counts_per_liter=counts_per_liter, fake_flow=row.get('fake_flow', 0))
 				else:
