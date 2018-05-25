@@ -3,7 +3,7 @@ import importlib
 import datetime
 import os
 
-from . import send_email
+from .utils import send_email
 import numpy as np
 
 logger = getLogger(__name__)
@@ -151,14 +151,15 @@ class Faucet:
 			action_str = 'remotely closed'
 		self.local_computer.write_action_log('%s faucet %s water %d median flow %f' % (action_str, self.name, total_water, self.get_median_flow()))
 
-		if total_water > -1:
-			if total_water <= 10:
-				logger.warning('got 0 flow for faucet %s' % self.name)
-				msg = 'local (sending) computer: %s\n' % self.local_computer.computer_name
-				msg += 'faucet computer: %s\n' % self.computer_name
-				msg += 'faucet: %s\n' % self.name
-				msg += 'total water: %s\n' % total_water
-				send_email('amnonim@gmail.com', 'faucet not opening', msg)
+		if self.is_local():
+			if total_water > -1:
+				if total_water <= 10:
+					logger.warning('got 0 flow for faucet %s' % self.name)
+					msg = 'local (sending) computer: %s\n' % self.local_computer.computer_name
+					msg += 'faucet computer: %s\n' % self.computer_name
+					msg += 'faucet: %s\n' % self.name
+					msg += 'total water: %s\n' % total_water
+					send_email('amnonim@gmail.com', 'faucet not opening', msg)
 
 		# reset the flow counts since we now don't have any
 		self.flow_counts = []

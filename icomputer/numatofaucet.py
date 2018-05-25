@@ -16,8 +16,9 @@ class NumatoFaucet(Faucet):
             self.relay_idx = self.relay_idx_from_num(self.relay_idx)
         except:
             self.relay_idx = str(self.relay_idx)
-        if port_name is None:
-            port_name = self.get_serial_port()
+        if self.is_local():
+            if port_name is None:
+                port_name = self.get_serial_port()
         self.port_name = port_name
 
     def relay_idx_from_num(self, relay_num):

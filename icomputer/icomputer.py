@@ -10,45 +10,13 @@ import sys
 
 from .faucet import get_faucet_class
 from .timers import Timer, WeeklyTimer, SingleTimer
+from .utils import send_email
 
 logger = logging.getLogger(__name__)
 
 
 def set_log_level(level):
 	logger.setLevel(level)
-
-
-def send_email(recipient, subject, body, user='irrigation.computer.amnon@gmail.com', pwd=None):
-	import smtplib
-
-	if pwd is None:
-		if 'IRRIGATOR_EMAIL_PASSWORD' in os.environ:
-			pwd = os.environ['IRRIGATOR_EMAIL_PASSWORD']
-		else:
-			logger.warning('IRRIGATOR_EMAIL_PASSWORD not in environment variables. please set.')
-			return False
-
-	gmail_user = user
-	gmail_pwd = pwd
-	FROM = user
-	TO = recipient if type(recipient) is list else [recipient]
-	SUBJECT = subject
-	TEXT = body
-
-	# Prepare actual message
-	message = """From: %s\nTo: %s\nSubject: %s\n\n%s""" % (FROM, ", ".join(TO), SUBJECT, TEXT)
-	try:
-		server = smtplib.SMTP("smtp.gmail.com", 587)
-		server.ehlo()
-		server.starttls()
-		server.login(gmail_user, gmail_pwd)
-		server.sendmail(FROM, TO, message)
-		server.close()
-		logger.info('sent email: subject %s to %s' % (SUBJECT, TO))
-		return True
-	except Exception as err:
-		logger.warning('failed to send email: subject %s to %s. error %s' % (SUBJECT, TO, err))
-		return False
 
 
 class IComputer:
@@ -88,6 +56,7 @@ class IComputer:
 		try:
 			self.commands_file_timestamp = os.stat(self.commands_file).st_mtime
 		except:
+			logger.warning('commands file %s not found' % self.commands_file)
 			self.commands_file = None
 			self.commands_file_timestamp = int(time.time())
 
@@ -112,6 +81,7 @@ class IComputer:
 					'numato' : io pins of the numato relay board
 					'pi' : gpio pins of the raspberry pi
 					'arduino' : arduino connected counter (use image button_test)
+					'fake' : a fake software counter for testing. has the field fake_flow (per second)
 				channel : int
 					the channel the counter is connected to (0 is pin #0, etc.)
 				voltage (optional) : int or 'none'
@@ -142,6 +112,9 @@ class IComputer:
 				elif ttype == 'pi':
 					from .counter_pi import CounterPi
 					ccounter = CounterPi()
+				if ttype == 'fake':
+					from .counter_fake import CounterFake
+					ccounter = CounterFake(name=name, computer_name=computer_name, iopin=row['channel'], counts_per_liter=counts_per_liter, fake_flow=row.get('fake_flow', 0))
 				else:
 					logger.warning('counter type %s for counter %s unknown' % (ttype, row['name']))
 					continue
@@ -589,14 +562,16 @@ class IComputer:
 					cleak.append(ccounter.get_count())
 					if len(cleak) > leak_check_nunber_tests:
 						cleak.pop(0)
+					print('cleak %s' % cleak)
 
 					# test if we have a leak
 					num_leak = 0
-					for idx in range(len(cleak - 1)):
+					for idx in range(len(cleak) - 1):
 						if cleak[idx + 1] - cleak[idx] <= 0:
 							break
 						num_leak += 1
-					if num_leak >= leak_check_nunber_tests:
+					print('num leak %s' % num_leak)
+					if num_leak >= leak_check_nunber_tests - 1:
 						logger.warning('leak detected for faucet %s')
 						msg = 'computer name: %s\n' % self.computer_name
 						msg += 'counter name: %s\n' % ccounter.name
