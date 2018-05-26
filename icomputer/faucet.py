@@ -21,7 +21,7 @@ class Faucet:
 	# timers associated with the faucet
 	timers = []
 
-	def __init__(self, name, local_computer, computer_name=None, faucet_type='generic', relay='0', counter='none', default_duration=30, **kwargs):
+	def __init__(self, name, local_computer, computer_name=None, faucet_type='generic', relay='0', counter='none', default_duration=30, normal_flow=-1, **kwargs):
 		'''Init the faucet
 
 		Parameters
@@ -53,6 +53,10 @@ class Faucet:
 		self.flow_counts = []
 		self.open_time = datetime.datetime.now()
 		self.isopen = False
+		try:
+			self.normal_flow = float(normal_flow)
+		except:
+			self.normal_flow = -1
 		self.all_alone_all_time = True
 		self.all_alone = True
 		self.start_water = -1
@@ -143,6 +147,7 @@ class Faucet:
 				self.write_water_summary()
 
 		total_water = self.get_total_water()
+		med_flow = self.get_median_flow()
 
 		# write the action log file entry
 		if self.is_local():
@@ -151,23 +156,49 @@ class Faucet:
 			action_str = 'remotely closed'
 		self.local_computer.write_action_log('%s faucet %s water %d median flow %f' % (action_str, self.name, total_water, self.get_median_flow()))
 
-		# test if faucet did not actually have water
+		# test if faucet did not actually have water or if there was a water leak in the faucet (too high/low flow)
 		# only if it is a faucet with a counter on this computer
 		counter = self.get_faucet_counter()
 		if counter is not None:
 			if counter.computer_name == self.local_computer.computer_name:
-				# and was open long enough (>60 seconds)
-				if (datetime.datetime.now() - self.open_time).total_seconds() > 60:
-					# and we have a water read
+				# and was open long enough (>120 seconds)
+				if (datetime.datetime.now() - self.open_time).total_seconds() > 120:
+					# check if any water came out
+					# if we have a water read
 					if total_water > -1:
 						# and not enough water (< 10 L)
 						if total_water <= 10:
-							logger.warning('got 0 flow for faucet %s' % self.name)
-							msg = 'local (sending) computer: %s\n' % self.local_computer.computer_name
+							logger.warning('got 0 water for faucet %s' % self.name)
+							msg = 'Zero water for faucet %s. Did it open correctly?\n' % self.name
+							msg += 'local (sending) computer: %s\n' % self.local_computer.computer_name
 							msg += 'faucet computer: %s\n' % self.computer_name
 							msg += 'faucet: %s\n' % self.name
 							msg += 'total water: %s\n' % total_water
-							send_email('amnonim@gmail.com', 'faucet not opening', msg)
+							send_email('amnonim@gmail.com', 'faucet %s not opening' % self.name, msg)
+					# check if flow is too high/low
+					# do we have a normal flow for the faucet
+					if self.normal_flow > 0:
+						if med_flow > -1:
+							# if we pass too high by 15% or 4l/m
+							if med_flow > self.normal_flow * 1.15 or med_flow > self.normal_flow + 4:
+								logger.warning('got too high flow for faucet %s' % self.name)
+								msg = 'Too high flow for faucet %s. Does the line have a leak?\n' % self.name
+								msg += 'local (sending) computer: %s\n' % self.local_computer.computer_name
+								msg += 'faucet computer: %s\n' % self.computer_name
+								msg += 'faucet: %s\n' % self.name
+								msg += 'required flow: %f, observed flow: %f' % (self.normal_flow, med_flow)
+								msg += 'total water: %s\n' % total_water
+								send_email('amnonim@gmail.com', 'high flow for faucet %s' % self.name, msg)
+							# if we pass too low by 20% or 4l/m
+							if med_flow < self.normal_flow * 0.8 or med_flow < self.normal_flow - 4:
+								logger.warning('got too low flow for faucet %s' % self.name)
+								msg = 'Too low flow for faucet %s. Does the line have a congestion?\n' % self.name
+								msg += 'local (sending) computer: %s\n' % self.local_computer.computer_name
+								msg += 'faucet computer: %s\n' % self.computer_name
+								msg += 'faucet: %s\n' % self.name
+								msg += 'required flow: %f, observed flow: %f' % (self.normal_flow, med_flow)
+								msg += 'total water: %s\n' % total_water
+								send_email('amnonim@gmail.com', 'low flow for faucet %s' % self.name, msg)
 
 		# reset the flow counts since we now don't have any
 		self.flow_counts = []
