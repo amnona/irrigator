@@ -32,7 +32,7 @@ def sane_day_from_isoweekday(day):
     int:
         the hebrew day num (1=sunday,...,7=sat)
     '''
-    day = day+1
+    day = day + 1
     if day == 8:
         day = 1
     return day

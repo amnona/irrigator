@@ -624,6 +624,8 @@ class IComputer:
 		last_daily_water_count = defaultdict(float)
 		last_daily_water_day = datetime.datetime.now().day
 
+		old_fertilizer_should_be_open = set()
+
 		send_email('amnonim@gmail.com', 'irrigator started', 'computer name is %s' % self.computer_name)
 
 		while not done:
@@ -671,13 +673,18 @@ class IComputer:
 				fertilizer_should_be_open.add(cpump)
 			# now lets remove all the pumps that should be closed
 			fertilizer_should_be_open = fertilizer_should_be_open.difference(fertilizer_should_be_closed)
-			# and let's open all the pumps that need to be open
+			# and let's open all the pumps that need to be open and close the other ones
 			for cpump in fertilizer_should_be_open:
 				if cpump in self.pumps:
 					logger.debug('fertilizer - opening pump %s' % cpump)
 					self.pumps[cpump].open()
 				else:
 					logger.warning(' strange error with pump %s should open but not in self.pumps' % cpump)
+			# close the open pumps that should not be open anymore
+			for cpump in old_fertilizer_should_be_open:
+				if cpump not in fertilizer_should_be_open:
+					self.pumps[cpump].close()
+			old_fertilizer_should_be_open = fertilizer_should_be_open
 
 			# if the faucets that should be opened changed, write the status file (local faucets only?)
 			if should_be_open != old_should_be_open:
