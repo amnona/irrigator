@@ -170,6 +170,19 @@ class WeeklyTimer(Timer):
         # since always there's another week, don't delete
         return False
 
+    def time_to_close(self):
+        '''How much time left until the timer ends
+
+        Returns
+        -------
+        float - the time left to closing (in seconds)
+        '''
+        now = datetime.datetime.now()
+        test_start = datetime.datetime.combine(datetime.date.today(), self.start_time)
+        test_end = test_start + datetime.timedelta(minutes=self.duration)
+        time_left = (test_end - now).total_seconds()
+        return time_left
+
 
 class SingleTimer(Timer):
     #
