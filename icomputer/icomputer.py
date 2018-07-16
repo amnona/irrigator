@@ -647,7 +647,7 @@ class IComputer:
 			fertilizer_should_be_closed = set()
 			for ctimer in self.timers:
 				# the faucet needs to be open
-				if not ctimer.should_be_open:
+				if not ctimer.should_be_open():
 					continue
 				cfaucet = ctimer.faucet
 				logger.debug('fertilize - faucet %s open' % cfaucet.name)
