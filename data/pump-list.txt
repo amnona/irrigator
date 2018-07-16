@@ -1,0 +1,2 @@
+name	computer_name	relay	faucet_type	pre_close_time	sensor_type	sensor_pin
+main-pump	dani	14	NumatoFaucet	10	na	na
