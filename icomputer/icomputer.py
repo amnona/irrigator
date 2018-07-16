@@ -675,14 +675,17 @@ class IComputer:
 			fertilizer_should_be_open = fertilizer_should_be_open.difference(fertilizer_should_be_closed)
 			# and let's open all the pumps that need to be open and close the other ones
 			for cpump in fertilizer_should_be_open:
+				if cpump in old_fertilizer_should_be_open:
+					continue
 				if cpump in self.pumps:
-					logger.debug('fertilizer - opening pump %s' % cpump)
+					logger.info('fertilizer - opening pump %s' % cpump)
 					self.pumps[cpump].open()
 				else:
 					logger.warning(' strange error with pump %s should open but not in self.pumps' % cpump)
 			# close the open pumps that should not be open anymore
 			for cpump in old_fertilizer_should_be_open:
 				if cpump not in fertilizer_should_be_open:
+					logger.info('fertilizer - closing pump %s' % cpump)
 					self.pumps[cpump].close()
 			old_fertilizer_should_be_open = fertilizer_should_be_open
 
@@ -711,6 +714,7 @@ class IComputer:
 					# if it is open and should close, close it
 					if cfaucet.name not in should_be_open:
 						# if faucet on local computer, actually close it, otherwise pretend to close it
+						logger.info('closing faucet %s' % cfaucet.name)
 						cfaucet.close()
 					else:
 						# if open and should be open, if it is alone, add the water count
@@ -723,6 +727,7 @@ class IComputer:
 								logger.debug('computer disabled. not opening faucet %s' % cfaucet.name)
 								continue
 						# if faucet on local computer, actually open it. otherwise, pretend to open it
+						logger.info('opening faucet %s' % cfaucet.name)
 						cfaucet.open()
 
 			# delete timers in the delete list
