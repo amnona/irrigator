@@ -213,3 +213,14 @@ class SingleTimer(Timer):
             return False
         logger.debug('Single timer %s should be deleted since past bedtime' % self)
         return True
+
+    def time_to_close(self):
+        '''How much time left until the timer ends
+
+        Returns
+        -------
+        float - the time left to closing (in seconds)
+        '''
+        now = datetime.datetime.now()
+        time_left = (self.end_datetime - now).total_seconds()
+        return time_left

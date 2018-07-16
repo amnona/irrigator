@@ -26,6 +26,9 @@ class IComputer:
 	timers = []
 	# water counters. Keyed by name
 	counters = {}
+	# fertilization pumps. Keyed by name
+	pumps = {}
+
 	# number of faucets open concurrently for each water counter
 	# key is water counter name
 	num_open = {}
@@ -66,6 +69,8 @@ class IComputer:
 		self.read_timers()
 		# load the water counters file
 		self.read_counters()
+		# load the fertilization pumps file
+		self.read_pumps()
 
 	def __repr__(self):
 		return "Computer: " + ', '.join("%s: %s" % item for item in vars(self).items())
@@ -130,12 +135,18 @@ class IComputer:
 		faucets_file : str (optional)
 			name of TSV file containing faucet information. should contain the following columns:
 				name (str) : name of faucet
-				computer (str) : name of computer to which the faucet is connected
+				idx (int): the index of the faucet (for quick reference)
+				computer_name (str) : name of computer to which the faucet is connected
 				type (str) : type of relay (connected to the computer) to which the faucet is connected. can be:
-					'XXX'
-					'YYY'
+					'NumatoFaucet'
+					'FakeFaucet'
+				counter (str): name of the water counter (from counters.txt) measuting this line or 'na' if no counter connected
+				normal_flow (float): the expected flow for the faucet. if water is significantly higher/lower than the normal_flow, we get an email warning
 				relay (str) : name of the relay
 				port (str): the port on the relay for the faucet
+				default_duration (float): default irrigation time for the faucet (used for manual open and adding new timer)
+				fertilization_pump (str): name of the fertilization pump associated with this line (from pump-list.txt) or 'na' if no pump on this line
+				fertilize (str): 'yes' to apply fertilization or 'no' to not fertilize
 		'''
 		logger.info('read faucets from file %s' % faucets_file)
 		self.close_all()
@@ -154,6 +165,40 @@ class IComputer:
 				self.faucets[fname] = cfaucet
 		self.faucets_file = faucets_file
 		self.faucets_file_timestamp = os.stat(self.faucets_file).st_mtime
+
+	def read_pumps(self, pumps_file='data/pump-list.txt'):
+		'''Load fertilization pump information from config file into the computer class faucet dict
+
+		Parameters
+		----------
+		pump_file : str (optional)
+			name of TSV file containing pump information. should contain the following columns:
+				name (str) : name of pump (used in faucet-list.txt)
+				computer_name (str) : name of computer to which the pump relay is connected
+				type (str) : type of relay (connected to the computer) to which the faucet is connected. can be:
+					'NumatoFaucet'
+					'FakeFaucet'
+				relay (str) : name of the relay
+				port (str): the port on the relay for the faucet
+				pre_close_time (float): time before closing the faucet to close the pump (min)
+		'''
+		logger.info('read pumps config from file %s' % pumps_file)
+		self.close_all()
+		self.pumps = {}
+		with open(pumps_file) as fl:
+			ffile = csv.DictReader(fl, delimiter='\t')
+			for row in ffile:
+				faucet_type = row['faucet_type']
+				fname = row['name']
+				if fname in self.pumps:
+					logger.warning('pump %s already defined' % fname)
+					continue
+				faucet_class = get_faucet_class(faucet_type)
+				cpump = faucet_class(local_computer=self, **dict(row))
+				logger.info('added pump %s' % cpump)
+				self.pumps[fname] = cpump
+		self.pumps_file = pumps_file
+		self.pumps_file_timestamp = os.stat(self.pumps_file).st_mtime
 
 	def read_timers(self, timers_file='data/timer-list.txt'):
 		'''Load timers information from config file into the computer class timers list
@@ -361,6 +406,134 @@ class IComputer:
 		self.commands_file = commands_file
 		self.commands_file_timestamp = os.stat(commands_file).st_mtime
 
+	def read_comfig_commands(self, config_commands_file=None):
+		'''
+		TODO: write this
+
+		Read the config commands file
+
+		This file includes per-computer commands that are always used (not deleted).
+		This includes disabling/enabling lines, changing irrigation durations by percentage, disbaling/enabling fertilization, etc.
+
+		commands are tab separated between arguments, newline between commands.
+		can include:
+		disable_computer computer_name(str)
+			move computer to "disable" mode (close all faucets and don't turn any on until enable)
+		set_percent percent(number+'%'')
+			change all irrigation times by percent compared to the real program (100% - original, <100% less, 200% twice long irrigations...)
+		disable_line line_name(str)
+			skip all irrigations for this line
+		disable_fertilization fertilization_pump(str)
+			disable all fertilization by this pump
+		force_fertilization fertilization_pump(str)
+			force fertilization for all lines using this pump
+
+		:param commands_file:  str or None (optional)
+			file name of the commands file. None to use the default (computer_name + '_commands.txt')
+		:return:
+		'''
+		if commands_file is None:
+			commands_file = self.commands_file
+		with open(commands_file) as cf:
+			for cline in cf:
+				cline = cline.strip().split('\t')
+				if len(cline) != 2:
+					logger.warning('Manual command %s does not contain 2 columns' % cline)
+					continue
+				ccommand = cline[0].lower()
+				param = cline[1]
+				if ccommand == 'open':
+					cfaucet = param
+					if cfaucet not in self.faucets:
+						logger.warning('cannot open faucet %s - not found' % cfaucet)
+						logger.warning('current faucets: %s' % self.faucets)
+						continue
+					new_timer = SingleTimer(duration=self.faucets[cfaucet].default_duration, cfaucet=self.faucets[cfaucet], start_datetime=None, is_manual=True)
+					self.timers.append(new_timer)
+					if self.faucets[cfaucet].is_local():
+						logger.info('created manual single timer for faucet: %s' % cfaucet)
+					else:
+						logger.info('cannot open. faucet %s not on this computer' % cfaucet)
+
+				elif ccommand == 'close':
+					cfaucet = param
+					if cfaucet not in self.faucets:
+						logger.warning('cannot close faucet %s - not found' % cfaucet)
+						continue
+					self.faucets[cfaucet].close()
+					# the_faucet = self.faucets[cfaucet]
+					# self.write_action_log('manually closed faucet %s, water=%d, flow=%s' % (cfaucet, the_faucet.get_total_water(), the_faucet.get_median_flow()))
+					# self.faucets[cfaucet].close()
+
+					# if self.faucets[cfaucet].is_local():
+					# 	logger.info('manually closed faucet %s' % cfaucet)
+					# else:
+					# 	logger.warning('cannot close. faucet %s not on this computer' % cfaucet)
+					delete_list = []
+					for ctimer in self.timers:
+						if ctimer.faucet != self.faucets[cfaucet]:
+							continue
+						if not isinstance(ctimer, SingleTimer):
+							continue
+						if not ctimer.is_manual:
+							continue
+						delete_list.append(ctimer)
+					self.delete_timers(delete_list)
+
+				elif ccommand == 'closeall':
+					self.close_all()
+					delete_list = []
+					for ctimer in self.timers:
+						if not isinstance(ctimer, SingleTimer):
+							continue
+						if not ctimer.is_manual:
+							continue
+						delete_list.append(ctimer)
+					self.delete_timers(delete_list)
+					logger.info('closed all faucets (manual)')
+
+				elif ccommand == 'disable':
+					computer_name = param
+					logger.debug('manual disable computer %s' % computer_name)
+					if computer_name == self.computer_name:
+						self.disabled = True
+						self.write_config_file()
+						logger.info('computer %s disabled' % computer_name)
+						# close all currently open faucets
+						self.close_all()
+						# and delete the manual timers
+						delete_list = []
+						for ctimer in self.timers:
+							if not isinstance(ctimer, SingleTimer):
+								continue
+							if not ctimer.is_manual:
+								continue
+							delete_list.append(ctimer)
+						self.delete_timers(delete_list)
+					else:
+						logger.debug('cannot disable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
+
+				elif ccommand == 'enable':
+					computer_name = param
+					logger.debug('manual enable computer %s' % computer_name)
+					if computer_name == self.computer_name:
+						self.disabled = False
+						self.write_config_file()
+						logger.info('computer %s enabled' % computer_name)
+					else:
+						logger.debug('cannot enable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
+
+				elif ccommand == 'quit':
+					logger.warning('quitting')
+					self.close_all()
+					sys.exit()
+
+				else:
+					logger.warning('Manual command %s not recognized' % cline)
+					continue
+		self.commands_file = commands_file
+		self.commands_file_timestamp = os.stat(commands_file).st_mtime
+
 	def write_action_log(self, msg):
 		with open(self.actions_log_file, 'a') as fl:
 			fl.write('%s ' % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
@@ -447,6 +620,9 @@ class IComputer:
 		leak_check_nunber_tests = 4
 		# interval for leak checks (seconds)
 		leak_check_interval = 5 * 60
+		# for the daily total water report
+		last_daily_water_count = defaultdict(float)
+		last_daily_water_day = datetime.datetime.now().day
 
 		send_email('amnonim@gmail.com', 'irrigator started', 'computer name is %s' % self.computer_name)
 
@@ -465,6 +641,37 @@ class IComputer:
 					should_be_open.add(ctimer.faucet.name)
 				if ctimer.should_remove():
 					delete_list.append(ctimer)
+
+			# check which fertilization pumps should be open
+			fertilizer_should_be_open = set()
+			fertilizer_should_be_closed = set()
+			for ctimer in self.timers:
+				# the faucet needs to be open
+				if not ctimer.should_be_open:
+					continue
+				cfaucet = ctimer.faucet
+				# need to have the fertilization pump
+				cpump = cfaucet.fertilization_pump
+				if cpump not in self.pumps:
+					continue
+				# if this is an open faucet which is connected to the pump and should not be fertilized, should not open the pump
+				if cfaucet.fertilize != 'yes':
+					fertilizer_should_be_closed.add(cpump)
+					continue
+				# if we have < 10 minutes to closing time, pump should be closed
+				if ctimer.time_to_close() < 10 * 60:
+					fertilizer_should_be_closed.add(cpump)
+					continue
+				# so faucet with the pump is open, should fertilize and has enough time before closing, lets open the pump
+				fertilizer_should_be_open.add(cpump)
+			# now lets remove all the pumps that should be closed
+			fertilizer_should_be_open = fertilizer_should_be_open.difference(fertilizer_should_be_closed)
+			# and let's open all the pumps that need to be open
+			for cpump in fertilizer_should_be_open:
+				if cpump in self.pumps:
+					self.pumps[cpump].open()
+				else:
+					logger.warning(' strange error with pump %s should open but not in self.pumps' % cpump)
 
 			# if the faucets that should be opened changed, write the status file (local faucets only?)
 			if should_be_open != old_should_be_open:
@@ -578,6 +785,20 @@ class IComputer:
 						msg += 'reads (read interval is %s):\n%s\n' % (leak_check_interval, cleak)
 						send_email('amnonim@gmail.com', 'leak detected', msg)
 
+			# do the daily water report
+			ctime = datetime.datetime.now()
+			if ctime.day != last_daily_water_day:
+				irrigation_report = ''
+				if ctime.hour >= 8:
+					last_daily_water_day = ctime.day
+					for ccounter in self.counters.values():
+						if ccounter.computer_name != self.computer_name:
+							continue
+						irrigation_report += 'counter %s total daily water: %f' % (ccounter.name, ccounter.last_water_read - last_daily_water_count[ccounter.name])
+						last_daily_water_count[ccounter.name] = ccounter.last_water_read
+				send_email('amnonim@gmail.com', 'daily irrigation report', irrigation_report)
+				last_daily_water_day = ctime.day
+
 			# check for changed files
 			# check manual open/close file
 			try:
@@ -596,6 +817,12 @@ class IComputer:
 			# check timers file
 			if not self.timers_file_timestamp == os.stat(self.timers_file).st_mtime:
 				logger.info('timers file changed')
+				self.read_timers(self.timers_file)
+			# check fertilization pumps list file
+			if not self.pumps_file_timestamp == os.stat(self.pumps_file).st_mtime:
+				logger.info('pumps file changed')
+				self.read_pumps(self.pumps_file)
+				self.read_faucets(self.faucets_file)
 				self.read_timers(self.timers_file)
 
 			# update keepalive file

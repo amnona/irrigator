@@ -21,7 +21,7 @@ class Faucet:
 	# timers associated with the faucet
 	timers = []
 
-	def __init__(self, name, local_computer, computer_name=None, faucet_type='generic', relay='0', counter='none', default_duration=30, normal_flow=-1, **kwargs):
+	def __init__(self, name, local_computer, computer_name=None, faucet_type='generic', relay='0', counter='none', default_duration=30, normal_flow=-1, fertilization_pump='none', fertilize='no', pump_control=False, pump_sensor='none', **kwargs):
 		'''Init the faucet
 
 		Parameters
@@ -40,6 +40,16 @@ class Faucet:
 			the relay in the faucet controller (i.e. 0-F for numato 16 relay board
 		default_duration: int (optional)
 			the default duration of the faucet when opened manually/new timer added
+		normal_flow: float (optional)
+			the expected flow for the line (used to give warnings if deviation occurs) or -1 to skip testing
+		fertilization_pump: str, optional
+			name of the fertilization pump connected to this faucet, 'none' if no pump connected
+		fertilize: str, optional
+			'yes' to fertilize this line, 'no' to not fertilize
+		pump_control: bool, optional
+			if True, this faucet control a fertilization pump. False (default) is a regular irrigation faucet
+		pump_sensor: str, optional
+			name of the fertilizer sensor (to close the pump if it runs out)
 		'''
 		self.name = name
 		self.local_computer = local_computer
@@ -57,6 +67,10 @@ class Faucet:
 			self.normal_flow = float(normal_flow)
 		except:
 			self.normal_flow = -1
+		self.pump_control = pump_control
+		self.pump_sensor = pump_sensor
+		self.fertilization_pump = fertilization_pump
+		self.fertilize = fertilize
 		self.all_alone_all_time = True
 		self.all_alone = True
 		self.start_water = -1
@@ -66,7 +80,15 @@ class Faucet:
 		logger.debug('Init faucet %s on computer %s' % (name, computer_name))
 
 	def __repr__(self):
-		return 'Faucet: %s\nfaucet_type: %s, counter: %s, default_duration: %s, computer_name: %s, relay: %s' % (self.name, self.faucet_type, self.counter, self.default_duration, self.computer_name, self.relay_idx)
+		if self.pump_control:
+			return 'Pump control faucet %s, relay %s on computer %s' % (self.name, self.relay_idx, self.computer_name)
+		else:
+			return 'Faucet: %s\nfaucet_type: %s, counter: %s, default_duration: %s, computer_name: %s, relay: %s' % (self.name, self.faucet_type, self.counter, self.default_duration, self.computer_name, self.relay_idx)
+
+	def is_pump_control(self):
+		'''True if this faucet control a fertilization pump, False if regular faucet
+		'''
+		return self.pump_control
 
 	def is_local(self):
 		'''Is this faucet physically connected to this computer
