@@ -703,7 +703,7 @@ class IComputer:
 			# now mark as not alone ones on a counter with more than one faucet open
 			for ccounter, faucets in num_open.items():
 				if len(faucets) > 1:
-					logger.info('more than one faucet: %s' % faucets)
+					logger.debug('more than one faucet: %s' % faucets)
 					for cfaucet in faucets:
 						self.faucets[cfaucet].all_alone = False
 						self.faucets[cfaucet].all_alone_all_time = False
@@ -724,7 +724,7 @@ class IComputer:
 					if cfaucet.name in should_be_open:
 						if self.disabled:
 							if cfaucet.is_local():
-								logger.debug('computer disabled. not opening faucet %s' % cfaucet.name)
+								logger.info('computer disabled. not opening faucet %s' % cfaucet.name)
 								continue
 						# if faucet on local computer, actually open it. otherwise, pretend to open it
 						logger.info('opening faucet %s' % cfaucet.name)
