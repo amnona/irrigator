@@ -650,25 +650,31 @@ class IComputer:
 				if not ctimer.should_be_open:
 					continue
 				cfaucet = ctimer.faucet
+				logger.debug('fertilize - faucet %s open' % cfaucet.name)
 				# need to have the fertilization pump
 				cpump = cfaucet.fertilization_pump
 				if cpump not in self.pumps:
+					logger.debug('fertilize - pump %s does not exist from faucet %s' % (cpump, cfaucet.name))
 					continue
 				# if this is an open faucet which is connected to the pump and should not be fertilized, should not open the pump
 				if cfaucet.fertilize != 'yes':
+					logger.debug('fertilize - pump %s should be always closed from faucet %s' % (cpump, cfaucet.name))
 					fertilizer_should_be_closed.add(cpump)
 					continue
 				# if we have < 10 minutes to closing time, pump should be closed
 				if ctimer.time_to_close() < 10 * 60:
 					fertilizer_should_be_closed.add(cpump)
+					logger.debug('fertilize - pump %s should be closed since %f time left is not enough from faucet %s' % (cpump, ctimer.time_to_close(), cfaucet.name))
 					continue
 				# so faucet with the pump is open, should fertilize and has enough time before closing, lets open the pump
+				logger.debug('fertilize - pump %s should be open from faucet %s' % (cpump, cfaucet.name))
 				fertilizer_should_be_open.add(cpump)
 			# now lets remove all the pumps that should be closed
 			fertilizer_should_be_open = fertilizer_should_be_open.difference(fertilizer_should_be_closed)
 			# and let's open all the pumps that need to be open
 			for cpump in fertilizer_should_be_open:
 				if cpump in self.pumps:
+					logger.debug('fertilizer - opening pump %s' % cpump)
 					self.pumps[cpump].open()
 				else:
 					logger.warning(' strange error with pump %s should open but not in self.pumps' % cpump)
