@@ -782,7 +782,6 @@ class IComputer:
 					cleak.append(ccounter.get_count())
 					if len(cleak) > leak_check_nunber_tests:
 						cleak.pop(0)
-					print('cleak %s' % cleak)
 
 					# test if we have a leak
 					num_leak = 0
@@ -790,7 +789,6 @@ class IComputer:
 						if cleak[idx + 1] - cleak[idx] <= 0:
 							break
 						num_leak += 1
-					print('num leak %s' % num_leak)
 					if num_leak >= leak_check_nunber_tests - 1:
 						logger.warning('leak detected for faucet %s')
 						msg = 'computer name: %s\n' % self.computer_name
