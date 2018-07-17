@@ -485,10 +485,10 @@ class IComputer:
 					else:
 						logger.warning('Manual command %s not recognized' % cline)
 						continue
-			self.state_commands_file = state_commands_file
-			self.state_commands_file_timestamp = os.stat(state_commands_file).st_mtime
 		except Exception as err:
 			logger.warning('Error reading state command file %s.\n%s' % (state_commands_file, err))
+		self.state_commands_file = state_commands_file
+		self.state_commands_file_timestamp = os.stat(state_commands_file).st_mtime
 
 	def write_action_log(self, msg):
 		with open(self.actions_log_file, 'a') as fl:
@@ -778,7 +778,7 @@ class IComputer:
 				logger.warning(traceback.format_exc())
 				self.commands_file_timestamp = int(time.time())
 			# check for state commands change (disable computer etc.)
-			if not self.state_commands_file_timestamp == os.stat(self.commands_file).st_mtime:
+			if not self.state_commands_file_timestamp == os.stat(self.state_commands_file).st_mtime:
 				logger.info('State commands file changed. reloading')
 				self.read_state_commands()
 			# check faucet list file
