@@ -119,13 +119,21 @@ class Faucet:
 			return -1
 		return ccounter.get_count()
 
-	def open(self):
+	def open(self, force=False):
 		'''Open the faucet (water on)
+
+		Parameters
+		----------
+		force: bool, optional
+			True to force re-closing (writing to relay) even if already closed
 
 		Returns
 		-------
-		True if the faucet was opened, False if an error was enountered
+		True if the faucet was opened, False if an error was enountered or already open
 		'''
+		if not force:
+			if self.isopen:
+				return False
 		logger.debug('opening faucet %s' % self.name)
 		self.isopen = True
 		self.all_alone = True
@@ -149,18 +157,23 @@ class Faucet:
 		# we didn't really open anything so return false
 		return False
 
-	def close(self, write_summary=True):
+	def close(self, write_summary=True, force=False):
 		'''Close the faucet (water off)
 
 		Parameters
 		----------
 		write_summary: bool, optional
 			True to save the open-close summary to the faucet water summary file
+		force: bool, optional
+			True to force re-closing (writing to relay) even if already closed
 
 		Returns
 		-------
-		True if faucet was closed, False if a problem encountered
+		True if faucet was closed, False if a problem encountered or already closed
 		'''
+		if not force:
+			if not self.isopen:
+				return False
 		self.isopen = False
 		# write the water summary for this open/close session
 		if write_summary:

@@ -106,7 +106,10 @@ class NumatoFaucet(Faucet):
             logger.debug(e)
             return False
 
-    def open(self):
+    def open(self, force=False):
+        if not force:
+            if self.isopen:
+                return False
         super().open()
         if self.is_local():
             res = self.write_relay(self.relay_idx, 'on')
@@ -119,7 +122,10 @@ class NumatoFaucet(Faucet):
             res = True
         return res
 
-    def close(self):
+    def close(self, force=False):
+        if not force:
+            if not self.isopen:
+                return False
         logger.debug('closing faucet %s' % self.name)
         super().close()
         if self.is_local():

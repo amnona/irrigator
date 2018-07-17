@@ -38,11 +38,10 @@ class IComputer:
 	commands_file = None
 	# file containing the expected status of the faucets
 	status_file = None
-	# True if computer is disabled, False if not disabled (should irrigate)
-	disabled = False
 
 	def __init__(self, icomputer_conf_file='computer-config.txt'):
 		logger.debug('init icomputer')
+		self.init_state_params()
 		self.computer_name = 'local'
 		self.icomputer_config_file = icomputer_conf_file
 		# load the irrigation computer config file
@@ -71,6 +70,8 @@ class IComputer:
 		self.read_counters()
 		# load the fertilization pumps file
 		self.read_pumps()
+		# load the state commands file (disabled computers etc.)
+		self.read_state_commands()
 
 	def __repr__(self):
 		return "Computer: " + ', '.join("%s: %s" % item for item in vars(self).items())
@@ -406,17 +407,28 @@ class IComputer:
 		self.commands_file = commands_file
 		self.commands_file_timestamp = os.stat(commands_file).st_mtime
 
-	def read_comfig_commands(self, config_commands_file=None):
+	def init_state_params(self):
+		'''Initialize all the state commands related parameters to default values
 		'''
+		# True if computer is disabled, False if not disabled (should irrigate)
+		self.disabled = False
+		# set of disabled fertilization pump names
+		self.fertilization_disabled = set()
+		# Fraction to modify all irrigation timers (1 to not change)
+		self.duration_correction = 1
+		# a set of disabled faucets (names - str)
+		self.disabled_faucets = set()
+
+	def read_state_commands(self, state_commands_file='data/irrigation-state-commands.txt'):
+		'''Read the state commands file
 		TODO: write this
 
-		Read the config commands file
-
-		This file includes per-computer commands that are always used (not deleted).
-		This includes disabling/enabling lines, changing irrigation durations by percentage, disbaling/enabling fertilization, etc.
+		This file contains commands that are always applied (not deleted).
+		This includes disabling/enabling computer / lines, changing irrigation durations by percentage, disbaling/enabling fertilization, etc.
 
 		commands are tab separated between arguments, newline between commands.
 		can include:
+		'#' - comment line
 		disable_computer computer_name(str)
 			move computer to "disable" mode (close all faucets and don't turn any on until enable)
 		set_percent percent(number+'%'')
@@ -432,107 +444,51 @@ class IComputer:
 			file name of the commands file. None to use the default (computer_name + '_commands.txt')
 		:return:
 		'''
-		if commands_file is None:
-			commands_file = self.commands_file
-		with open(commands_file) as cf:
-			for cline in cf:
-				cline = cline.strip().split('\t')
-				if len(cline) != 2:
-					logger.warning('Manual command %s does not contain 2 columns' % cline)
-					continue
-				ccommand = cline[0].lower()
-				param = cline[1]
-				if ccommand == 'open':
-					cfaucet = param
-					if cfaucet not in self.faucets:
-						logger.warning('cannot open faucet %s - not found' % cfaucet)
-						logger.warning('current faucets: %s' % self.faucets)
+		try:
+			# first reset all state parameters (since we're reloading the state file)
+			self.init_state_params()
+			with open(state_commands_file) as cf:
+				for cline in cf:
+					cline = cline.strip().split('\t')
+					ccommand = cline[0].lower()
+					if len(cline) > 1:
+						param = cline[1].lower()
+
+					# if comment - next line
+					if ccommand[0] == '#':
 						continue
-					new_timer = SingleTimer(duration=self.faucets[cfaucet].default_duration, cfaucet=self.faucets[cfaucet], start_datetime=None, is_manual=True)
-					self.timers.append(new_timer)
-					if self.faucets[cfaucet].is_local():
-						logger.info('created manual single timer for faucet: %s' % cfaucet)
-					else:
-						logger.info('cannot open. faucet %s not on this computer' % cfaucet)
 
-				elif ccommand == 'close':
-					cfaucet = param
-					if cfaucet not in self.faucets:
-						logger.warning('cannot close faucet %s - not found' % cfaucet)
+					if ccommand == 'disable_computer':
+						computer_name = param
+						logger.debug('manual disable computer %s' % computer_name)
+						if computer_name == self.computer_name:
+							self.disabled = True
+							logger.info('computer %s disabled from state_commands_file' % computer_name)
+							# close all currently open faucets
+							self.close_all()
+							# and delete the manual timers
+							delete_list = []
+							for ctimer in self.timers:
+								if not isinstance(ctimer, SingleTimer):
+									continue
+								if not ctimer.is_manual:
+									continue
+								delete_list.append(ctimer)
+							self.delete_timers(delete_list)
+						else:
+							logger.debug('cannot disable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
+
+					elif ccommand == 'disable_line':
+						self.disabled_faucets.add(param)
+					elif ccommand == 'disable_fertilization':
+						self.disable_fertilization.add(param)
+					else:
+						logger.warning('Manual command %s not recognized' % cline)
 						continue
-					self.faucets[cfaucet].close()
-					# the_faucet = self.faucets[cfaucet]
-					# self.write_action_log('manually closed faucet %s, water=%d, flow=%s' % (cfaucet, the_faucet.get_total_water(), the_faucet.get_median_flow()))
-					# self.faucets[cfaucet].close()
-
-					# if self.faucets[cfaucet].is_local():
-					# 	logger.info('manually closed faucet %s' % cfaucet)
-					# else:
-					# 	logger.warning('cannot close. faucet %s not on this computer' % cfaucet)
-					delete_list = []
-					for ctimer in self.timers:
-						if ctimer.faucet != self.faucets[cfaucet]:
-							continue
-						if not isinstance(ctimer, SingleTimer):
-							continue
-						if not ctimer.is_manual:
-							continue
-						delete_list.append(ctimer)
-					self.delete_timers(delete_list)
-
-				elif ccommand == 'closeall':
-					self.close_all()
-					delete_list = []
-					for ctimer in self.timers:
-						if not isinstance(ctimer, SingleTimer):
-							continue
-						if not ctimer.is_manual:
-							continue
-						delete_list.append(ctimer)
-					self.delete_timers(delete_list)
-					logger.info('closed all faucets (manual)')
-
-				elif ccommand == 'disable':
-					computer_name = param
-					logger.debug('manual disable computer %s' % computer_name)
-					if computer_name == self.computer_name:
-						self.disabled = True
-						self.write_config_file()
-						logger.info('computer %s disabled' % computer_name)
-						# close all currently open faucets
-						self.close_all()
-						# and delete the manual timers
-						delete_list = []
-						for ctimer in self.timers:
-							if not isinstance(ctimer, SingleTimer):
-								continue
-							if not ctimer.is_manual:
-								continue
-							delete_list.append(ctimer)
-						self.delete_timers(delete_list)
-					else:
-						logger.debug('cannot disable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
-
-				elif ccommand == 'enable':
-					computer_name = param
-					logger.debug('manual enable computer %s' % computer_name)
-					if computer_name == self.computer_name:
-						self.disabled = False
-						self.write_config_file()
-						logger.info('computer %s enabled' % computer_name)
-					else:
-						logger.debug('cannot enable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
-
-				elif ccommand == 'quit':
-					logger.warning('quitting')
-					self.close_all()
-					sys.exit()
-
-				else:
-					logger.warning('Manual command %s not recognized' % cline)
-					continue
-		self.commands_file = commands_file
-		self.commands_file_timestamp = os.stat(commands_file).st_mtime
+			self.state_commands_file = state_commands_file
+			self.state_commands_file_timestamp = os.stat(state_commands_file).st_mtime
+		except Exception as err:
+			logger.warning('Error reading state command file %s.\n%s' % (state_commands_file, err))
 
 	def write_action_log(self, msg):
 		with open(self.actions_log_file, 'a') as fl:
@@ -568,11 +524,13 @@ class IComputer:
 		return self.computer_name
 
 	def close_all(self):
-		'''Close all faucets on the computer
+		'''Close all faucets and fertilization pumps on the computer
 		'''
-		logger.debug('closing all faucets')
+		logger.debug('closing all faucets and pumps')
 		for cfaucet in self.faucets.values():
-			cfaucet.close()
+			cfaucet.close(force=True)
+		for cpump in self.pumps.values():
+			cpump.close(force=True)
 
 	def write_keep_alive_file(self):
 		'''write the current time to the keep alive file.
@@ -624,8 +582,6 @@ class IComputer:
 		last_daily_water_count = defaultdict(float)
 		last_daily_water_day = datetime.datetime.now().day
 
-		old_fertilizer_should_be_open = set()
-
 		send_email('amnonim@gmail.com', 'irrigator started', 'computer name is %s' % self.computer_name)
 
 		while not done:
@@ -673,21 +629,17 @@ class IComputer:
 				fertilizer_should_be_open.add(cpump)
 			# now lets remove all the pumps that should be closed
 			fertilizer_should_be_open = fertilizer_should_be_open.difference(fertilizer_should_be_closed)
+
 			# and let's open all the pumps that need to be open and close the other ones
-			for cpump in fertilizer_should_be_open:
-				if cpump in old_fertilizer_should_be_open:
-					continue
-				if cpump in self.pumps:
-					logger.info('fertilizer - opening pump %s' % cpump)
+			for cpump in self.pumps:
+				if cpump in fertilizer_should_be_open:
+					if not self.pumps[cpump].isopen:
+						logger.info('fertilizer - opening pump %s' % cpump)
 					self.pumps[cpump].open()
 				else:
-					logger.warning(' strange error with pump %s should open but not in self.pumps' % cpump)
-			# close the open pumps that should not be open anymore
-			for cpump in old_fertilizer_should_be_open:
-				if cpump not in fertilizer_should_be_open:
-					logger.info('fertilizer - closing pump %s' % cpump)
+					if self.pumps[cpump].isopen:
+						logger.info('fertilizer - closing pump %s' % cpump)
 					self.pumps[cpump].close()
-			old_fertilizer_should_be_open = fertilizer_should_be_open
 
 			# if the faucets that should be opened changed, write the status file (local faucets only?)
 			if should_be_open != old_should_be_open:
@@ -715,7 +667,7 @@ class IComputer:
 					if cfaucet.name not in should_be_open:
 						# if faucet on local computer, actually close it, otherwise pretend to close it
 						logger.info('closing faucet %s' % cfaucet.name)
-						cfaucet.close()
+						cfaucet.close(force=True)
 					else:
 						# if open and should be open, if it is alone, add the water count
 						cfaucet.add_flow_count()
@@ -728,7 +680,7 @@ class IComputer:
 								continue
 						# if faucet on local computer, actually open it. otherwise, pretend to open it
 						logger.info('opening faucet %s' % cfaucet.name)
-						cfaucet.open()
+						cfaucet.open(force=True)
 
 			# delete timers in the delete list
 			self.delete_timers(delete_list)
@@ -812,8 +764,8 @@ class IComputer:
 							continue
 						irrigation_report += 'counter %s total daily water: %f' % (ccounter.name, ccounter.last_water_read - last_daily_water_count[ccounter.name])
 						last_daily_water_count[ccounter.name] = ccounter.last_water_read
-				send_email('amnonim@gmail.com', 'daily irrigation report', irrigation_report)
-				last_daily_water_day = ctime.day
+					send_email('amnonim@gmail.com', 'daily irrigation report', irrigation_report)
+					last_daily_water_day = ctime.day
 
 			# check for changed files
 			# check manual open/close file
@@ -825,6 +777,10 @@ class IComputer:
 				logger.warning('manual commands file %s load failed. error: %s' % (self.commands_file, err))
 				logger.warning(traceback.format_exc())
 				self.commands_file_timestamp = int(time.time())
+			# check for state commands change (disable computer etc.)
+			if not self.state_commands_file_timestamp == os.stat(self.commands_file).st_mtime:
+				logger.info('State commands file changed. reloading')
+				self.read_state_commands()
 			# check faucet list file
 			if not self.faucets_file_timestamp == os.stat(self.faucets_file).st_mtime:
 				logger.info('faucets file changed')
