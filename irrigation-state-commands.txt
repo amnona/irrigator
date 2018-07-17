@@ -1,0 +1,7 @@
+# irrigation-state-commands.txt
+# state commands for irrigator
+# this includes commands that are not reset after performing
+# can include (tab separation between command and parameters):
+# disable_computer	COMPUTER_NAME
+# disable_line	LINE_NAME
+# disable_fertilization	PUMP_NAME
