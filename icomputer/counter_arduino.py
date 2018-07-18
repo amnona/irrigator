@@ -27,18 +27,22 @@ class CounterArduino(Counter):
         self.clear_count()
 
     def get_serial_port(self):
-        # find and set the correct port name
-        dev_list_dir = '/dev/serial/by-id/'
-        port_names = [os.path.join(dev_list_dir, x) for x in os.listdir(dev_list_dir)]
-        port_names = [x for x in port_names if 'usb-Arduino' in x]
-        if len(port_names) == 0:
-            logger.warning('no Arduino connected. cannot contact counter %s' % self.name)
+        try:
+            # find and set the correct port name
+            dev_list_dir = '/dev/serial/by-id/'
+            port_names = [os.path.join(dev_list_dir, x) for x in os.listdir(dev_list_dir)]
+            port_names = [x for x in port_names if 'usb-Arduino' in x]
+            if len(port_names) == 0:
+                logger.warning('no Arduino connected. cannot contact counter %s' % self.name)
+                return None
+            if len(port_names) > 1:
+                logger.warning('found more than one Arduino (%d) connected to counter %s' % (len(port_names), self.name))
+            found_port = port_names[0]
+            logger.debug('Found serial port %s for counter %s' % (found_port, self.name))
+            return found_port
+        except Exception as err:
+            logger.debug('Did not find serial port. error %s' % err)
             return None
-        if len(port_names) > 1:
-            logger.warning('found more than one Arduino (%d) connected to counter %s' % (len(port_names), self.name))
-        found_port = port_names[0]
-        logger.debug('Found serial port %s for counter %s' % (found_port, self.name))
-        return found_port
 
     def open_serial(self):
         '''Get the USB(serial) port connection for the arduino and set it in self.serial
