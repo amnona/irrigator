@@ -1,79 +1,79 @@
 type	faucet	faucet_num	duration	start_day	start_hour	start_minute	start_year	start_month	start_date
-weekly	afarsermon drips	1	60	1	0	0	0	0	0
-weekly	eyal entrance drips	10	60	1	1	0	0	0	0
-weekly	japanese sprinkler	11	15	1	2	0	0	0	0
-weekly	north matazim	13	30	1	2	30	0	0	0
-weekly	palms	17	30	1	3	0	0	0	0
-weekly	ziva north sprinklers	24	30	1	3	30	0	0	0
-weekly	outside west drips	16	30	1	5	0	0	0	0
-weekly	ziva roses sprinkler	26	25	1	6	0	0	0	0
-weekly	ariza drips	3	30	1	18	30	0	0	0
-weekly	dani rose drips	6	150	1	19	0	0	0	0
-weekly	ziva roses drips	25	150	1	19	30	0	0	0
-weekly	dani rose drips	6	150	2	19	0	0	0	0
-weekly	ziva roses drips	25	150	2	19	30	0	0	0
-weekly	dani rose drips	6	150	3	19	0	0	0	0
-weekly	ziva roses drips	25	150	3	19	30	0	0	0
-weekly	dani rose drips	6	150	4	19	0	0	0	0
-weekly	ziva roses drips	25	150	4	19	30	0	0	0
-weekly	dani rose drips	6	150	5	19	0	0	0	0
-weekly	ziva roses drips	25	150	5	19	30	0	0	0
-weekly	dani rose drips	6	150	6	19	0	0	0	0
-weekly	ziva roses drips	25	150	6	19	30	0	0	0
-weekly	dani rose drips	6	150	7	19	0	0	0	0
-weekly	ziva roses drips	25	150	7	19	30	0	0	0
-weekly	main drips	12	120	1	22	0	0	0	0
-weekly	east fence	8	20	1	23	0	0	0	0
-weekly	main drips	12	120	4	22	0	0	0	0
-weekly	main drips	12	120	6	22	0	0	0	0
-weekly	east drips	7	45	3	23	0	0	0	0
-weekly	east drips	7	45	6	23	0	0	0	0
+weekly	afarsermon drips	1	70	1	0	0	0	0	0
+weekly	afarsermon drips	1	70	3	0	0	0	0	0
+weekly	afarsermon drips	1	70	5	0	0	0	0	0
 weekly	anona drips	2	105	2	22	0	0	0	0
 weekly	anona drips	2	105	5	22	0	0	0	0
 weekly	anona drips	2	105	7	22	0	0	0	0
-weekly	east fence	8	20	5	23	0	0	0	0
+weekly	ariza drips	3	30	1	18	30	0	0	0
 weekly	ariza drips	3	30	3	18	30	0	0	0
 weekly	ariza drips	3	30	5	18	30	0	0	0
+weekly	between houses	4	30	3	4	0	0	0	0
+weekly	between houses	4	30	7	4	0	0	0	0
+weekly	cypress	5	22	4	4	0	0	0	0
+weekly	dani rose drips	6	150	1	19	0	0	0	0
+weekly	dani rose drips	6	150	2	19	0	0	0	0
+weekly	dani rose drips	6	150	3	19	0	0	0	0
+weekly	dani rose drips	6	150	4	19	0	0	0	0
+weekly	dani rose drips	6	150	5	19	0	0	0	0
+weekly	dani rose drips	6	150	6	19	0	0	0	0
+weekly	dani rose drips	6	150	7	19	0	0	0	0
+weekly	east drips	7	45	3	23	0	0	0	0
+weekly	east drips	7	45	6	23	0	0	0	0
+weekly	east fence	8	20	1	23	0	0	0	0
+weekly	east fence	8	20	5	23	0	0	0	0
 weekly	entrance flowers	9	10	2	18	30	0	0	0
 weekly	entrance flowers	9	10	4	18	30	0	0	0
 weekly	entrance flowers	9	10	6	18	30	0	0	0
 weekly	entrance flowers	9	10	7	18	30	0	0	0
-weekly	ziva entrance drips	23	120	2	0	0	0	0	0
-weekly	ziva entrance drips	23	120	4	0	0	0	0	0
-weekly	ziva entrance drips	23	120	6	0	0	0	0	0
-weekly	ziva entrance drips	23	120	7	0	0	0	0	0
-weekly	afarsermon drips	1	60	3	0	0	0	0	0
+weekly	eyal entrance drips	10	60	1	1	0	0	0	0
 weekly	eyal entrance drips	10	60	3	1	0	0	0	0
-weekly	afarsermon drips	1	60	5	0	0	0	0	0
 weekly	eyal entrance drips	10	60	5	1	0	0	0	0
-weekly	studio drips	20	25	2	2	0	0	0	0
-weekly	studio drips	20	25	4	2	0	0	0	0
-weekly	studio drips	20	25	6	2	0	0	0	0
+weekly	japanese sprinkler	11	20	1	2	0	0	0	0
+weekly	japanese sprinkler	11	20	3	2	0	0	0	0
+weekly	japanese sprinkler	11	20	5	2	0	0	0	0
+weekly	japanese sprinkler	11	20	7	2	0	0	0	0
+weekly	main drips	12	120	1	22	0	0	0	0
+weekly	main drips	12	120	4	22	0	0	0	0
+weekly	main drips	12	120	6	22	0	0	0	0
+weekly	north matazim	13	30	1	2	30	0	0	0
+weekly	north matazim	13	30	4	2	30	0	0	0
 weekly	north pingpong	14	30	2	2	30	0	0	0
 weekly	north pingpong	14	30	5	2	30	0	0	0
-weekly	south pingpong	18	30	2	3	0	0	0	0
-weekly	south pingpong	18	30	6	3	0	0	0	0
-weekly	tapuz satsuma	22	30	2	3	30	0	0	0
-weekly	tapuz satsuma	22	30	5	3	30	0	0	0
-weekly	japanese sprinkler	11	15	3	2	0	0	0	0
-weekly	japanese sprinkler	11	15	5	2	0	0	0	0
-weekly	japanese sprinkler	11	15	7	2	0	0	0	0
 weekly	north sprinklers	15	30	3	2	30	0	0	0
 weekly	north sprinklers	15	30	6	2	30	0	0	0
-weekly	north matazim	13	30	4	2	30	0	0	0
-weekly	palms	17	30	3	3	0	0	0	0
-weekly	palms	17	30	5	3	0	0	0	0
-weekly	ziva north sprinklers	24	30	3	3	30	0	0	0
-weekly	ziva north sprinklers	24	30	6	3	30	0	0	0
+weekly	outside west drips	16	20	1	5	0	0	0	0
+weekly	outside west drips	16	20	3	5	0	0	0	0
+weekly	outside west drips	16	20	5	5	0	0	0	0
+weekly	palms	17	20	1	3	0	0	0	0
+weekly	palms	17	20	3	3	0	0	0	0
+weekly	palms	17	20	5	3	0	0	0	0
+weekly	south pingpong	18	30	2	3	0	0	0	0
+weekly	south pingpong	18	30	6	3	0	0	0	0
 weekly	south pool	19	30	4	3	30	0	0	0
 weekly	south pool	19	30	7	3	30	0	0	0
-weekly	between houses	4	45	3	4	0	0	0	0
-weekly	between houses	4	45	7	4	0	0	0	0
-weekly	cypress	5	22	4	4	0	0	0	0
-weekly	outside west drips	16	30	3	5	0	0	0	0
-weekly	outside west drips	16	30	5	5	0	0	0	0
-weekly	tapuz pecan	21	30	4	5	0	0	0	0
-weekly	tapuz pecan	21	30	7	5	0	0	0	0
-weekly	ziva roses sprinkler	26	25	3	6	0	0	0	0
-weekly	ziva roses sprinkler	26	25	5	6	0	0	0	0
-weekly	ziva roses sprinkler	26	25	7	6	0	0	0	0
+weekly	studio drips	20	35	2	2	0	0	0	0
+weekly	studio drips	20	35	4	2	0	0	0	0
+weekly	studio drips	20	35	6	2	0	0	0	0
+weekly	tapuz pecan	21	20	4	5	0	0	0	0
+weekly	tapuz pecan	21	20	7	5	0	0	0	0
+weekly	tapuz satsuma	22	30	2	3	30	0	0	0
+weekly	tapuz satsuma	22	30	5	3	30	0	0	0
+weekly	ziva entrance drips	23	100	2	0	0	0	0	0
+weekly	ziva entrance drips	23	100	4	0	0	0	0	0
+weekly	ziva entrance drips	23	100	6	0	0	0	0	0
+weekly	ziva entrance drips	23	100	7	0	0	0	0	0
+weekly	ziva north sprinklers	24	30	1	3	30	0	0	0
+weekly	ziva north sprinklers	24	30	3	3	30	0	0	0
+weekly	ziva north sprinklers	24	30	6	3	30	0	0	0
+weekly	ziva roses drips	25	150	1	19	30	0	0	0
+weekly	ziva roses drips	25	150	2	19	30	0	0	0
+weekly	ziva roses drips	25	150	3	19	30	0	0	0
+weekly	ziva roses drips	25	150	4	19	30	0	0	0
+weekly	ziva roses drips	25	150	5	19	30	0	0	0
+weekly	ziva roses drips	25	150	6	19	30	0	0	0
+weekly	ziva roses drips	25	150	7	19	30	0	0	0
+weekly	ziva roses sprinkler	26	15	1	6	0	0	0	0
+weekly	ziva roses sprinkler	26	15	3	6	0	0	0	0
+weekly	ziva roses sprinkler	26	15	5	6	0	0	0	0
+weekly	ziva roses sprinkler	26	15	7	6	0	0	0	0
