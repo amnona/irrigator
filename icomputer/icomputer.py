@@ -408,6 +408,7 @@ class IComputer:
 		self.commands_file_timestamp = os.stat(commands_file).st_mtime
 
 	def init_state_params(self):
+		logger.debug('Initialized state_params')
 		'''Initialize all the state commands related parameters to default values
 		'''
 		# True if computer is disabled, False if not disabled (should irrigate)
@@ -482,6 +483,20 @@ class IComputer:
 						self.disabled_faucets.add(param)
 					elif ccommand == 'disable_fertilization':
 						self.disable_fertilization.add(param)
+					elif ccommand == 'set_percent':
+						if param[-1] != '%':
+							logger.warning('set_percent in state-commands file needs to end with "%"')
+							continue
+						try:
+							percent = float(param[:-1])
+						except Exception as err:
+							logger.warning('failed to convert to float set_percent in state-commands file')
+							continue
+						if percent < 0 or percent > 1000:
+							logger.warning('set_percent in state-commands supplied percent (%f) too small or too big' % percent)
+							continue
+						self.duration_correction = percent / 100
+						logger.info('percent irrigation updated to %f' % percent)
 					else:
 						logger.warning('Manual command %s not recognized' % cline)
 						continue
@@ -592,7 +607,7 @@ class IComputer:
 			num_open = defaultdict(list)
 			delete_list = []
 			for ctimer in self.timers:
-				if ctimer.should_be_open():
+				if ctimer.should_be_open(self.duration_correction):
 					# add this faucet to the list of open faucets for this timer
 					num_open[ctimer.faucet.counter].append(ctimer.faucet.name)
 					# add faucet to the list of all faucets which should be open now (on all computers)
@@ -605,7 +620,7 @@ class IComputer:
 			fertilizer_should_be_closed = set()
 			for ctimer in self.timers:
 				# the faucet needs to be open
-				if not ctimer.should_be_open():
+				if not ctimer.should_be_open(self.duration_correction):
 					continue
 				cfaucet = ctimer.faucet
 				logger.debug('fertilize - faucet %s open' % cfaucet.name)
@@ -620,9 +635,9 @@ class IComputer:
 					fertilizer_should_be_closed.add(cpump)
 					continue
 				# if we have < 10 minutes to closing time, pump should be closed
-				if ctimer.time_to_close() < 10 * 60:
+				if ctimer.time_to_close(self.duration_correction) < 10 * 60:
 					fertilizer_should_be_closed.add(cpump)
-					logger.debug('fertilize - pump %s should be closed since %f time left is not enough from faucet %s' % (cpump, ctimer.time_to_close(), cfaucet.name))
+					logger.debug('fertilize - pump %s should be closed since %f time left is not enough from faucet %s' % (cpump, ctimer.time_to_close(self.duration_correction), cfaucet.name))
 					continue
 				# so faucet with the pump is open, should fertilize and has enough time before closing, lets open the pump
 				logger.debug('fertilize - pump %s should be open from faucet %s' % (cpump, cfaucet.name))
@@ -633,6 +648,9 @@ class IComputer:
 			# and let's open all the pumps that need to be open and close the other ones
 			for cpump in self.pumps:
 				if cpump in fertilizer_should_be_open:
+					if cpump in self.disable_fertilization:
+						logger.debug('Fertilization pump %s disabled. Not opening.' % cpump)
+						continue
 					if not self.pumps[cpump].isopen:
 						logger.info('fertilizer - opening pump %s' % cpump)
 					self.pumps[cpump].open()
@@ -677,6 +695,10 @@ class IComputer:
 						if self.disabled:
 							if cfaucet.is_local():
 								logger.info('computer disabled. not opening faucet %s' % cfaucet.name)
+								continue
+						if cfaucet.name in self.disabled_faucets:
+							if cfaucet.is_local():
+								logger.info('faucet %s disabled. not opening' % cfaucet.name)
 								continue
 						# if faucet on local computer, actually open it. otherwise, pretend to open it
 						logger.info('opening faucet %s' % cfaucet.name)

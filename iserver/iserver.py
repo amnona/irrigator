@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.register_blueprint(Site_Main_Flask_Obj)
 
 
-port=5000
+port = 5000
 print('hello2', file=sys.stderr)
 logger.debug('starting iserver on port %d' % port)
 print('starting iserver on port %d' % port, file=sys.stderr)

@@ -95,7 +95,16 @@ class Timer:
     def __repr__(self):
         return "Timer: " + ', '.join("%s: %s" % item for item in vars(self).items())
 
-    def should_be_open(self):
+    def should_be_open(self, duration_correction=1):
+        '''
+        Test if timer should be open or closed now
+
+        :return: bool
+            True if timer should be open now, False if not
+        '''
+        raise ValueError('Base class timer - not implemented')
+
+    def time_to_close(self, duration_correction=1):
         '''
         Test if timer should be open or closed now
 
@@ -140,9 +149,12 @@ class WeeklyTimer(Timer):
             self.overnight = True
         logger.debug('timer %s initialized' % self)
 
-    def should_be_open(self):
+    def should_be_open(self, duration_correction=1):
         '''
         Test if timer should be open or closed now
+
+        :param duration_correction: float
+            The correction to the irrigation time (by how much to multiply the timer duration)
 
         :return: bool
             True if timer should be open now, False if not
@@ -153,7 +165,7 @@ class WeeklyTimer(Timer):
             # is it the correct day now?
             if sane_day(now) != self.start_day:
                 return False
-            if not time_in_range(self.start_time.hour, self.start_time.minute, self.duration):
+            if not time_in_range(self.start_time.hour, self.start_time.minute, self.duration * duration_correction):
                 return False
             return True
         else:
@@ -161,7 +173,7 @@ class WeeklyTimer(Timer):
             next_start = datetime.datetime.combine(next_weekday(now, self.start_day).date(), self.start_time)
             if now < next_start:
                 return False
-            next_end = next_start + datetime.timedelta(minutes=self.duration)
+            next_end = next_start + datetime.timedelta(minutes=self.duration * duration_correction)
             if now > next_end:
                 return False
             return True
@@ -170,7 +182,7 @@ class WeeklyTimer(Timer):
         # since always there's another week, don't delete
         return False
 
-    def time_to_close(self):
+    def time_to_close(self, duration_correction=1):
         '''How much time left until the timer ends
 
         Returns
@@ -179,7 +191,7 @@ class WeeklyTimer(Timer):
         '''
         now = datetime.datetime.now()
         test_start = datetime.datetime.combine(datetime.date.today(), self.start_time)
-        test_end = test_start + datetime.timedelta(minutes=self.duration)
+        test_end = test_start + datetime.timedelta(minutes=self.duration * duration_correction)
         time_left = (test_end - now).total_seconds()
         return time_left
 
@@ -209,7 +221,9 @@ class SingleTimer(Timer):
         self.is_manual = is_manual
         logger.debug('timer %s initialized' % self)
 
-    def should_be_open(self):
+    def should_be_open(self, duration_correction=1):
+        '''For single timer, we ignore the duration correction since user knows how long he wants
+        '''
         now = datetime.datetime.now()
         if now >= self.start_datetime:
             if now <= self.end_datetime:
@@ -227,8 +241,9 @@ class SingleTimer(Timer):
         logger.debug('Single timer %s should be deleted since past bedtime' % self)
         return True
 
-    def time_to_close(self):
+    def time_to_close(self, duration_correction=False):
         '''How much time left until the timer ends
+        We ignore the duration_correction
 
         Returns
         -------
