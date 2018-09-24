@@ -445,12 +445,15 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 	-------
 	dict of {line_name (str): list of dict {'date':datetime, 'flow':list of float, 'water': list of float}}
 	'''
+	logger.debug('get_stats_from_log')
 	if actions_log_file is None:
 		actions_log_file = get_actions_file_name()
 	if end_time is None:
 		end_time = datetime.datetime.now()
 	start_time = end_time - datetime.timedelta(days=period)
+	logger.debug('using log file %s, period %s, end_time %s' % (actions_log_file, period, end_time))
 	actions = defaultdict(list)
+	num_lines = 0
 	with open(actions_log_file) as fl:
 		for cline in fl:
 			# get the log file parameters.
@@ -467,6 +470,7 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 			except Exception as err:
 				logger.debug('failed to read date time from actions log file. line is: %s' % cline)
 				continue
+			num_lines += 1
 			if event_time <= start_time or event_time > end_time:
 				continue
 			try:
@@ -481,6 +485,7 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 				continue
 			caction = {'date': event_time, 'flow': cflow, 'water': cwater}
 			actions[cfaucet].append(caction)
+	logger.debug('read %d ok lines from log file' % num_lines)
 	return actions
 
 
@@ -624,10 +629,12 @@ def waterlog(counter):
 @Site_Main_Flask_Obj.route('/faucetlog/<line>', methods=['GET'])
 @requires_auth
 def faucetlog(line):
+	logger.debug('getting faucetlog for line %s' % line)
 	actions = get_stats_from_log(period=1000)
 	if line not in actions:
-		return('line %s not in actions file')
+		return('line %s not in actions file' % line)
 	line_actions = actions[line]
+	logger.info('found %d actions for line' % len(line_actions))
 	flows = []
 	times = []
 	water = []
@@ -635,9 +642,10 @@ def faucetlog(line):
 		flows.append(caction['flow'])
 		water.append(caction['water'])
 		times.append(caction['date'].strftime("%d/%m"))
+	logger.debug('generating graphs')
 	flow_bars = draw_barchart(flows, times, 'flow')
 	water_bars = draw_barchart(water, times, 'flow')
-
+	logger.debug('finished')
 	wpart = ''
 	wpart += 'Actions summary for line %s<br><br>' % line
 	wpart += 'Flow<br>'
