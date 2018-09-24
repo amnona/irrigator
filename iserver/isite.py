@@ -380,7 +380,7 @@ def schedule():
 		cstart_minute = int(ctimer['start_minute'])
 		cduration = int(ctimer['duration'])
 		# for i in range(np.ceil(cduration / 60)):
-		for i in range(round((cduration+30) / 60)):
+		for i in range(round((cduration + 30) / 60)):
 			schedule[days[cday]][cstart_hour + i].append(ctimer)
 	wpage = render_template('main.html')
 	wpage += '<div>'

@@ -77,6 +77,7 @@ def watch_files(dbx_key, dir_name, files, interval=2):
                     file_times[cfile] = datetime.datetime.fromtimestamp(os.stat(cfile).st_mtime)
         time.sleep(interval)
 
+
 def upload_file(dbx_key, dir_name, files):
     '''
     Upload a local file (file_name) to dropbox server
@@ -102,6 +103,7 @@ def upload_file(dbx_key, dir_name, files):
                 return False
         logger.info('file %s uploaded' % cfile)
         return True
+
 
 def get_file(dbx, dir_name, file_name):
     '''
@@ -201,13 +203,14 @@ def synchronize_dropbox(dbx_key, dir_name, files, interval=30):
                     logger.warning('error gettting file %s. Error: %s' % (cfile, err))
         time.sleep(interval)
 
+
 parser = argparse.ArgumentParser()
-parser.add_argument('--dbkey','-k',help='dropbox app token')
-parser.add_argument('--interval','-i', help='the time interval for upload/test (seconds)', default=30, type=int)
-parser.add_argument('--dir','-d',help='dropbox dir for app', default='/irrigator2')
-parser.add_argument('--action','-a',help='action (sync / upload / watch)', default='sync')
-parser.add_argument('--files','-f',help='file names', nargs='*',default=['timer-list.txt'])
-parser.add_argument('--debug-level','-l',help='debug level (DEBUG/INFO/WARNING)',default='DEBUG')
+parser.add_argument('--dbkey', '-k', help='dropbox app token')
+parser.add_argument('--interval', '-i', help='the time interval for upload/test (seconds)', default=30, type=int)
+parser.add_argument('--dir', '-d', help='dropbox dir for app', default='/irrigator2')
+parser.add_argument('--action', '-a', help='action (sync / upload / watch)', default='sync')
+parser.add_argument('--files', '-f', help='file names', nargs='*', default=['timer-list.txt'])
+parser.add_argument('--debug-level', '-l', help='debug level (DEBUG/INFO/WARNING)', default='DEBUG')
 
 ns = parser.parse_args()
 
@@ -221,4 +224,3 @@ elif ns.action == 'watch':
     watch_files(dbx_key=ns.dbkey, dir_name=ns.dir, files=ns.files, interval=ns.interval)
 else:
     print('action %s not supported - please use "upload" or "sync"' % ns.action)
-

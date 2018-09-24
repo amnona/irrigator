@@ -420,7 +420,7 @@ class IComputer:
 		# a set of disabled faucets (names - str)
 		self.disabled_faucets = set()
 
-	def read_state_commands(self, state_commands_file='irrigation-state-commands.txt'):
+	def read_state_commands(self, state_commands_file='actions/irrigation-state-commands.txt'):
 		'''Read the state commands file
 		TODO: write this
 
