@@ -414,7 +414,7 @@ class IComputer:
 		# True if computer is disabled, False if not disabled (should irrigate)
 		self.disabled = False
 		# set of disabled fertilization pump names
-		self.fertilization_disabled = set()
+		self.disable_fertilization = set()
 		# Fraction to modify all irrigation timers (1 to not change)
 		self.duration_correction = 1
 		# a set of disabled faucets (names - str)
