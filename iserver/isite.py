@@ -114,7 +114,6 @@ def get_status_file_name():
 
 def get_actions_file_name():
 	computer_name = get_computer_name()
-	return 'actions/dani_actions.txt'
 	return 'actions/%s_actions.txt' % computer_name
 
 
@@ -623,7 +622,7 @@ def draw_barchart(ydat, labels, xlabel=None):
 @Site_Main_Flask_Obj.route('/stats', methods=['GET'])
 @requires_auth
 def stats():
-	period = 1007
+	period = 7
 	actions = get_stats_from_log(period=period)
 	median_flows = []
 	median_water = []
