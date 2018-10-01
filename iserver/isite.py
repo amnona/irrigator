@@ -640,7 +640,7 @@ def stats():
 		median_water.append(np.sum(cwater))
 
 	flow_bars = draw_barchart(median_flows, lines, 'median flow (Liter/Hour)')
-	water_bars = draw_barchart(median_water, lines, 'total water for last %d days (Liter)')
+	water_bars = draw_barchart(median_water, lines, 'total water for last %d days (Liter)' % period)
 
 	wpart = ''
 	wpart += 'Flow<br>'
