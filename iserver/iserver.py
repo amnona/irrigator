@@ -3,7 +3,7 @@ from .isite import Site_Main_Flask_Obj
 from logging import getLogger
 import sys
 
-logger = getLogger(__name__)
+logger = getLogger('iserver')
 # basicConfig(level='DEBUG')
 logger.setLevel('DEBUG')
 

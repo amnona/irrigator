@@ -17,7 +17,7 @@ import mpld3
 
 # import numpy as np
 
-logger = getLogger(__name__)
+logger = getLogger('iserver')
 
 Site_Main_Flask_Obj = Blueprint('Site_Main_Flask_Obj', __name__)
 
