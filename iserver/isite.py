@@ -635,7 +635,7 @@ def stats():
 		logger.debug('prcoessing line %s' % cline)
 		lines.append(cline)
 		cflows = [x['flow'] for x in cactions]
-		median_flows.append(np.median(cflows))
+		median_flows.append(np.median(cflows) * 60)
 		cwater = [x['water'] for x in cactions]
 		median_water.append(np.sum(cwater))
 
@@ -679,12 +679,12 @@ def faucetlog(line):
 	times = []
 	water = []
 	for caction in line_actions:
-		flows.append(caction['flow'])
+		flows.append(caction['flow'] * 60)
 		water.append(caction['water'])
 		times.append(caction['date'].strftime("%d/%m"))
 	logger.debug('generating graphs')
-	flow_bars = draw_barchart(flows, times, 'flow')
-	water_bars = draw_barchart(water, times, 'flow')
+	flow_bars = draw_barchart(flows, times, 'flow (Liter/Hour)')
+	water_bars = draw_barchart(water, times, 'total water (Liter)')
 	logger.debug('finished')
 	wpart = ''
 	wpart += 'Actions summary for line %s<br><br>' % line
