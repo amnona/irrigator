@@ -467,6 +467,9 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 	logger.debug('using log file %s, period %s, end_time %s' % (actions_log_file, period, end_time))
 	actions = defaultdict(list)
 	num_lines = 0
+	num_out_of_range = 0
+	num_bad_format = 0
+	num_water_problem = 0
 	with open(actions_log_file) as fl:
 		for cline in fl:
 			# get the log file parameters.
@@ -485,20 +488,27 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 				continue
 			num_lines += 1
 			if event_time <= start_time or event_time > end_time:
+				num_out_of_range += 1
 				continue
 			try:
 				cfaucet = res.groups()[2]
 				cwater = float(res.groups()[3])
 				cflow = float(res.groups()[4])
 			except:
+				num_bad_format += 1
 				continue
 			if cflow < 0:
+				num_water_problem += 1
 				continue
 			if cwater < 0:
+				num_water_problem += 1
 				continue
 			caction = {'date': event_time, 'flow': cflow, 'water': cwater}
 			actions[cfaucet].append(caction)
 	logger.debug('read %d ok lines from log file' % num_lines)
+	logger.debug('got %d out of date range' % num_out_of_range)
+	logger.debug('got %d bad format' % num_bad_format)
+	logger.debug('got %d water problems' % num_water_problem)
 	return actions
 
 
@@ -586,7 +596,8 @@ def draw_barchart(ydat, labels, xlabel=None):
 		xdat = np.arange(len(ydat))
 		plt.barh(xdat, ydat, tick_label=labels)
 		if xlabel:
-			plt.ylabel(xlabel)
+			logger.debug('adding xlabel %s' % xlabel)
+			plt.xlabel(xlabel)
 
 		res = mpld3.fig_to_html(fig, no_extras=False)
 		plt.close(fig)
@@ -599,21 +610,25 @@ def draw_barchart(ydat, labels, xlabel=None):
 @Site_Main_Flask_Obj.route('/stats', methods=['GET'])
 @requires_auth
 def stats():
-	actions = get_stats_from_log(period=7)
+	period = 1007
+	actions = get_stats_from_log(period=period)
 	median_flows = []
 	median_water = []
 	lines = []
+	logger.debug('got %d actions' % len(actions))
 	for cline, cactions in actions.items():
 		if len(cactions) == 0:
+			logger.debug('caction len is 0 for line %s' % cline)
 			continue
+		logger.debug('prcoessing line %s' % cline)
 		lines.append(cline)
 		cflows = [x['flow'] for x in cactions]
 		median_flows.append(np.median(cflows))
 		cwater = [x['water'] for x in cactions]
 		median_water.append(np.sum(cwater))
 
-	flow_bars = draw_barchart(median_flows, lines, 'median flow')
-	water_bars = draw_barchart(median_water, lines, 'total water')
+	flow_bars = draw_barchart(median_flows, lines, 'median flow (Liter/Hour)')
+	water_bars = draw_barchart(median_water, lines, 'total water for last %d days (Liter)')
 
 	wpart = ''
 	wpart += 'Flow<br>'
