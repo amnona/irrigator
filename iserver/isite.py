@@ -488,6 +488,7 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 			except Exception as err:
 				if parsing_problems == 0:
 					logger.debug('failed to read date time from actions log file. line is: %s' % cline)
+					logger.debug(err)
 					logger.debug(res.groups()[0])
 				parsing_problems += 1
 				continue
