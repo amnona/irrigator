@@ -151,6 +151,19 @@ def get_faucets_file_name():
 
 
 def get_timers(timers_file=None):
+	'''Get the timers list from the timers data file
+
+	Parameters
+	----------
+	timers_file: str, optional
+		name of the timers file to parse, or None to get the default file from the computer
+
+	Returns
+	-------
+	list of dict:
+		entry for each line in the timers file. keys are the headers of the tsv file
+		(should include "faucet_num", "faucet", "type", "duration", etc.
+	'''
 	if timers_file is None:
 		timers_file = get_timers_file_name()
 
