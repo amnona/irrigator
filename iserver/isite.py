@@ -484,7 +484,13 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 			if res is None:
 				continue
 			try:
-				event_time = datetime.datetime.strptime(res.groups()[0], "%Y-%m-%d %H:%M:%S")
+				# parse the date/time part
+				# we don't use strptime since has problems with raspberry pi locale en-IL
+				tt = res.groups()[0].split(' ')
+				dpart = tt[0].split('-')
+				tpart = tt[1].split(':')
+				event_time = datetime.datetime(year=int(dpart[0]), month=int(dpart[1]), day=int(dpart[2]), hour=int(tpart[0]), minute=int(tpart[1]))
+				# event_time = datetime.datetime.strptime(res.groups()[0], "%Y-%m-%d %H:%M:%S")
 			except Exception as err:
 				if parsing_problems == 0:
 					logger.debug('failed to read date time from actions log file. line is: %s' % cline)
