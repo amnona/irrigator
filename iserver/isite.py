@@ -114,6 +114,7 @@ def get_status_file_name():
 
 def get_actions_file_name():
 	computer_name = get_computer_name()
+	return 'actions/dani_actions.txt'
 	return 'actions/%s_actions.txt' % computer_name
 
 
@@ -470,6 +471,7 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 	num_out_of_range = 0
 	num_bad_format = 0
 	num_water_problem = 0
+	parsing_problems = 0
 	with open(actions_log_file) as fl:
 		for cline in fl:
 			# get the log file parameters.
@@ -484,7 +486,9 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 			try:
 				event_time = datetime.datetime.strptime(res.groups()[0], "%Y-%m-%d %H:%M:%S")
 			except Exception as err:
-				logger.debug('failed to read date time from actions log file. line is: %s' % cline)
+				if parsing_problems == 0:
+					logger.debug('failed to read date time from actions log file. line is: %s' % cline)
+				parsing_problems += 1
 				continue
 			num_lines += 1
 			if event_time <= start_time or event_time > end_time:
@@ -509,6 +513,7 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 	logger.debug('got %d out of date range' % num_out_of_range)
 	logger.debug('got %d bad format' % num_bad_format)
 	logger.debug('got %d water problems' % num_water_problem)
+	logger.debug('got %d parsing problems' % parsing_problems)
 	return actions
 
 
