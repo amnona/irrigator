@@ -758,21 +758,25 @@ class IComputer:
 
 					# add current water read
 					cleak = leak_check_counter_water[ccounter.name]
+					# get the per minute flow
 					cleak.append(ccounter.get_count())
 					if len(cleak) > leak_check_nunber_tests:
 						cleak.pop(0)
 
 					# test if we have a leak
 					num_leak = 0
+					leak_flows = []
 					for idx in range(len(cleak) - 1):
 						if cleak[idx + 1] - cleak[idx] <= 0:
 							break
+						leak_flows.append((cleak[idx + 1] - cleak[idx]) * 60 / leak_check_interval)
 						num_leak += 1
 					if num_leak >= leak_check_nunber_tests - 1:
 						logger.warning('leak detected for faucet %s')
 						msg = 'computer name: %s\n' % self.computer_name
 						msg += 'counter name: %s\n' % ccounter.name
 						msg += 'reads (read interval is %s):\n%s\n' % (leak_check_interval, cleak)
+						msg += 'flows (read interval is %s):\n%s\n' % (leak_check_interval, leak_flows)
 						send_email('amnonim@gmail.com', 'leak detected', msg)
 
 			# do the daily water report
