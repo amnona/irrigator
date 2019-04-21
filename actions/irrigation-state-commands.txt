@@ -5,6 +5,7 @@
 
 # increasre/decrease irrigation times for all timers by a given percent
 # set_percent 100
+set_percent 50
 
 # disable a single irrigation line
 # disable_line LINE_NAME
