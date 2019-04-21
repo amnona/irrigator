@@ -298,8 +298,6 @@ class IComputer:
 			move computer to "disable" mode (close all faucets and don't turn any on until enable)
 		enable computer_name(str)
 			enable irrigation from computer
-		set_percent percent(number+'%'')
-			change all irrigation times by percent compared to the real program (100% - original, <100% less, 200% twice long irrigations...)
 
 		:param commands_file:  str or None (optional)
 			file name of the commands file. None to use the default (computer_name + '_commands.txt')
@@ -441,8 +439,9 @@ class IComputer:
 		force_fertilization fertilization_pump(str)
 			force fertilization for all lines using this pump
 
-		:param commands_file:  str or None (optional)
-			file name of the commands file. None to use the default (computer_name + '_commands.txt')
+		:param state_commands_file:  str or None (optional)
+			file name of the commands file. None to use the default ('actions/irrigation-state-commands.txt')
+
 		:return:
 		'''
 		try:
@@ -450,7 +449,12 @@ class IComputer:
 			self.init_state_params()
 			with open(state_commands_file) as cf:
 				for cline in cf:
-					cline = cline.strip().split('\t')
+					cline = cline.strip()
+					if len(cline) == 0:
+						continue
+					cline = cline.split('\t')
+					if len(cline) == 0:
+						continue
 					ccommand = cline[0].lower()
 					if len(cline) > 1:
 						param = cline[1].lower()

@@ -1,0 +1,17 @@
+# state commands affecting all timers/faucets in all computers and are not deleted after read
+
+# disable a specific computer
+# disable_computer COMPUTERNAME
+
+# increasre/decrease irrigation times for all timers by a given percent
+# set_percent 100
+
+# disable a single irrigation line
+# disable_line LINE_NAME
+
+# disable a fertilization pump for all lines
+# disable_fertilization PUMP_NAME
+
+# force fertilization for all lines using the pump
+# force_fertilization PUMP_NAME
+
