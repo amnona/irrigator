@@ -599,6 +599,7 @@ class IComputer:
 		leak_check_interval = 5 * 60
 		# for the daily total water report
 		last_daily_water_count = defaultdict(float)
+		irrigation_report_timers = ''
 		last_daily_water_day = datetime.datetime.now().day
 
 		send_email('amnonim@gmail.com', 'irrigator started', 'computer name is %s' % self.computer_name)
@@ -654,6 +655,7 @@ class IComputer:
 				if cpump in fertilizer_should_be_open:
 					if cpump in self.disable_fertilization:
 						logger.debug('Fertilization pump %s disabled. Not opening.' % cpump)
+						irrigation_report_timers += 'did not open fertilization pump %s since it is disabled\n' % cpump
 						continue
 					if not self.pumps[cpump].isopen:
 						logger.info('fertilizer - opening pump %s' % cpump)
@@ -661,6 +663,7 @@ class IComputer:
 				else:
 					if self.pumps[cpump].isopen:
 						logger.info('fertilizer - closing pump %s' % cpump)
+						irrigation_report_timers += 'closed fertilization pump %s\n' % cpump
 					self.pumps[cpump].close()
 
 			# if the faucets that should be opened changed, write the status file (local faucets only?)
@@ -690,6 +693,7 @@ class IComputer:
 						# if faucet on local computer, actually close it, otherwise pretend to close it
 						logger.info('closing faucet %s' % cfaucet.name)
 						cfaucet.close(force=True)
+						irrigation_report_timers += 'closed faucet %s duration %d min, total water %f L, median flow %f L/hour\n' % (cfaucet.name, 0, cfaucet.get_total_water(), cfaucet.get_median_flow())
 					else:
 						# if open and should be open, if it is alone, add the water count
 						cfaucet.add_flow_count()
@@ -699,10 +703,12 @@ class IComputer:
 						if self.disabled:
 							if cfaucet.is_local():
 								logger.info('computer disabled. not opening faucet %s' % cfaucet.name)
+								irrigation_report_timers += 'did not open faucet %s since computer %s is disabled\n' % (cfaucet.name, self.computer_name)
 								continue
 						if cfaucet.name in self.disabled_faucets:
 							if cfaucet.is_local():
 								logger.info('faucet %s disabled. not opening' % cfaucet.name)
+								irrigation_report_timers += 'did not open faucet %s since computer line is disabled\n' % cfaucet.name
 								continue
 						# if faucet on local computer, actually open it. otherwise, pretend to open it
 						logger.info('opening faucet %s' % cfaucet.name)
@@ -792,8 +798,9 @@ class IComputer:
 					for ccounter in self.counters.values():
 						if ccounter.computer_name != self.computer_name:
 							continue
-						irrigation_report += 'counter %s total daily water: %f' % (ccounter.name, ccounter.last_water_read - last_daily_water_count[ccounter.name])
+						irrigation_report += 'counter %s total daily water: %f\n' % (ccounter.name, ccounter.last_water_read - last_daily_water_count[ccounter.name])
 						last_daily_water_count[ccounter.name] = ccounter.last_water_read
+					irrigation_report += irrigation_report_timers
 					send_email('amnonim@gmail.com', 'daily irrigation report', irrigation_report)
 					last_daily_water_day = ctime.day
 
