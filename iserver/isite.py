@@ -359,7 +359,13 @@ def main_site():
 		wpage += '<td>%s</td>' % ccomputer
 		wpage += '<td>%s</td>' % crelay
 		wpage += '<td>%s</td>' % cduration
-		wpage += '<td>%s</td>' % cstatus
+		if cstatus == 'Open':
+			wpage += '<td style="background-color:#00FF00">Open</td>'
+		elif cstatus == 'Closed':
+			wpage += '<td style="background-color:#0000FF">Closed</td>'
+		else:
+			wpage += '<td style="background-color:#FF0000">%s</td>' % cstatus
+		# wpage += '<td>%s</td>' % cstatus
 		wpage += '<td><button id=".button-test" type="button" onclick="open_faucet(\'%s\')">open</button></td>' % cname
 		wpage += '<td><button id=".button-test" type="button" onclick="close_faucet(\'%s\')">close</button></td>' % cname
 		wpage += '</tr>'
