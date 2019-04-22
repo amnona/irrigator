@@ -23,7 +23,7 @@
 </head>
 <script>
 	// auto reload every 10 seconds
-	setTimeout(function() {window.location.reload(1);}, 10000);
+	// setTimeout(function() {window.location.reload(1);}, 10000);
 
 	function close_faucet(faucet_name) {
         $.ajax({ 
@@ -31,7 +31,7 @@
             url:"/manual_close/" + faucet_name,
             success:function(data){ 
                 alert('faucet '+faucet_name+' closed\n'+data);
-                window.location.reload(1);
+                setTimeout(function() {window.location.reload(1);}, 2000);
             },
             cache: false
         });		
@@ -42,7 +42,7 @@
             url:"/manual_open/" + faucet_name,
             success:function(data){ 
                 alert('faucet '+faucet_name+' opened\n'+data);
-                window.location.reload(1);
+                setTimeout(function() {window.location.reload(1);}, 2000);
             },
             cache: false
         });		
