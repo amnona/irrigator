@@ -599,7 +599,7 @@ class IComputer:
 		leak_check_interval = 5 * 60
 		# for the daily total water report
 		last_daily_water_count = defaultdict(float)
-		irrigation_report_timers = ''
+		irrigation_report_timers = '--------------------\n'
 		last_daily_water_day = datetime.datetime.now().day
 
 		send_email('amnonim@gmail.com', 'irrigator started', 'computer name is %s' % self.computer_name)
@@ -663,7 +663,7 @@ class IComputer:
 				else:
 					if self.pumps[cpump].isopen:
 						logger.info('fertilizer - closing pump %s' % cpump)
-						irrigation_report_timers += 'closed fertilization pump %s\n' % cpump
+						irrigation_report_timers += 'fertilized with pump %s for %f minuntes\n' % (cpump, self.pumps[cpump].get_time_since_open())
 					self.pumps[cpump].close()
 
 			# if the faucets that should be opened changed, write the status file (local faucets only?)
@@ -692,8 +692,8 @@ class IComputer:
 					if cfaucet.name not in should_be_open:
 						# if faucet on local computer, actually close it, otherwise pretend to close it
 						logger.info('closing faucet %s' % cfaucet.name)
-						cfaucet.close(force=True)
 						irrigation_report_timers += 'closed faucet %s duration %d min, total water %f L, median flow %f L/hour\n' % (cfaucet.name, 0, cfaucet.get_total_water(), cfaucet.get_median_flow())
+						cfaucet.close(force=True)
 					else:
 						# if open and should be open, if it is alone, add the water count
 						cfaucet.add_flow_count()

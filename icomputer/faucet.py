@@ -309,6 +309,11 @@ class Faucet:
 		logger.debug('predicted total water %f for %s' % (predicted_water, self.name))
 		return predicted_water
 
+	def get_time_since_open(self):
+		'''Return the time in minutes from opening to now
+		'''
+		return (datetime.datetime.now() - self.open_time).total_seconds() // 60
+
 	def write_water_summary(self):
 		'''Write the faucet summary to the faucet water summary file
 
