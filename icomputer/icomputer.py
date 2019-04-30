@@ -802,6 +802,7 @@ class IComputer:
 						last_daily_water_count[ccounter.name] = ccounter.last_water_read
 					irrigation_report += irrigation_report_timers
 					send_email('amnonim@gmail.com', 'daily irrigation report', irrigation_report)
+					irrigation_report_timers = '--------------------\n'
 					last_daily_water_day = ctime.day
 
 			# check for changed files
