@@ -88,6 +88,12 @@ def time_in_range(start_hour, start_minute, duration, test_time=None):
 
 class Timer:
     def __init__(self, duration, cfaucet):
+        '''
+        duration: int
+            the timer duration in minutes
+        cfaucet: icomputer.Faucet
+            the faucet to which the timer is attached
+        '''
         self.duration = int(duration)
         self.faucet = cfaucet
         self.timer_type = 'generic'
@@ -119,6 +125,11 @@ class Timer:
         :return:
         '''
         return False
+
+    def get_next_irrigation(self):
+        '''return the next datetime.datetime when the timer should open
+        '''
+        raise ValueError('Base class timer - not implemented')
 
 
 class WeeklyTimer(Timer):
@@ -195,6 +206,19 @@ class WeeklyTimer(Timer):
         time_left = (test_end - now).total_seconds()
         return time_left
 
+    def get_next_irrigation(self):
+        now = datetime.datetime.now()
+        # if not today, simple
+        if sane_day(now) != self.start_day:
+            return datetime.datetime.combine(next_weekday(now, self.start_day).date(), self.start_time)
+        # irrigation is today. need to check if the time has passed
+        if self.start_time > now.time():
+            # not passed - so today
+            return datetime.datetime.combine(now.date(), self.start_time)
+        else:
+            # passed - so next week
+            return datetime.datetime.combine((now + datetime.timedelta(days=7)).date(), self.start_time)
+
 
 class SingleTimer(Timer):
     #
@@ -252,3 +276,6 @@ class SingleTimer(Timer):
         now = datetime.datetime.now()
         time_left = (self.end_datetime - now).total_seconds()
         return time_left
+
+    def get_next_irrigation(self):
+        return self.start_datetime

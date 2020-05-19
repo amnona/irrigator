@@ -15,6 +15,9 @@ import base64
 import urllib
 import mpld3
 
+from icomputer import IComputer
+
+
 # import numpy as np
 
 logger = getLogger('iserver')
@@ -339,25 +342,58 @@ def faucet_info(faucet):
 @Site_Main_Flask_Obj.route('/', methods=['GET'])
 @requires_auth
 def main_site():
+	icomputer = IComputer(read_only=True)
+	# get the next irrigation times
+	next_time = {}
+	for ctimer in icomputer.timers:
+		ctimer_name = ctimer.faucet.name
+		cnext_irrigation = ctimer.get_next_irrigation()
+		if ctimer_name in next_time:
+			if next_time[ctimer_name] < cnext_irrigation:
+				continue
+		next_time[ctimer_name] = cnext_irrigation
+
+	# get the last irrigation times
+	print(get_actions_file_name())
+	last_times = {}
+	last_actions = get_last_lines(get_actions_file_name(), 200)
+	for caction in last_actions[::-1]:
+		print(caction)
+		a = caction.split('opened faucet ')
+		print(a)
+		if len(a) != 2:
+			continue
+		action_faucet = a[1]
+		action_time_str = a[0].split(' remotely ')[0].strip()
+		# same format as the write_action_log() command in icomputer
+		last_times[action_faucet] = datetime.datetime.strptime(action_time_str, '%Y-%m-%d %H:%M:%S')
+		print(caction)
+		print(action_faucet)
+		print(action_time_str)
+
+	skip_remote = False
 	wpage = render_template('main.html')
 	wpage += '<table>'
-	wpage += '<thead><tr><th>Name</th><th>Computer</th><th>Relay</th><th>Duration</th><th>Status</th></tr></thead>'
+	wpage += '<thead><tr><th>Name</th><th>Duration</th><th>Status</th><th>Last</th><th>Next</th></tr></thead>'
 	wpage += '<tbody>'
-	faucets = _faucets_info()
 	open_faucets = get_status()
-	for cfaucet in faucets:
-		cname = cfaucet.get('name', 'NA')
-		ccomputer = cfaucet.get('computer_name', 'NA')
-		crelay = cfaucet.get('relay', 'NA')
-		cduration = cfaucet.get('default_duration', 'NA')
+	for cfaucet in icomputer.faucets.values():
+		if skip_remote:
+			if not cfaucet.is_local():
+				continue
+		cname = cfaucet.name
+		cduration = cfaucet.default_duration
 		if cname in open_faucets:
 			cstatus = 'Open'
 		else:
 			cstatus = 'Closed'
 		wpage += '<tr>'
-		wpage += '<td>%s</td>' % cname
-		wpage += '<td>%s</td>' % ccomputer
-		wpage += '<td>%s</td>' % crelay
+		cline = '<td>%s</td>' % cname
+		if not skip_remote:
+			if not cfaucet.is_local():
+				# cline = '<td style="background-color:#0077FF">%s</td>' % cname
+				cline = '<td><s>%s</s></td>' % cname
+		wpage += cline
 		wpage += '<td>%s</td>' % cduration
 		if cstatus == 'Open':
 			wpage += '<td style="background-color:#00FF00">Open</td>'
@@ -365,6 +401,8 @@ def main_site():
 			wpage += '<td style="background-color:#0000FF">Closed</td>'
 		else:
 			wpage += '<td style="background-color:#FF0000">%s</td>' % cstatus
+		wpage += '<td>%s</td>' % get_last_irrigation_str(last_times.get(cname, None))
+		wpage += '<td>%s</td>' % get_next_irrigation_time_str(next_time.get(cname, None))
 		# wpage += '<td>%s</td>' % cstatus
 		wpage += '<td><button id=".button-test" type="button" onclick="open_faucet(\'%s\')">open</button></td>' % cname
 		wpage += '<td><button id=".button-test" type="button" onclick="close_faucet(\'%s\')">close</button></td>' % cname
@@ -377,6 +415,85 @@ def main_site():
 	wpage += '</body>'
 	wpage += '</html>'
 	return wpage
+
+
+def get_next_irrigation_time_str(next_time):
+	'''Get a string describing the next irrigation time
+
+	Parameters
+	----------
+	next_time: datetime.datetime
+		the time of the next irrigation
+
+	Returns
+	-------
+	str: (i.e. 'today night' or 'tomorrow evening' etc)
+	'''
+	if next_time is None:
+		return 'NA'
+
+	ctime = datetime.datetime.now()
+	# we set the current time to 5am, so anything until 5am is <1day away
+	ctime = ctime.replace(hour=4, minute=59, second=0)
+
+	tstart_hour = next_time.time().hour
+
+	day_diff = (next_time - ctime).days
+
+	if tstart_hour < 5:
+		timestr = 'night'
+	elif tstart_hour < 8:
+		timestr = 'morning'
+	elif tstart_hour < 17:
+		timestr = 'day'
+	elif tstart_hour < 20:
+		timestr = 'evening'
+	else:
+		timestr = 'night'
+
+	if day_diff <= 0:
+		daystr = 'today'
+	elif day_diff == 1:
+		daystr = 'tomorrow'
+	else:
+		daystr = 'in %d days' % day_diff
+
+	ntime = daystr + ' ' + timestr
+	if ntime == 'today night':
+		ntime = 'tonight'
+	return ntime
+
+
+def get_last_irrigation_str(last_time):
+	'''Get a string representation of the last irrigation time (in hours or days)
+	Parameters
+	----------
+		last_time: datetime.datetime
+
+	Returns
+	-------
+		str (for example '2 hours' or '5 days')
+	'''
+	if last_time is None:
+		return 'NA'
+	ctime = datetime.datetime.now()
+	ti = ctime - last_time
+	if ti.days < 0:
+		return 'future'
+	hours = ti.days * 24 + ti.seconds / 3600
+	print('------')
+	if hours < 48:
+		print(hours)
+		print(ti)
+		print(last_time)
+		print(ctime)
+		print('%d Hours' % int(hours))
+		return '%d Hours' % int(hours)
+	print(ti)
+	print(last_time)
+	print(ctime)
+	print('%d Days' % ti.days)
+	return '%d Days' % ti.days
 
 
 @Site_Main_Flask_Obj.route('/schedule', methods=['GET'])
