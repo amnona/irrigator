@@ -366,7 +366,10 @@ def main_site():
 		action_faucet = a[1]
 		action_time_str = a[0].split(' remotely ')[0].strip()
 		# same format as the write_action_log() command in icomputer
-		last_times[action_faucet] = datetime.datetime.strptime(action_time_str, '%Y-%m-%d %H:%M:%S')
+		try:
+			last_times[action_faucet] = datetime.datetime.strptime(action_time_str, '%Y-%m-%d %H:%M:%S')
+		except:
+			last_times[action_faucet] = datetime.datetime.now()
 		print(caction)
 		print(action_faucet)
 		print(action_time_str)
