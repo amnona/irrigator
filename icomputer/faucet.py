@@ -21,7 +21,7 @@ class Faucet:
 	# timers associated with the faucet
 	timers = []
 
-	def __init__(self, name, local_computer, computer_name=None, faucet_type='generic', relay='0', counter='none', default_duration=30, normal_flow=-1, fertilization_pump='none', fertilize='no', pump_control=False, pump_sensor='none', **kwargs):
+	def __init__(self, name, local_computer, read_only=False, computer_name=None, faucet_type='generic', relay='0', counter='none', default_duration=30, normal_flow=-1, fertilization_pump='none', fertilize='no', pump_control=False, pump_sensor='none', **kwargs):
 		'''Init the faucet
 
 		Parameters
@@ -32,6 +32,8 @@ class Faucet:
 			the current computer.
 			Note: could be different from computer_name if this faucet is connected to a different computer, since
 			we are loading all faucets to all computers, but don't actually open/close it
+		read_only: bool, optional
+			if True, do not open/close this faucet (for web server display)
 		computer_name : str or None
 			name of the computer the faucet is connected to or None to get the name from local_computer
 		faucet_type : str (optional)
@@ -52,6 +54,7 @@ class Faucet:
 			name of the fertilizer sensor (to close the pump if it runs out)
 		'''
 		self.name = name
+		self.read_only = read_only
 		self.local_computer = local_computer
 		if computer_name is None:
 			computer_name = local_computer.computer_name

@@ -18,7 +18,8 @@ class NumatoFaucet(Faucet):
             self.relay_idx = str(self.relay_idx)
         if self.is_local():
             if port_name is None:
-                port_name = self.get_serial_port()
+                if not self.read_only:
+                    port_name = self.get_serial_port()
         self.port_name = port_name
 
     def relay_idx_from_num(self, relay_num):
@@ -107,6 +108,8 @@ class NumatoFaucet(Faucet):
             return False
 
     def open(self, force=False):
+        if self.read_only:
+            return False
         if not force:
             if self.isopen:
                 return False
@@ -123,6 +126,8 @@ class NumatoFaucet(Faucet):
         return res
 
     def close(self, force=False):
+        if self.read_only:
+            return False
         if not force:
             if not self.isopen:
                 return False

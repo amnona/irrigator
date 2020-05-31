@@ -39,7 +39,16 @@ class IComputer:
 	# file containing the expected status of the faucets
 	status_file = None
 
-	def __init__(self, icomputer_conf_file='computer-config.txt'):
+	def __init__(self, icomputer_conf_file='computer-config.txt', read_only=False):
+		'''Initialize the irrigation computer
+		loads the faucet, timer, counters and pumps
+
+		Parameters
+		----------
+		read_only: bool, optional
+			False (default) to be a fully working irrigation computer
+			True to not write anything to the relays
+		'''
 		logger.debug('init icomputer')
 		self.init_state_params()
 		self.computer_name = 'local'
@@ -63,7 +72,7 @@ class IComputer:
 			self.commands_file_timestamp = int(time.time())
 
 		# load the faucets file
-		self.read_faucets()
+		self.read_faucets(read_only=read_only)
 		# load the timers file
 		self.read_timers()
 		# load the water counters file
@@ -128,7 +137,7 @@ class IComputer:
 		self.counters_file = counters_file
 		self.counters_file_timestamp = os.stat(self.counters_file).st_mtime
 
-	def read_faucets(self, faucets_file='data/faucet-list.txt'):
+	def read_faucets(self, faucets_file='data/faucet-list.txt', read_only=False):
 		'''Load faucets information from config file into the computer class faucet dict
 
 		Parameters
@@ -148,9 +157,12 @@ class IComputer:
 				default_duration (float): default irrigation time for the faucet (used for manual open and adding new timer)
 				fertilization_pump (str): name of the fertilization pump associated with this line (from pump-list.txt) or 'na' if no pump on this line
 				fertilize (str): 'yes' to apply fertilization or 'no' to not fertilize
+		read_only: bool, optional
+			True to not write anything to the faucets (for monitoring)
 		'''
 		logger.info('read faucets from file %s' % faucets_file)
-		self.close_all()
+		if not read_only:
+			self.close_all()
 		self.faucets = {}
 		with open(faucets_file) as fl:
 			ffile = csv.DictReader(fl, delimiter='\t')
@@ -161,7 +173,7 @@ class IComputer:
 					logger.warning('faucet %s already defined' % fname)
 					continue
 				faucet_class = get_faucet_class(faucet_type)
-				cfaucet = faucet_class(local_computer=self, **dict(row))
+				cfaucet = faucet_class(local_computer=self, read_only=read_only, **dict(row))
 				logger.info('added faucet %s' % cfaucet)
 				self.faucets[fname] = cfaucet
 		self.faucets_file = faucets_file
@@ -447,6 +459,11 @@ class IComputer:
 		try:
 			# first reset all state parameters (since we're reloading the state file)
 			self.init_state_params()
+			# if state commands file doesn't exist, create it
+			# (should be copied from irrigation-state-commands.default.txt)
+			if not os.path.exists(state_commands_file):
+				with open(state_commands_file, 'w'):
+					logger.warning('irrigation state commands file %s does not exist, create' % state_commands_file)
 			with open(state_commands_file) as cf:
 				for cline in cf:
 					cline = cline.strip()
