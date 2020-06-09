@@ -9,7 +9,7 @@ south pool	7	dani	6	NumatoFaucet	30	main-garden	42.5	main-pump	no
 main drips	8	dani	7	NumatoFaucet	120	main-garden	17.5	main-pump	yes
 tapuz pecan	9	dani	8	NumatoFaucet	30	main-garden	30	main-pump	no
 tapuz satsuma	10	dani	9	NumatoFaucet	30	main-garden	35	main-pump	no
-between houses	11	dani	10	NumatoFaucet	45	main-garden	30	main-pump	no
+between houses	11	dani	10	NumatoFaucet	45	main-garden	25	main-pump	no
 eyal entrance drips	12	dani	11	NumatoFaucet	60	main-garden	6	main-pump	yes
 studio drips	13	dani	12	NumatoFaucet	25	main-garden	8.5	main-pump	yes
 dani rose drips	14	dani	13	NumatoFaucet	150	main-garden	1	main-pump	yes
@@ -25,4 +25,4 @@ outside west drips	35	amnon	9	NumatoFaucet	30	main-garden	0.5	main-pump	yes
 palms	36	amnon	10	NumatoFaucet	30	main-garden	37	main-pump	no
 ziva north sprinklers	33	amnon	11	NumatoFaucet	30	main-garden	42	main-pump	no
 ariza drips	34	amnon	12	NumatoFaucet	30	main-garden	1.5	main-pump	yes
-vegetables	35	amnon	14	NumatoFaucet	30	main-garden	1	main-pump	yes
+vegetables	35	amnon	14	NumatoFaucet	30	main-garden	1.5	main-pump	yes
