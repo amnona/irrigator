@@ -1,3 +1,3 @@
 name	computer	type	channel	counts_per_liter	fake_flow
-main-garden	dani	arduino	2	2	0
+main-garden	garage	arduino	2	2	0
 fake	local	fake	4	1	5
