@@ -12,17 +12,17 @@ tapuz satsuma	10	dani	9	NumatoFaucet	30	main-garden	35	main-pump	no
 between houses	11	dani	10	NumatoFaucet	45	main-garden	25	main-pump	no
 eyal entrance drips	12	dani	11	NumatoFaucet	60	main-garden	6	main-pump	yes
 studio drips	13	dani	12	NumatoFaucet	25	main-garden	8.5	main-pump	yes
-dani rose drips	14	dani	13	NumatoFaucet	150	main-garden	1	main-pump	yes
-afarsermon drips	16	dani	15	NumatoFaucet	60	main-garden	8.5	main-pump	yes
+dani rose drips	14	dani	13	NumatoFaucet	150	main-garden	1.5	main-pump	yes
+afarsermon drips	16	dani	15	NumatoFaucet	60	main-garden	10	main-pump	yes
 ziva roses sprinkler	21	amnon	1	NumatoFaucet	25	main-garden	20	main-pump	no
-ziva roses drips	23	amnon	3	NumatoFaucet	150	main-garden	1.5	main-pump	yes
+ziva roses drips	23	amnon	3	NumatoFaucet	150	main-garden	2	main-pump	yes
 ziva entrance drips	24	amnon	4	NumatoFaucet	120	main-garden	8.5	main-pump	yes
 cypress	25	amnon	5	NumatoFaucet	25	main-garden	27	main-pump	no
-anona drips	26	amnon	6	NumatoFaucet	105	main-garden	6.5	main-pump	yes
+anona drips	26	amnon	6	NumatoFaucet	105	main-garden	7.5	main-pump	yes
 japanese sprinkler	27	amnon	7	NumatoFaucet	15	main-garden	8.5	main-pump	no
 entrance flowers	28	amnon	8	NumatoFaucet	10	main-garden	1.5	main-pump	no
-outside west drips	35	amnon	9	NumatoFaucet	30	main-garden	0.5	main-pump	yes
+outside west drips	35	amnon	9	NumatoFaucet	30	main-garden	1	main-pump	yes
 palms	36	amnon	10	NumatoFaucet	30	main-garden	37	main-pump	no
 ziva north sprinklers	33	amnon	11	NumatoFaucet	30	main-garden	42	main-pump	no
-ariza drips	34	amnon	12	NumatoFaucet	30	main-garden	1.5	main-pump	yes
-vegetables	35	amnon	14	NumatoFaucet	30	main-garden	1.5	main-pump	yes
+ariza drips	34	amnon	12	NumatoFaucet	30	main-garden	1	main-pump	yes
+vegetables	35	amnon	14	NumatoFaucet	30	main-garden	2	main-pump	yes
