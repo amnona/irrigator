@@ -52,6 +52,11 @@ class IComputer:
 		logger.debug('init icomputer')
 		self.init_state_params()
 		self.computer_name = 'local'
+
+		# monitoe leaks mode. if True, do not report faucets not opening - just leaks (and assume no faucets should open)
+		# can be set via "monitor_leaks True" in actions config file
+		self.monitor_leaks = False
+
 		self.icomputer_config_file = icomputer_conf_file
 		# load the irrigation computer config file
 		if icomputer_conf_file is not None:
@@ -499,7 +504,12 @@ class IComputer:
 							self.delete_timers(delete_list)
 						else:
 							logger.debug('cannot disable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
-
+					elif ccommand == 'monitor_leaks':
+						logger.info('Change to monitor state %s' % param)
+						if param == 'True':
+							self.monitor_leaks = True
+						else:
+							self.monitor_leaks = False
 					elif ccommand == 'disable_line':
 						self.disabled_faucets.add(param)
 					elif ccommand == 'disable_fertilization':
@@ -778,12 +788,14 @@ class IComputer:
 					if ccounter.computer_name != self.computer_name:
 						continue
 					# are any faucets on this counter open?
-					if ccounter.name in num_open:
-						logger.debug('faucets open on counter %s. test skipped' % ccounter.name)
-						continue
-					logger.debug('leak check - no faucets open for %s' % ccounter.name)
+					# do this check only if not in monitor_leaks mode (monitor leaks mode assumes no faucets should be open)
+					if not self.monitor_leaks:
+						if ccounter.name in num_open:
+							logger.debug('faucets open on counter %s. test skipped' % ccounter.name)
+							continue
+						logger.debug('leak check - no faucets open for %s' % ccounter.name)
 
-					# add current water read
+					# add current water read to list of flows for the current counter
 					cleak = leak_check_counter_water[ccounter.name]
 					# get the per minute flow
 					cleak.append(ccounter.get_count())
