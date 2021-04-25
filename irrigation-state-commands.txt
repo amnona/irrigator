@@ -5,3 +5,5 @@
 # disable_computer	COMPUTER_NAME
 # disable_line	LINE_NAME
 # disable_fertilization	PUMP_NAME
+
+# disable_line	ziva roses drips

@@ -79,7 +79,7 @@ weekly	ziva north sprinklers	24	15	3	3	30	0	0	0
 weekly	ziva north sprinklers	24	15	6	3	30	0	0	0
 weekly	ziva roses drips	25	120	1	19	30	0	0	0
 weekly	ziva roses drips	25	120	3	19	30	0	0	0
-weekly	ziva roses drips	25	150	5	19	30	0	0	0
+weekly	ziva roses drips	25	120	5	19	30	0	0	0
 weekly	ziva roses sprinkler	26	15	1	6	0	0	0	0
 weekly	ziva roses sprinkler	26	15	3	6	0	0	0	0
 weekly	ziva roses sprinkler	26	15	5	6	0	0	0	0
