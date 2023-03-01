@@ -84,6 +84,8 @@ class IComputer:
 		self.read_counters()
 		# load the fertilization pumps file
 		self.read_pumps()
+		# set the irrigation mode (can be 'auto' or 'manual')
+		self.mode = 'auto'
 		# load the state commands file (disabled computers etc.)
 		self.read_state_commands()
 
@@ -411,6 +413,11 @@ class IComputer:
 					else:
 						logger.debug('cannot enable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
 
+				elif ccommand == 'mode':
+					mode = param
+					logger.info('changing mode to %s' % param)
+					self.mode = mode
+
 				elif ccommand == 'quit':
 					logger.warning('quitting')
 					self.close_all()
@@ -455,6 +462,9 @@ class IComputer:
 			disable all fertilization by this pump
 		force_fertilization fertilization_pump(str)
 			force fertilization for all lines using this pump
+		mode manual/auto
+			'manual' - Ignore all automatic (timer) open commands, open only using manual commands (and automatically close)
+			'auto' - Use the timers
 
 		:param state_commands_file:  str or None (optional)
 			file name of the commands file. None to use the default ('actions/irrigation-state-commands.txt')
@@ -521,13 +531,17 @@ class IComputer:
 						try:
 							percent = float(param[:-1])
 						except Exception as err:
-							logger.warning('failed to convert to float set_percent in state-commands file')
+							logger.warning('failed to convert to float set_percent in state-commands file: error %s' % err)
 							continue
 						if percent < 0 or percent > 1000:
 							logger.warning('set_percent in state-commands supplied percent (%f) too small or too big' % percent)
 							continue
 						self.duration_correction = percent / 100
 						logger.info('percent irrigation updated to %f' % percent)
+					elif ccommand == 'mode':
+						mode = param
+						logger.info('changing mode to %s' % param)
+						self.mode = mode
 					else:
 						logger.warning('Manual command %s not recognized' % cline)
 						continue
@@ -639,6 +653,10 @@ class IComputer:
 			num_open = defaultdict(list)
 			delete_list = []
 			for ctimer in self.timers:
+				# if we are in manual mode, ignore the weekly timers open command
+				if self.mode == 'manual':
+					if isinstance(ctimer, WeeklyTimer):
+						continue
 				if ctimer.should_be_open(self.duration_correction):
 					# add this faucet to the list of open faucets for this timer
 					num_open[ctimer.faucet.counter].append(ctimer.faucet.name)
