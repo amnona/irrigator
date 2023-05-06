@@ -377,7 +377,7 @@ def main_site():
 	skip_remote = False
 	wpage = render_template('main.html')
 	if icomputer.mode == 'manual':
-		wpage += '<h2 style="background-color:red;">Manual mode</h2>'
+		wpage += '<h2 style="background-color:red;">Manual mode</h2><br>'
 	wpage += '<table>'
 	wpage += '<thead><tr><th>Name</th><th>Duration</th><th>Status</th><th>Last</th><th>Next</th></tr></thead>'
 	wpage += '<tbody>'

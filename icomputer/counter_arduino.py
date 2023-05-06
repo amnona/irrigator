@@ -106,12 +106,16 @@ class CounterArduino(Counter):
 
     def clear_count(self):
         '''Set the count to 0'''
-        command = 'c' + str(self.iopin) + '\n'
-        if self.open_serial() is None:
+        try:
+            command = 'c' + str(self.iopin) + '\n'
+            if self.open_serial() is None:
+                return
+            self.serial.write(command.encode())
+            new_count = self.get_count()
+            if new_count != 0:
+                logger.warning('clear counts failed for %s port %s. count is %d' % (self.serial_name, self.iopin, self.count))
+                return
+            logger.info('reset water counter %s port %s' % (self.serial_name, self.iopin))
+        except Exception as err:
+            logger.warning('clear counts failed for %s port %s. error %s' % (self.name, self.iopin, err))
             return
-        self.serial.write(command.encode())
-        new_count = self.get_count()
-        if new_count != 0:
-            logger.warning('clear counts failed for %s port %s. count is %d' % (self.serial_name, self.iopin, self.count))
-            return
-        logger.info('reset water counter %s port %s' % (self.serial_name, self.iopin))
