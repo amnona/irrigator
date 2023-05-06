@@ -74,7 +74,11 @@ class CounterArduino(Counter):
         command = 'r' + str(self.iopin) + '\n'
         if self.open_serial() is None:
             return self.count
-        self.serial.write(command.encode())
+        try:
+            self.serial.write(command.encode())
+        except Exception as err:
+            logger.warning('could not get count for serial %s. error %s' % (self.name, err))
+            return self.count
         try:
             count = self.serial.readline()
         except serial.SerialTimeoutException:
