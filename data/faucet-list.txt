@@ -7,7 +7,7 @@ north pingpong	5	dani	4	NumatoFaucet	30	main-garden	32	main-pump	no
 south pingpong	6	dani	5	NumatoFaucet	30	main-garden	32.5	main-pump	no
 south pool	7	dani	6	NumatoFaucet	30	main-garden	42.5	main-pump	no
 main drips	8	dani	7	NumatoFaucet	120	main-garden	17.5	main-pump	yes
-tapuz pecan	9	dani	8	NumatoFaucet	30	main-garden	30	main-pump	no
+tapuz pecan	9	amnon	13	NumatoFaucet	30	main-garden	30	main-pump	no
 tapuz satsuma	10	dani	9	NumatoFaucet	30	main-garden	35	main-pump	no
 between houses	11	dani	10	NumatoFaucet	45	main-garden	25	main-pump	no
 eyal entrance drips	12	dani	11	NumatoFaucet	60	main-garden	6	main-pump	yes
