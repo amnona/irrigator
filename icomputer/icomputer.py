@@ -521,6 +521,7 @@ class IComputer:
 						else:
 							self.monitor_leaks = False
 					elif ccommand == 'disable_line':
+						logger.info('disable line %s' % param)
 						self.disabled_faucets.add(param)
 					elif ccommand == 'disable_fertilization':
 						self.disable_fertilization.add(param)
