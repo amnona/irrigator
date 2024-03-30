@@ -26,3 +26,4 @@ palms	36	amnon	10	NumatoFaucet	30	main-garden	37	main-pump	no
 ziva north sprinklers	33	amnon	11	NumatoFaucet	30	main-garden	42	main-pump	no
 ariza drips	34	amnon	12	NumatoFaucet	30	main-garden	1	main-pump	yes
 vegetables	35	amnon	14	NumatoFaucet	30	main-garden	2	main-pump	yes
+valencia drips	36	amnon	15	NumatoFaucet	60	main-garden	7	main-pump	yes
