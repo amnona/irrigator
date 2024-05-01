@@ -2,9 +2,13 @@ type	faucet	faucet_num	duration	start_day	start_hour	start_minute	start_year	sta
 weekly	afarsermon drips	1	70	1	0	0	0	0	0
 weekly	afarsermon drips	1	70	3	0	0	0	0	0
 weekly	afarsermon drips	1	70	5	0	0	0	0	0
-weekly	anona drips	2	105	2	22	0	0	0	0
-weekly	anona drips	2	105	5	22	0	0	0	0
-weekly	anona drips	2	105	7	22	0	0	0	0
+weekly	anona drips	2	45	1	21	0	0	0	0
+weekly	anona drips	2	45	2	21	0	0	0	0
+weekly	anona drips	2	45	3	21	0	0	0	0
+weekly	anona drips	2	45	4	21	0	0	0	0
+weekly	anona drips	2	45	5	21	0	0	0	0
+weekly	anona drips	2	45	6	21	0	0	0	0
+weekly	anona drips	2	45	7	21	0	0	0	0
 weekly	ariza drips	3	60	1	18	30	0	0	0
 weekly	ariza drips	3	60	3	18	30	0	0	0
 weekly	ariza drips	3	60	5	18	30	0	0	0
