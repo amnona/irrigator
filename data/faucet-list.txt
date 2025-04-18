@@ -27,4 +27,4 @@ ziva north sprinklers	33	amnon	11	NumatoFaucet	30	main-garden	42	main-pump	no
 ariza drips	34	amnon	12	NumatoFaucet	30	main-garden	2.5	main-pump	yes
 vegetables	35	amnon	14	NumatoFaucet	30	main-garden	1.5	main-pump	yes
 valencia drips	36	amnon	15	NumatoFaucet	60	main-garden	3.5	main-pump	yes
-avocado drips	37	dani	8	NumatoFaucet	20	main-garden	4	main-pump	yes
+avocado drips	37	dani	8	NumatoFaucet	20	main-garden	1.5	main-pump	yes
