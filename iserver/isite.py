@@ -730,10 +730,10 @@ def draw_counter_water_plot(xdat, ydat, title=None):
 
 		res = mpld3.fig_to_html(fig, no_extras=False)
 		plt.close(fig)
-		return res
+		return None, res
 	except Exception as err:
 		logger.warning('error when running draw_counter_water_plot:%s' % err)
-		return None
+		return 'error when running draw_counter_water_plot:%s' % err, None
 
 
 def draw_barchart(ydat, labels, xlabel=None):
@@ -795,9 +795,12 @@ def waterlog(counter):
 	if err is not None:
 		logger.warning(err)
 		return err
-	water_lines = draw_counter_water_plot(times, water_reads, 'counter %s' % counter)
-	# return water_bars
+	err, water_lines = draw_counter_water_plot(times, water_reads, 'counter %s' % counter)
+	if err is not None:
+		logger.warning('error when drawing water plot: %s' % err)
+		return err
 
+	# return water_bars
 	wpart = 'Flow for counter: %s<br>' % counter
 	wpart += water_lines
 	# wpart += render_template('plot_counter_water.html', water_plot=water_bars)
