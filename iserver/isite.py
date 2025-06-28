@@ -671,7 +671,7 @@ def get_water_log(counter, end_time=None, period=14, actions_log_file=None):
 
 	Returns
 	-------
-	(times: list of int, water_reads: list of float)
+	(err: str or None if ok, times: list of int, water_reads: list of float)
 	'''
 	if actions_log_file is None:
 		actions_log_file = get_counter_file_name(counter)
@@ -680,22 +680,26 @@ def get_water_log(counter, end_time=None, period=14, actions_log_file=None):
 	start_time = end_time - datetime.timedelta(days=period)
 	times = []
 	water_reads = []
-	with open(actions_log_file) as fl:
-		for cline in fl:
-			try:
-				cres = cline.split('\t')
-				# event_time = datetime.datetime.strptime(cres[0], "%Y-%m-%d %H:%M:%S")
-				event_time = datetime.datetime.strptime(cres[0], "%a %b %d %H:%M:%S %Y")
-				if event_time <= start_time or event_time > end_time:
+	try:
+		with open(actions_log_file) as fl:
+			for cline in fl:
+				try:
+					cres = cline.split('\t')
+					# event_time = datetime.datetime.strptime(cres[0], "%Y-%m-%d %H:%M:%S")
+					event_time = datetime.datetime.strptime(cres[0], "%a %b %d %H:%M:%S %Y")
+					if event_time <= start_time or event_time > end_time:
+						continue
+					cwater = float(cres[1])
+					# cflow = float(cres[2])
+					times.append(event_time.timestamp())
+					water_reads.append(cwater)
+				except Exception as err:
+					print(err)
 					continue
-				cwater = float(cres[1])
-				# cflow = float(cres[2])
-				times.append(event_time.timestamp())
-				water_reads.append(cwater)
-			except Exception as err:
-				print(err)
-				continue
-	return (times, water_reads)
+		return (None,times, water_reads)
+	except:
+		logger.warning('could not read water log file %s' % actions_log_file)
+		return ('counter %s does not have the water log file %s' % (counter, actions_log_file),[], [])
 
 
 def draw_counter_water_plot(xdat, ydat, title=None):
@@ -787,7 +791,10 @@ def stats():
 @Site_Main_Flask_Obj.route('/waterlog/<counter>', methods=['GET'])
 @requires_auth
 def waterlog(counter):
-	times, water_reads = get_water_log(counter)
+	err, times, water_reads = get_water_log(counter)
+	if err is not None:
+		logger.warning(err)
+		return err
 	water_lines = draw_counter_water_plot(times, water_reads, 'counter %s' % counter)
 	# return water_bars
 
