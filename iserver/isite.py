@@ -40,14 +40,16 @@ def get_last_lines(filename, num_lines, max_line_len=200):
 	-------
 	list of str (one per line)
 	'''
-	with open(filename, 'rb') as fl:
-		fl.seek(-num_lines * max_line_len, os.SEEK_END)
-		lines = fl.readlines()
-		out_lines = []
-		for x in range(min(num_lines, len(lines))):
-			out_lines.append(lines[-(x + 1)].decode().strip())
-	return out_lines
-
+	try:
+		with open(filename, 'rb') as fl:
+			fl.seek(-num_lines * max_line_len, os.SEEK_END)
+			lines = fl.readlines()
+			out_lines = []
+			for x in range(min(num_lines, len(lines))):
+				out_lines.append(lines[-(x + 1)].decode().strip())
+		return out_lines
+	except:
+		return ['Error reading file %s' % filename]
 
 def check_auth(username, password):
 	"""This function is called to check if a username /
@@ -659,6 +661,8 @@ def get_water_log(counter, end_time=None, period=14, actions_log_file=None):
 	----------
 	counter: str
 		the water counter name
+	end_time: datetime or None, optional
+		the end time for the analysis period. None for the current datetime
 	period: int, optional
 		the period in days to get the reads for (back from the end_time)
 	actions_log_file: str, optional
