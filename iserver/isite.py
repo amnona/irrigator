@@ -704,7 +704,7 @@ def get_water_log(counter, end_time=None, period=14, actions_log_file=None):
 
 def draw_counter_water_plot(xdat, ydat, title=None):
 	try:
-		plt.hold(False)
+		# plt.hold(False)
 		logger.debug('draw counter_water_plot')
 		fig = plt.figure()
 		points = plt.plot(xdat, ydat, 'o-')
