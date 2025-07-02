@@ -625,6 +625,46 @@ class IComputer:
 			cfl.write('%s\t%d\t%f\n' % (time.asctime(), counter.get_count(), counter.flow))
 			logger.debug('logged counter %s count %d flow %f' % (counter.name, counter.last_water_read, counter.flow))
 
+	def write_short_water_log_counter(self, counter, n=30, faucet_name=None, water_dir='water'):
+		'''Write the faucet/counter water count to the log file containing only the last n reads.
+		Note by default it writes the counter file, and if faucet is not None, it writes the faucet file.
+
+		Parameters
+		----------
+		counter: Counter
+			the Counter from where to get the water total/flow values
+		n: int (optional)
+			the number of last reads to write to the file
+		faucet_name: str or None (optional)
+			None to write to faucet file or str to to write the water info for the given faucet name
+		water_dir: str (optional)
+			the directory where to write the file
+		'''
+		# if we don't have the output directory, create it
+		if not os.path.exists(water_dir):
+			os.makedirs(water_dir)
+		if faucet_name is None:
+			file_name = os.path.join(water_dir, 'water-short-log-%s-%s.txt' % (self.computer_name, counter.name))
+		else:
+			file_name = os.path.join(water_dir, 'water-short-log-faucet-%s-%s.txt' % (faucet_name, self.computer_name))
+		# read the file and keep only the last n lines
+		last_reads = []
+		if os.path.exists(file_name):
+			with open(file_name, 'r') as cfl:
+				for line in cfl:
+					last_reads.append(line.strip())
+		# keep only the last n-1 reads
+		if len(last_reads) >= n:
+			last_reads = last_reads[-n:]
+		# add the current read
+		last_reads.append('%s\t%d\t%f' % (time.asctime(), counter.get_count(), counter.flow))
+		# write the last n reads to the file
+		with open(file_name, 'w') as cfl:
+			for line in last_reads:
+				cfl.write(line + '\n')
+		logger.debug('logged short (%d) counter %s count %d flow %f' % (n, counter.name, counter.last_water_read, counter.flow))
+
+
 	def main_loop(self):
 		done = False
 
@@ -770,6 +810,14 @@ class IComputer:
 						continue
 					# write water log
 					self.write_water_log_counter(ccounter)
+
+			# write the short water log file (last 30 reads) (for website)
+			if ticks % 60 == 0:
+				for ccounter in self.counters.values():
+					if ccounter.computer_name != self.computer_name:
+						continue
+					# write short water log
+					self.write_short_water_log_counter(ccounter)
 
 			# write the current per-counter water details to the current water status file (for website)
 			if ticks % 60 == 0:
