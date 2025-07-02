@@ -8,6 +8,11 @@ from collections import defaultdict
 import datetime
 import time
 import re
+
+# to avoid error in threads
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 import numpy as np
 from io import BytesIO
@@ -122,9 +127,12 @@ def get_actions_file_name():
 	return 'actions/%s_actions.txt' % computer_name
 
 
-def get_counter_file_name(counter):
+def get_counter_file_name(counter, get_short=False):
 	computer_name = get_computer_name()
-	return 'water/water-log-%s-%s.txt' % (computer_name, counter)
+	if get_short:
+		return 'water/water-short-log-%s-%s.txt' % (computer_name, counter)
+	else:
+		return 'water/water-log-%s-%s.txt' % (computer_name, counter)
 
 
 def get_timers_file_name():
@@ -424,6 +432,105 @@ def main_site():
 	return wpage
 
 
+@Site_Main_Flask_Obj.route('/main', methods=['GET'])
+@requires_auth
+def main_new_site():
+	icomputer = IComputer(read_only=True)
+	# get the next irrigation times
+	next_time = {}
+	for ctimer in icomputer.timers:
+		ctimer_name = ctimer.faucet.name
+		cnext_irrigation = ctimer.get_next_irrigation()
+		if ctimer_name in next_time:
+			if next_time[ctimer_name] < cnext_irrigation:
+				continue
+		next_time[ctimer_name] = cnext_irrigation
+
+	# get the last irrigation times
+	print(get_actions_file_name())
+	last_times = {}
+	last_actions = get_last_lines(get_actions_file_name(), 200)
+	for caction in last_actions[::-1]:
+		print(caction)
+		a = caction.split('opened faucet ')
+		print(a)
+		if len(a) != 2:
+			continue
+		action_faucet = a[1]
+		action_time_str = a[0].split(' remotely ')[0].strip()
+		# same format as the write_action_log() command in icomputer
+		try:
+			last_times[action_faucet] = datetime.datetime.strptime(action_time_str, '%Y-%m-%d %H:%M:%S')
+		except:
+			last_times[action_faucet] = datetime.datetime.now()
+		print(caction)
+		print(action_faucet)
+		print(action_time_str)
+
+	skip_remote = False
+
+	if icomputer.mode == 'manual':
+		irrigation_mode += '<h2 style="background-color:red;">Manual mode</h2><br>'
+	else:
+		irrigation_mode = ''
+
+	faucets = ''
+
+	open_faucets = get_status()
+	for cfaucet in icomputer.faucets.values():
+		if skip_remote:
+			if not cfaucet.is_local():
+				continue
+		cname = cfaucet.name
+		cduration = cfaucet.default_duration
+		if cname in open_faucets:
+			cstatus = 'Open'
+		else:
+			cstatus = 'Closed'
+		faucets += '<tr>'
+		if not skip_remote:
+			if cfaucet.is_local():
+				cline = '<td>%s</td>' % cname
+			else:
+				cline = '<td><s>%s</s></td>' % cname
+				# cline = '<td style="background-color:#0077FF">%s</td>' % cname
+
+		faucets += cline
+		faucets += '<td>%s</td>' % cduration
+		if cstatus == 'Open':
+			faucets += '<td style="background-color:#00FF00">Open</td>'
+		elif cstatus == 'Closed':
+			faucets += '<td style="background-color:#0000FF">Closed</td>'
+		else:
+			faucets += '<td style="background-color:#FF0000">%s</td>' % cstatus
+		faucets += '<td>%s</td>' % get_last_irrigation_str(last_times.get(cname, None))
+		faucets += '<td>%s</td>' % get_next_irrigation_time_str(next_time.get(cname, None))
+		# wpage += '<td>%s</td>' % cstatus
+		faucets += '<td><button id=".button-test" type="button" onclick="open_faucet(\'%s\')">open</button></td>' % cname
+		faucets += '<td><button id=".button-test" type="button" onclick="close_faucet(\'%s\')">close</button></td>' % cname
+		faucets += '</tr>'
+
+	counter_water = get_current_water()
+	print('found %d water counters' % len(counter_water))
+	print(counter_water)
+	water_data = []
+	for ccounter, cvals in counter_water.items():
+		new_data = {'name': ccounter, 'current_water': round(float(cvals['total']), 2), 'current_flow': round(float(cvals['flow']), 2)}
+		water_image, flow_image=get_water_image(ccounter)
+		new_data['water_image'] = water_image
+		new_data['flow_image'] = flow_image
+		water_data.append(new_data)
+
+	current_time = datetime.datetime.now().strftime('%d %H:%M:%S')
+	return render_template('main-new.html',
+						irrigation_mode=irrigation_mode, 
+						faucets=faucets, 
+						water_data=water_data, 
+						computer_name = get_computer_name(), 
+						version='V0.3',
+						current_time=current_time)
+
+
 def get_next_irrigation_time_str(next_time):
 	'''Get a string describing the next irrigation time
 
@@ -654,7 +761,7 @@ def get_stats_from_log(end_time=None, period=7, actions_log_file=None):
 	return actions
 
 
-def get_water_log(counter, end_time=None, period=14, actions_log_file=None):
+def get_water_log(counter, end_time=None, period=14, actions_log_file=None, get_short=False):
 	'''Get the water counter reads log for the counter
 
 	Parameters
@@ -668,18 +775,21 @@ def get_water_log(counter, end_time=None, period=14, actions_log_file=None):
 	actions_log_file: str, optional
 		the file to get the reads from.
 		If None, use the file for counter
+	get_short: bool, optional
+		if True, use the rotating water log file (i.e. water-short-log-<counter>.txt)
 
 	Returns
 	-------
 	(err: str or None if ok, times: list of int, water_reads: list of float)
 	'''
 	if actions_log_file is None:
-		actions_log_file = get_counter_file_name(counter)
+		actions_log_file = get_counter_file_name(counter, get_short=get_short)
 	if end_time is None:
 		end_time = datetime.datetime.now()
 	start_time = end_time - datetime.timedelta(days=period)
 	times = []
 	water_reads = []
+	flow_reads = []
 	try:
 		with open(actions_log_file) as fl:
 			for cline in fl:
@@ -690,16 +800,72 @@ def get_water_log(counter, end_time=None, period=14, actions_log_file=None):
 					if event_time <= start_time or event_time > end_time:
 						continue
 					cwater = float(cres[1])
-					# cflow = float(cres[2])
+					cflow = float(cres[2])
 					times.append(event_time.timestamp())
 					water_reads.append(cwater)
+					flow_reads.append(cflow)
 				except Exception as err:
 					print(err)
 					continue
-		return (None,times, water_reads)
+		return (None,times, water_reads, flow_reads)
 	except:
 		logger.warning('could not read water log file %s' % actions_log_file)
 		return ('counter %s does not have the water log file %s' % (counter, actions_log_file),[], [])
+
+
+def draw_counter_water_image(xdat, ydat, title=None, type='water'):
+	try:
+		# plt.hold(False)
+		logger.debug('draw counter_water_image')
+		fig = plt.figure()
+
+		xticks = []
+		currentday = 'na'
+		xtickpos = []
+		xticklabels = []
+		for ctime in xdat:
+			xticks.append(time.strftime('%d/%m/%Y %H:%M', time.gmtime(ctime)))
+			newday = time.strftime('%d', time.gmtime(ctime))
+			if newday != currentday:
+				currentday = newday
+				xtickpos.append(ctime)
+				xticklabels.append(newday)
+				print('new day %s' % newday)
+
+		if type == 'water':
+			plt.plot(xdat, ydat, 'o-')
+			plt.ylabel('total water (l)')
+			plt.xticks(xtickpos, xticklabels)
+		elif type == 'flow':
+			print('***flow')
+			print(ydat)
+			print(xdat)
+			plt.bar(range(len(ydat)), ydat)
+			plt.ylabel('flow (l/min)')
+		else:
+			logger.warning('unknown type %s for draw_counter_water_image' % type)
+			return 'unknown type %s for draw_counter_water_image' % type, None
+
+		plt.xlabel('time (secs)')
+		if title:
+			plt.title(title)
+
+		# convert the plot to a base64 image
+		buf = BytesIO()
+		plt.savefig(buf, format='png')
+		buf.seek(0)  # rewind the buffer to the beginning
+		
+		# encode the image as base64
+		img_data = base64.b64encode(buf.read()).decode('utf-8')
+		img_tag = f"data:image/png;base64,{img_data}"
+	
+		plt.close(fig)  # close the figure to free memory
+
+		return None, img_tag
+
+	except Exception as err:
+		logger.warning('error when running draw_counter_water_plot:%s' % err)
+		return 'error when running draw_counter_water_plot:%s' % err, None
 
 
 def draw_counter_water_plot(xdat, ydat, title=None):
@@ -741,15 +907,35 @@ def draw_barchart(ydat, labels, xlabel=None):
 		# plt.hold(False)
 		logger.debug('draw bar chart')
 		fig = plt.figure()
+		# xdat = np.arange(len(ydat))
+		# plt.barh(xdat, ydat, tick_label=labels)
+		# if xlabel:
+		# 	logger.debug('adding xlabel %s' % xlabel)
+		# 	plt.xlabel(xlabel)
+
+		plt.plot([0,10], [0, 10], 'k-', lw=1)
+		print('testing*****')
+
+		res = mpld3.fig_to_html(fig, no_extras=False)
+		plt.close(fig)
+		return res
+	except Exception as err:
+		logger.warning('error when running draw_barchart:%s' % err)
+		return ''
+
+
+def draw_barchart_fig(ydat, labels, xlabel=None):
+	try:
+		# plt.hold(False)
+		logger.debug('draw bar chart')
+		fig = plt.figure()
 		xdat = np.arange(len(ydat))
 		plt.barh(xdat, ydat, tick_label=labels)
 		if xlabel:
 			logger.debug('adding xlabel %s' % xlabel)
 			plt.xlabel(xlabel)
 
-		res = mpld3.fig_to_html(fig, no_extras=False)
-		plt.close(fig)
-		return res
+		return fig
 	except Exception as err:
 		logger.warning('error when running draw_barchart:%s' % err)
 		return None
@@ -788,10 +974,35 @@ def stats():
 	return wpart
 
 
+def get_water_image(counter):
+	'''Get the figure image for the water counter (to embed in the html)
+
+	Parameters
+	----------
+	counter: str
+		the name of the water counter
+
+	Returns
+	-------
+	str: the image tag for the water counter
+	'''
+	err, times, water_reads, flow_reads = get_water_log(counter, get_short=True)
+	if err is not None:
+		logger.warning(err)
+		return err
+	err, water_lines = draw_counter_water_image(times, water_reads, title='total water', type='water')
+	if err is not None:
+		logger.warning('error when drawing water plot: %s' % err)
+		return err
+	err, flow_lines = draw_counter_water_image(times, flow_reads, title='flow', type='flow')
+
+	return water_lines, flow_lines
+
+
 @Site_Main_Flask_Obj.route('/waterlog/<counter>', methods=['GET'])
 @requires_auth
 def waterlog(counter):
-	err, times, water_reads = get_water_log(counter)
+	err, times, water_reads, flow_reads = get_water_log(counter)
 	if err is not None:
 		logger.warning(err)
 		return err
@@ -812,7 +1023,8 @@ def waterlog(counter):
 @requires_auth
 def faucetlog(line):
 	logger.debug('getting faucetlog for line %s' % line)
-	actions = get_stats_from_log(period=1000)
+	# actions = get_stats_from_log(period=1000)
+	actions = get_stats_from_log(period=21)
 	if line not in actions:
 		return('line %s not in actions file' % line)
 	line_actions = actions[line]
@@ -825,14 +1037,57 @@ def faucetlog(line):
 		water.append(caction['water'])
 		times.append(caction['date'].strftime("%d/%m"))
 	logger.debug('generating graphs')
-	flow_bars = draw_barchart(flows, times, 'flow (Liter/Hour)')
-	water_bars = draw_barchart(water, times, 'total water (Liter)')
-	logger.debug('finished')
-	wpart = ''
-	wpart += 'Actions summary for line %s<br><br>' % line
-	wpart += 'Flow<br>'
-	wpart += flow_bars
-	wpart += '<br>Total water<br>'
-	wpart += water_bars
+	fig = draw_barchart_fig(flows, times, 'flow (Liter/Hour)')
+	if fig is None:
+		logger.warning('error when drawing flow barchart')
+		return 'error when drawing flow barchart'
+	# save the figure to a BytesIO object
+	buf = BytesIO()
+	plt.savefig(buf, format='png')
+	buf.seek(0)  # rewind the buffer to the beginning
+	
+	# encode the image as base64
+	img_data = base64.b64encode(buf.read()).decode('utf-8')
+	img_tag = f"data:image/png;base64,{img_data}"
+	
+	plt.close(fig)  # close the figure to free memory
 
+	return render_template('test.html', img_data=img_tag)
+	# flow_bars = draw_barchart(flows, times, 'flow (Liter/Hour)')
+	# water_bars = draw_barchart(water, times, 'total water (Liter)')
+	# logger.debug('finished')
+	# wpart = ''
+	# wpart += 'Actions summary for line %s<br><br>' % line
+	# wpart += 'Flow<br>'
+	# wpart += flow_bars
+	# wpart += '<br>Total water<br>'
+	# wpart += water_bars
+	# wpart += '</body>'
+	# wpart += '</html>'
 	return wpart
+
+@Site_Main_Flask_Obj.route('/test')
+def test():
+	# read the short water log
+	water_log_file = 'water/water-short-log-test-main-garden.txt'
+	with open(water_log_file, 'r') as fl:
+		lines = fl.readlines()
+	# get the last 10 lines
+	# lines = lines[-10:]
+	flows = [float(x.split('\t')[2]) for x in lines]
+	print(flows)
+
+	fig=plt.figure()
+	plt.bar(range(len(flows)), flows, tick_label=lines)
+	# save the figure to a BytesIO object
+	buf = BytesIO()
+	plt.savefig(buf, format='png')
+	buf.seek(0)  # rewind the buffer to the beginning
+	
+	# encode the image as base64
+	img_data = base64.b64encode(buf.read()).decode('utf-8')
+	img_tag = f"data:image/png;base64,{img_data}"
+	
+	plt.close(fig)  # close the figure to free memory
+
+	return render_template('test.html', img_data=img_tag)

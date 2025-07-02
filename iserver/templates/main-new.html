@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Irrigator</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <style>
+    .flex-container {
+      display: flex;
+      flex-wrap: nowrap;
+      /*background-color: DodgerBlue;*/
+    }
+
+    .flex-container > div {
+      /*background-color: #f1f1f1;*/
+      /*width: 100px;*/
+      margin: 10px;
+      text-align: center;
+      /*line-height: 75px;*/
+      /*font-size: 30px;*/
+    }
+    
+    /* Alternating row colors for table */
+    table tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    
+    table tbody tr:nth-child(odd) {
+      background-color: #ffffff;
+    }
+    </style>
+</head>
+<script>
+	// auto reload every 10 seconds
+	setTimeout(function() {window.location.reload(1);}, 10000);
+
+	function close_faucet(faucet_name) {
+        $.ajax({ 
+            type:"GET", 
+            url:"/manual_close/" + faucet_name,
+            success:function(data){ 
+                alert('faucet '+faucet_name+' closed\n'+data);
+                setTimeout(function() {window.location.reload(1);}, 2000);
+            },
+            cache: false
+        });		
+	}
+	function open_faucet(faucet_name) {
+        $.ajax({ 
+            type:"GET", 
+            url:"/manual_open/" + faucet_name,
+            success:function(data){ 
+                alert('faucet '+faucet_name+' opened\n'+data);
+                setTimeout(function() {window.location.reload(1);}, 2000);
+            },
+            cache: false
+        });		
+	}
+</script>
+<body>
+<h2>
+	Irrigator {{version}} - {{ computer_name }} - {{ current_time }}
+</h2>
+{{ irrigation_mode | safe }}
+<!-- add the fauvet list here as a table with a row for each faucet containing the columns:
+faucet name, duration, status, last irrigation time, next irrigation time and 2 buttons per row to open and close the faucet -->
+<div class="flex-container">
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Last</th>
+                    <th>Next</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ faucets | safe }}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- add the water log graph here for each water counter using the list water_data that contains 1 entry per counter, with the fields image, current water and current flow
+ using a loop over all entries in water_data -->
+<div class="flex-container">
+    {% for counter in water_data %}
+    <div>
+        <h3>Counter: {{ counter.name }}</h3>
+        <p>Current Water: {{ counter.current_water }}   Current Flow: {{ counter.current_flow }}</p>
+        <img src="{{ counter.water_image | safe }}" alt="Water data for {{ counter.name }}" style="max-width: 100%; height: auto;">
+        <img src="{{ counter.flow_image | safe }}" alt="Water data for {{ counter.name }}" style="max-width: 100%; height: auto;">
+    </div>
+    {% endfor %}
+</div>
+
+
+</body>
+</html>
