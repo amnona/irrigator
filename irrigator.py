@@ -5,7 +5,7 @@ import argparse
 
 import icomputer
 
-logger = getlogger(None)
+logger = getLogger(None)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--debug-level', '-l', help='debug level (DEBUG/INFO/WARNING)', default='INFO')

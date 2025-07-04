@@ -21,7 +21,7 @@ import dateutil.tz
 
 from logging.config import fileConfig
 
-logger = logging.getlogger(None)
+logger = logging.getLogger(None)
 
 log = 'log.cfg'
 # setting False allows other logger to print log.

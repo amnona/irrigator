@@ -6,7 +6,7 @@ import os
 from .utils import send_email
 import numpy as np
 
-logger = getlogger(None)
+logger = getLogger(None)
 
 
 def get_faucet_class(faucet_type):
