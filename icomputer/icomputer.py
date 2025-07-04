@@ -326,6 +326,7 @@ class IComputer:
 		'''
 		if commands_file is None:
 			commands_file = self.commands_file
+		logger.debug('read manual commands from file %s' % commands_file)
 		with open(commands_file) as cf:
 			for cline in cf:
 				cline = cline.strip().split('\t')
@@ -474,6 +475,7 @@ class IComputer:
 		:return:
 		'''
 		try:
+			logger.debug('read state commands from file %s' % state_commands_file)
 			# first reset all state parameters (since we're reloading the state file)
 			self.init_state_params()
 			# if state commands file doesn't exist, create it
@@ -554,12 +556,14 @@ class IComputer:
 		self.state_commands_file_timestamp = os.stat(state_commands_file).st_mtime
 
 	def write_action_log(self, msg):
+		logger.debug('write action log: %s' % msg)
 		with open(self.actions_log_file, 'a') as fl:
 			fl.write('%s ' % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 			fl.write(msg)
 			fl.write('\n')
 
 	def write_status_file(self, should_be_open):
+		logger.debug('write status file %s' % self.status_file)
 		with open(self.status_file, 'w') as fl:
 			for cfaucet_name in should_be_open:
 				fl.write(cfaucet_name + '\n')
@@ -571,6 +575,7 @@ class IComputer:
 			timers to delete
 		:return:
 		'''
+		logger.debug('delete %d timers' % len(delete_list))
 		if len(delete_list) == 0:
 			return
 		self.timers = [x for x in self.timers if x not in delete_list]
@@ -599,6 +604,7 @@ class IComputer:
 		'''write the current time to the keep alive file.
 		So we can see the computer is running.
 		'''
+		logger.debug('write keep alive file')
 		file_name = os.path.join('actions', '%s_keep_alive.txt' % self.computer_name)
 		with open(file_name, 'w') as fl:
 			fl.write('%s' % time.asctime())
@@ -616,6 +622,7 @@ class IComputer:
 		water_dir: str (optional)
 			the directory where to write the file
 		'''
+		logger.debug('write water log for counter %s' % counter.name)
 		# if we don't have the output directory, create it
 		if not os.path.exists(water_dir):
 			os.makedirs(water_dir)
@@ -642,6 +649,7 @@ class IComputer:
 		water_dir: str (optional)
 			the directory where to write the file
 		'''
+		logger.debug('write short water log for counter %s' % counter.name)
 		# if we don't have the output directory, create it
 		if not os.path.exists(water_dir):
 			os.makedirs(water_dir)
