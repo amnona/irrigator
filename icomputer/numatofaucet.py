@@ -5,7 +5,7 @@ import os
 
 from .faucet import Faucet
 
-logger = logging.getLogger(__name__)
+logger = logging.getlogger(None)
 
 
 class NumatoFaucet(Faucet):

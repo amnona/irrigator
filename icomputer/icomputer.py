@@ -12,7 +12,7 @@ from .faucet import get_faucet_class
 from .timers import Timer, WeeklyTimer, SingleTimer
 from .utils import send_email
 
-logger = logging.getLogger(__name__)
+logger = logging.getlogger(None)
 
 
 def set_log_level(level):

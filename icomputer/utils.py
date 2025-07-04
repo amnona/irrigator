@@ -2,7 +2,7 @@ import os
 import logging
 import smtplib
 
-logger = logging.getLogger(__name__)
+logger = logging.getlogger(None)
 
 
 def send_email(recipient, subject, body, user='irrigation.computer.amnon@gmail.com', pwd=None, smtp_server='smtp-relay.sendinblue.com', smtp_port=587, smtp_user='sugaroops@yahoo.com'):

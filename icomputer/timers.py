@@ -1,7 +1,7 @@
 import datetime
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getlogger(None)
 
 
 def sane_day(dt):

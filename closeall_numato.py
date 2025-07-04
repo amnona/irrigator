@@ -3,7 +3,7 @@
 import icomputer
 from logging import getLogger
 
-logger = getLogger(__name__)
+logger = getLogger(None)
 logger.setLevel('DEBUG')
 icomputer.set_log_level('DEBUG')
 

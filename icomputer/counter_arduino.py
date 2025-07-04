@@ -6,7 +6,7 @@ import os
 
 from .counter import Counter
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(None)
 
 
 MIN_FLOW_INTERVAL = 45
