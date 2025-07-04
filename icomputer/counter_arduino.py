@@ -73,6 +73,13 @@ class CounterArduino(Counter):
         --------
             int - the water count
         '''
+        # check if we called within the last 5 seconds - then skip the read
+        ctime = datetime.datetime.now()
+        time_delta = (ctime - self.last_water_time).seconds
+        if time_delta < MIN_FLOW_INTERVAL:
+            logger.debug('skipping get_count for %s since last read was %d seconds ago' % (self.name, time_delta))
+            return self.count
+
         command = 'r' + str(self.iopin) + '\n'
         if self.open_serial() is None:
             logger.warning('failed to get count for counter %s. serial is None' % self.name)
