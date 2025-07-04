@@ -15,9 +15,11 @@ MIN_FLOW_INTERVAL = 45
 class CounterArduino(Counter):
     def __init__(self, name, computer_name, iopin, serial_name=None, counts_per_liter=1):
         super().__init__(name=name, computer_name=computer_name)
+        logger.info('creating arduino counter %s on computer %s' % (name, computer_name))
         self.iopin = iopin
         if serial_name is None:
             serial_name = self.get_serial_port()
+        logger.info('using serial port %s for counter %s' % (serial_name, name))
         self.serial_name = serial_name
         self.counts_per_liter = float(counts_per_liter)
         self.last_water_read = -1

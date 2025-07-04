@@ -143,6 +143,8 @@ class IComputer:
 				self.counters[name] = ccounter
 		self.counters_file = counters_file
 		self.counters_file_timestamp = os.stat(self.counters_file).st_mtime
+		logger.info('read %d counters from file %s' % (len(self.counters), counters_file))
+
 
 	def read_faucets(self, faucets_file='data/faucet-list.txt', read_only=False):
 		'''Load faucets information from config file into the computer class faucet dict

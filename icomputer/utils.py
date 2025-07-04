@@ -40,6 +40,7 @@ def send_email(recipient, subject, body, user='irrigation.computer.amnon@gmail.c
 		server = smtplib.SMTP(smtp_server, smtp_port)
 		server.ehlo()
 		server.starttls()
+		logger.info('logging in to email server %s as user %s with password %s' % (smtp_server, smtp_user, pwd))
 		server.login(smtp_user, pwd)
 		server.sendmail(FROM, TO, message)
 		server.close()
