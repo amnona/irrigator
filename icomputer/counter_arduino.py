@@ -80,6 +80,7 @@ class CounterArduino(Counter):
             logger.debug('skipping get_count for %s since last read was %d seconds ago' % (self.name, time_delta))
             return self.count
 
+        logger.debug('getting count for counter %s' % self.name)
         command = 'r' + str(self.iopin) + '\n'
         if self.open_serial() is None:
             logger.warning('failed to get count for counter %s. serial is None' % self.name)
@@ -90,6 +91,7 @@ class CounterArduino(Counter):
             logger.warning('could not get count for serial %s. error %s' % (self.name, err))
             return self.count
         try:
+            logger.debug('waiting for response from counter %s' % self.name)
             count = self.serial.readline()
         except serial.SerialTimeoutException:
             logger.warning('did not get response from serial %s' % self.serial_name)
@@ -102,10 +104,11 @@ class CounterArduino(Counter):
             logger.warning('count read conversion to int failed. count was: %s (counter %s, serial %s)' % (count, self.name, self.serial_name))
             return self.count
 
+        logger.debug('new count for %s pin %s: %d' % (self.serial_name, self.iopin, self.count))
         # correct for the number of counts per liter, so we are in liter units
         self.count = self.count / self.counts_per_liter
+        logger.debug('corrected water count: %f (counts per liter %f)' % (self.count, self.counts_per_liter))
 
-        logger.debug('new count for %s pin %s: %d' % (self.serial_name, self.iopin, self.count))
         ctime = datetime.datetime.now()
         time_delta = (ctime - self.last_water_time).seconds
         if time_delta > MIN_FLOW_INTERVAL:
