@@ -36,17 +36,15 @@ def send_email(recipient, subject, body, user='irrigation.computer.amnon@gmail.c
 
 	# Prepare actual message
 	message = """From: %s\nTo: %s\nSubject: %s\n\n%s""" % (FROM, ", ".join(TO), SUBJECT, TEXT)
-	logger.info('prepared email message: %s' % message)
 	try:
-		logger.info('connecting to email server %s on port %d' % (smtp_server, smtp_port))
+		logger.debug('connecting to email server %s on port %d' % (smtp_server, smtp_port))
 		server = smtplib.SMTP(smtp_server, smtp_port)
 		server.ehlo()
 		server.starttls()
-		logger.info('logging in to email server %s as user %s with password %s' % (smtp_server, smtp_user, pwd))
 		server.login(smtp_user, pwd)
 		server.sendmail(FROM, TO, message)
 		server.close()
-		logger.info('sent email: subject %s to %s' % (SUBJECT, TO))
+		logger.debug('sent email: subject %s to %s' % (SUBJECT, TO))
 		return True
 	except Exception as err:
 		logger.warning('failed to send email: subject %s to %s. error %s' % (SUBJECT, TO, err))

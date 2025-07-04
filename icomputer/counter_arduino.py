@@ -15,11 +15,11 @@ MIN_FLOW_INTERVAL = 45
 class CounterArduino(Counter):
     def __init__(self, name, computer_name, iopin, serial_name=None, counts_per_liter=1):
         super().__init__(name=name, computer_name=computer_name)
-        logger.info('creating arduino counter %s on computer %s' % (name, computer_name))
+        logger.debug('creating arduino counter %s on computer %s' % (name, computer_name))
         self.iopin = iopin
         if serial_name is None:
             serial_name = self.get_serial_port()
-        logger.info('using serial port %s for counter %s' % (serial_name, name))
+        logger.debug('using serial port %s for counter %s' % (serial_name, name))
         self.serial_name = serial_name
         self.counts_per_liter = float(counts_per_liter)
         self.last_water_read = -1
@@ -75,6 +75,7 @@ class CounterArduino(Counter):
         '''
         command = 'r' + str(self.iopin) + '\n'
         if self.open_serial() is None:
+            logger.warning('failed to get count for counter %s. serial is None' % self.name)
             return self.count
         try:
             self.serial.write(command.encode())
@@ -91,7 +92,7 @@ class CounterArduino(Counter):
         try:
             self.count = int(count)
         except:
-            logger.debug('count read conversion to int failed. count was: %s (counter %s, serial %s)' % (count, self.name, self.serial_name))
+            logger.warning('count read conversion to int failed. count was: %s (counter %s, serial %s)' % (count, self.name, self.serial_name))
             return self.count
 
         # correct for the number of counts per liter, so we are in liter units
@@ -115,6 +116,7 @@ class CounterArduino(Counter):
         try:
             command = 'c' + str(self.iopin) + '\n'
             if self.open_serial() is None:
+                logger.warning('failed to clear counts for counter %s. serial is None' % self.name)
                 return
             self.serial.write(command.encode())
             new_count = self.get_count()
@@ -125,3 +127,4 @@ class CounterArduino(Counter):
         except Exception as err:
             logger.warning('clear counts failed for %s port %s. error %s' % (self.name, self.iopin, err))
             return
+        logger.info('cleared water counter %s' % self.name)
