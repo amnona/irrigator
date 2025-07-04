@@ -686,7 +686,9 @@ class IComputer:
 		irrigation_report_timers = '--------------------\n'
 		last_daily_water_day = datetime.datetime.now().day
 
+		logger.info('sending irrigator started email')
 		send_email('amnonim@gmail.com', 'irrigator started', 'computer name is %s' % self.computer_name)
+		logger.info('starting main loop for computer %s' % self.computer_name)
 
 		while not done:
 			# logger.debug('tick')
