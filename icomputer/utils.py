@@ -37,6 +37,7 @@ def send_email(recipient, subject, body, user='irrigation.computer.amnon@gmail.c
 	# Prepare actual message
 	message = """From: %s\nTo: %s\nSubject: %s\n\n%s""" % (FROM, ", ".join(TO), SUBJECT, TEXT)
 	try:
+		logger.info('connecting to email server %s on port %d' % (smtp_server, smtp_port))
 		server = smtplib.SMTP(smtp_server, smtp_port)
 		server.ehlo()
 		server.starttls()
