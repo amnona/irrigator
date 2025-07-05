@@ -511,8 +511,8 @@ def main_new_site():
 		faucets += '</tr>'
 
 	counter_water = get_current_water()
-	print('found %d water counters' % len(counter_water))
-	print(counter_water)
+	logger.debug('found %d water counters' % len(counter_water))
+	logger.debug(counter_water)
 	water_data = []
 	for ccounter, cvals in counter_water.items():
 		new_data = {'name': ccounter, 'current_water': round(float(cvals['total']), 2), 'current_flow': round(float(cvals['flow']), 2)}

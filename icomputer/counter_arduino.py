@@ -22,11 +22,11 @@ class CounterArduino(Counter):
         logger.debug('using serial port %s for counter %s' % (serial_name, name))
         self.serial_name = serial_name
         self.counts_per_liter = float(counts_per_liter)
-        self.last_water_read = -1
-        self.last_water_time = datetime.datetime.now()
         self.flow = -1
         self.serial = None
-        self.clear_count()
+        self.last_water_time = datetime.datetime.now()
+        self.last_water_read = self.get_count()
+        self.count = self.get_count()
 
     def get_serial_port(self):
         try:

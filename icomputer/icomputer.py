@@ -52,6 +52,7 @@ class IComputer:
 		logger.debug('init icomputer')
 		self.init_state_params()
 		self.computer_name = 'local'
+		self.read_only = read_only
 
 		# monitoe leaks mode. if True, do not report faucets not opening - just leaks (and assume no faucets should open)
 		# can be set via "monitor_leaks True" in actions config file

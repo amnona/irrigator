@@ -1,6 +1,5 @@
 class Counter():
     def __init__(self, name, computer_name):
-        self.count = 0
         self.last_val = False
         self.name = name
         self.computer_name = computer_name
@@ -9,6 +8,7 @@ class Counter():
         self.leak_duration = 0
         # last water value read on this counter (to look for flow/leak)
         self.last_water_read = 0
+        self.count = 0
 
     def update(self):
         pass

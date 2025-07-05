@@ -39,3 +39,4 @@ class CounterPi(Counter):
     def reset(self):
         self.count = 0
         self.last_val = self.get_current_value()
+        logger.info('reset counter %s' % self.name)
