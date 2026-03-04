@@ -96,29 +96,8 @@
       opacity: 0.7;
     }
     
-    /* Status styling */
-    .status-open {
-      background-color: #d4edda !important;
-      color: #155724;
-      font-weight: 600;
-    }
-    
-    .status-closed {
-      background-color: #cce7ff !important;
-      color: #004085;
-      font-weight: 600;
-    }
-    
-    .status-error {
-      background-color: #f8d7da !important;
-      color: #721c24;
-      font-weight: 600;
-    }
-    
-    .faucet-remote {
-      text-decoration: line-through;
-      opacity: 0.7;
-    }
+    /* Mobile-friendly buttons */
+    button {
       padding: 8px 16px;
       margin: 2px;
       border: none;
@@ -373,23 +352,17 @@ faucet name, duration, status, last irrigation time, next irrigation time and 2 
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Duration</th>
+                        <th>Actions</th>
                         <th>Status</th>
                         <th>Last</th>
                         <th>Next</th>
-                        <th>Actions</th>
+                        <th>Duration</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for faucet in faucet_data %}
                     <tr data-faucet="{{ faucet.name }}">
                         <td class="{% if not faucet.is_local %}faucet-remote{% endif %}">{{ faucet.name }}</td>
-                        <td>{{ faucet.duration }}</td>
-                        <td class="status-cell {% if faucet.status == 'Open' %}status-open{% elif faucet.status == 'Closed' %}status-closed{% else %}status-error{% endif %}">
-                            {{ faucet.status }}
-                        </td>
-                        <td class="last-irrigation">{{ faucet.last_irrigation }}</td>
-                        <td class="next-irrigation">{{ faucet.next_irrigation }}</td>
                         <td>
                             <button class="open-btn" type="button" onclick="open_faucet('{{ faucet.name }}')" {% if faucet.is_open %}disabled{% endif %}>
                                 Open
@@ -398,6 +371,12 @@ faucet name, duration, status, last irrigation time, next irrigation time and 2 
                                 Close
                             </button>
                         </td>
+                        <td class="status-cell {% if faucet.status == 'Open' %}status-open{% elif faucet.status == 'Closed' %}status-closed{% else %}status-error{% endif %}">
+                            {{ faucet.status }}
+                        </td>
+                        <td class="last-irrigation">{{ faucet.last_irrigation }}</td>
+                        <td class="next-irrigation">{{ faucet.next_irrigation }}</td>
+                        <td>{{ faucet.duration }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
