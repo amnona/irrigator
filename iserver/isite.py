@@ -470,7 +470,7 @@ def main_new_site():
 	skip_remote = False
 
 	if icomputer.mode == 'manual':
-		irrigation_mode += '<h2 style="background-color:red;">Manual mode</h2><br>'
+		irrigation_mode = '<h2 style="background-color:red;">Manual mode</h2><br>'
 	else:
 		irrigation_mode = ''
 
