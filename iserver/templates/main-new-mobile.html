@@ -254,8 +254,85 @@
     </style>
 </head>
 <script>
-	// auto reload every 10 seconds
-	setTimeout(function() {window.location.reload(1);}, 10000);
+	// Auto-update every 10 seconds without full page reload
+	let updateInterval;
+	
+	function updateStatus() {
+		$.ajax({
+			type: "GET",
+			url: "/api/status",
+			success: function(data) {
+				updateUI(data);
+			},
+			error: function() {
+				console.log('Failed to update status');
+				// Fallback to full reload on error
+				setTimeout(function() {window.location.reload(1);}, 5000);
+			},
+			cache: false
+		});
+	}
+	
+	function updateUI(data) {
+		// Update time
+		$('h2').html(`Irrigator {{version}} - {{ computer_name }} - ${data.current_time}`);
+		
+		// Update irrigation mode
+		if (data.is_manual_mode) {
+			$('#irrigation-mode').html('<h2 style="background-color:red;">Manual mode</h2><br>');
+		} else {
+			$('#irrigation-mode').html('');
+		}
+		
+		// Update faucet table rows
+		data.faucets.forEach(function(faucet) {
+			const row = $(`tr[data-faucet="${faucet.name}"]`);
+			if (row.length === 0) return; // Skip if row not found
+			
+			// Update status cell
+			const statusCell = row.find('.status-cell');
+			statusCell.removeClass('status-open status-closed status-error');
+			if (faucet.status === 'Open') {
+				statusCell.addClass('status-open');
+			} else if (faucet.status === 'Closed') {
+				statusCell.addClass('status-closed');
+			} else {
+				statusCell.addClass('status-error');
+			}
+			statusCell.text(faucet.status);
+			
+			// Update last irrigation
+			row.find('.last-irrigation').text(faucet.last_irrigation);
+			
+			// Update next irrigation
+			row.find('.next-irrigation').text(faucet.next_irrigation);
+			
+			// Update button states
+			const openBtn = row.find('.open-btn');
+			const closeBtn = row.find('.close-btn');
+			if (faucet.is_open) {
+				openBtn.prop('disabled', true);
+				closeBtn.prop('disabled', false);
+			} else {
+				openBtn.prop('disabled', false);
+				closeBtn.prop('disabled', true);
+			}
+		});
+		
+		// Update water data
+		data.water_data.forEach(function(counter) {
+			const counterDiv = $(`.water-counter[data-counter="${counter.name}"]`);
+			if (counterDiv.length > 0) {
+				counterDiv.find('.water-amount').text(counter.current_water);
+				counterDiv.find('.flow-amount').text(counter.current_flow);
+			}
+		});
+	}
+	
+	// Start auto-update
+	$(document).ready(function() {
+		updateInterval = setInterval(updateStatus, 10000); // Update every 10 seconds
+	});
 
 	function close_faucet(faucet_name) {
         $.ajax({ 
@@ -263,7 +340,8 @@
             url:"/manual_close/" + faucet_name,
             success:function(data){ 
                 alert('faucet '+faucet_name+' closed\n'+data);
-                setTimeout(function() {window.location.reload(1);}, 2000);
+                // Update status immediately instead of full reload
+                setTimeout(updateStatus, 1000);
             },
             cache: false
         });		
@@ -274,7 +352,8 @@
             url:"/manual_open/" + faucet_name,
             success:function(data){ 
                 alert('faucet '+faucet_name+' opened\n'+data);
-                setTimeout(function() {window.location.reload(1);}, 2000);
+                // Update status immediately instead of full reload
+                setTimeout(updateStatus, 1000);
             },
             cache: false
         });		
@@ -284,7 +363,7 @@
 <h2>
 	Irrigator {{version}} - {{ computer_name }} - {{ current_time }}
 </h2>
-{{ irrigation_mode | safe }}
+<div id="irrigation-mode">{{ irrigation_mode | safe }}</div>
 <!-- add the fauvet list here as a table with a row for each faucet containing the columns:
 faucet name, duration, status, last irrigation time, next irrigation time and 2 buttons per row to open and close the faucet -->
 <div class="flex-container">
@@ -303,14 +382,14 @@ faucet name, duration, status, last irrigation time, next irrigation time and 2 
                 </thead>
                 <tbody>
                     {% for faucet in faucet_data %}
-                    <tr>
+                    <tr data-faucet="{{ faucet.name }}">
                         <td class="{% if not faucet.is_local %}faucet-remote{% endif %}">{{ faucet.name }}</td>
                         <td>{{ faucet.duration }}</td>
-                        <td class="{% if faucet.status == 'Open' %}status-open{% elif faucet.status == 'Closed' %}status-closed{% else %}status-error{% endif %}">
+                        <td class="status-cell {% if faucet.status == 'Open' %}status-open{% elif faucet.status == 'Closed' %}status-closed{% else %}status-error{% endif %}">
                             {{ faucet.status }}
                         </td>
-                        <td>{{ faucet.last_irrigation }}</td>
-                        <td>{{ faucet.next_irrigation }}</td>
+                        <td class="last-irrigation">{{ faucet.last_irrigation }}</td>
+                        <td class="next-irrigation">{{ faucet.next_irrigation }}</td>
                         <td>
                             <button class="open-btn" type="button" onclick="open_faucet('{{ faucet.name }}')" {% if faucet.is_open %}disabled{% endif %}>
                                 Open
@@ -331,9 +410,9 @@ faucet name, duration, status, last irrigation time, next irrigation time and 2 
  using a loop over all entries in water_data -->
 <div class="flex-container">
     {% for counter in water_data %}
-    <div class="water-counter">
+    <div class="water-counter" data-counter="{{ counter.name }}">
         <h3>Counter: {{ counter.name }}</h3>
-        <p><strong>Water:</strong> {{ counter.current_water }} <strong>Flow:</strong> {{ counter.current_flow }}</p>
+        <p><strong>Water:</strong> <span class="water-amount">{{ counter.current_water }}</span> <strong>Flow:</strong> <span class="flow-amount">{{ counter.current_flow }}</span></p>
         <img src="{{ counter.water_image | safe }}" alt="Water data for {{ counter.name }}">
         <img src="{{ counter.flow_image | safe }}" alt="Flow data for {{ counter.name }}">
     </div>

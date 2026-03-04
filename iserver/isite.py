@@ -1,4 +1,4 @@
-from flask import Blueprint, request, Response, render_template
+from flask import Blueprint, request, Response, render_template, jsonify
 import os
 import csv
 from logging import getLogger
@@ -521,6 +521,81 @@ def main_new_site():
 						computer_name = get_computer_name(), 
 						version='V0.3',
 						current_time=current_time)
+
+
+@Site_Main_Flask_Obj.route('/api/status', methods=['GET'])
+@requires_auth
+def get_status_json():
+	"""API endpoint to get current irrigation status as JSON for AJAX updates"""
+	icomputer = IComputer(read_only=True)
+	
+	# Get current status
+	open_faucets = get_status()
+	all_faucets = list(icomputer.faucets.values())
+	all_faucets.sort(key=lambda x: (not x.is_local(), x.name))
+	
+	# Get last irrigation times
+	last_times = {}
+	last_actions = get_last_lines(get_actions_file_name(), 200)
+	for caction in last_actions[::-1]:
+		a = caction.split('opened faucet ')
+		if len(a) != 2:
+			continue
+		action_faucet = a[1]
+		action_time_str = a[0].split(' remotely ')[0].strip()
+		try:
+			last_times[action_faucet] = datetime.datetime.strptime(action_time_str, '%Y-%m-%d %H:%M:%S')
+		except:
+			last_times[action_faucet] = datetime.datetime.now()
+	
+	# Get next irrigation times
+	next_time = {}
+	for ctimer in icomputer.timers:
+		ctimer_name = ctimer.faucet.name
+		cnext_irrigation = ctimer.get_next_irrigation()
+		if ctimer_name in next_time:
+			if next_time[ctimer_name] < cnext_irrigation:
+				continue
+		next_time[ctimer_name] = cnext_irrigation
+	
+	# Prepare faucet status data
+	faucet_status = []
+	for cfaucet in all_faucets:
+		cname = cfaucet.name
+		cis_open = cname in open_faucets
+		cstatus = 'Open' if cis_open else 'Closed'
+		
+		faucet_info = {
+			'name': cname,
+			'is_local': cfaucet.is_local(),
+			'status': cstatus,
+			'is_open': cis_open,
+			'last_irrigation': get_last_irrigation_str(last_times.get(cname, None)),
+			'next_irrigation': get_next_irrigation_time_str(next_time.get(cname, None))
+		}
+		faucet_status.append(faucet_info)
+	
+	# Get water data
+	counter_water = get_current_water()
+	water_status = []
+	for ccounter, cvals in counter_water.items():
+		water_info = {
+			'name': ccounter, 
+			'current_water': round(float(cvals['total']), 2), 
+			'current_flow': round(float(cvals['flow']), 2)
+		}
+		water_status.append(water_info)
+	
+	current_time = datetime.datetime.now().strftime('%d %H:%M:%S')
+	irrigation_mode_text = 'Manual mode' if icomputer.mode == 'manual' else 'Auto mode'
+	
+	return jsonify({
+		'faucets': faucet_status,
+		'water_data': water_status,
+		'current_time': current_time,
+		'irrigation_mode': irrigation_mode_text,
+		'is_manual_mode': icomputer.mode == 'manual'
+	})
 
 
 def get_next_irrigation_time_str(next_time):
