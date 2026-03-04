@@ -924,7 +924,7 @@ def draw_counter_water_image(xdat, ydat, title=None, type='water'):
 		
 		# encode the image as base64
 		img_data = base64.b64encode(buf.read()).decode('utf-8')
-		img_tag = f"data:image/png;base64,{img_data}"
+		img_tag = "data:image/png;base64,{}".format(img_data)
 	
 		plt.close(fig)  # close the figure to free memory
 
@@ -1115,7 +1115,7 @@ def faucetlog(line):
 	
 	# encode the image as base64
 	img_data = base64.b64encode(buf.read()).decode('utf-8')
-	img_tag = f"data:image/png;base64,{img_data}"
+	img_tag = "data:image/png;base64,{}".format(img_data)
 	
 	plt.close(fig)  # close the figure to free memory
 
@@ -1153,7 +1153,7 @@ def test():
 	
 	# encode the image as base64
 	img_data = base64.b64encode(buf.read()).decode('utf-8')
-	img_tag = f"data:image/png;base64,{img_data}"
+	img_tag = "data:image/png;base64,{}".format(img_data)
 	
 	plt.close(fig)  # close the figure to free memory
 
