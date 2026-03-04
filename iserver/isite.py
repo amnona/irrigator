@@ -474,41 +474,33 @@ def main_new_site():
 	else:
 		irrigation_mode = ''
 
-	faucets = ''
-
+	# Prepare structured faucet data instead of HTML strings
+	faucet_data = []
 	open_faucets = get_status()
-	for cfaucet in icomputer.faucets.values():
+	all_faucets = list(icomputer.faucets.values())
+	# sort according to the name, with local faucets first
+	all_faucets.sort(key=lambda x: (not x.is_local(), x.name))
+
+	for cfaucet in all_faucets:
 		if skip_remote:
 			if not cfaucet.is_local():
 				continue
+		
 		cname = cfaucet.name
 		cduration = cfaucet.default_duration
-		if cname in open_faucets:
-			cstatus = 'Open'
-		else:
-			cstatus = 'Closed'
-		faucets += '<tr>'
-		if not skip_remote:
-			if cfaucet.is_local():
-				cline = '<td>%s</td>' % cname
-			else:
-				cline = '<td><s>%s</s></td>' % cname
-				# cline = '<td style="background-color:#0077FF">%s</td>' % cname
-
-		faucets += cline
-		faucets += '<td>%s</td>' % cduration
-		if cstatus == 'Open':
-			faucets += '<td style="background-color:#00FF00">Open</td>'
-		elif cstatus == 'Closed':
-			faucets += '<td style="background-color:#0000FF">Closed</td>'
-		else:
-			faucets += '<td style="background-color:#FF0000">%s</td>' % cstatus
-		faucets += '<td>%s</td>' % get_last_irrigation_str(last_times.get(cname, None))
-		faucets += '<td>%s</td>' % get_next_irrigation_time_str(next_time.get(cname, None))
-		# wpage += '<td>%s</td>' % cstatus
-		faucets += '<td><button id=".button-test" type="button" onclick="open_faucet(\'%s\')">open</button></td>' % cname
-		faucets += '<td><button id=".button-test" type="button" onclick="close_faucet(\'%s\')">close</button></td>' % cname
-		faucets += '</tr>'
+		cis_open = cname in open_faucets
+		cstatus = 'Open' if cis_open else 'Closed'
+		
+		faucet_info = {
+			'name': cname,
+			'is_local': cfaucet.is_local(),
+			'duration': cduration,
+			'status': cstatus,
+			'is_open': cis_open,
+			'last_irrigation': get_last_irrigation_str(last_times.get(cname, None)),
+			'next_irrigation': get_next_irrigation_time_str(next_time.get(cname, None))
+		}
+		faucet_data.append(faucet_info)
 
 	counter_water = get_current_water()
 	logger.debug('found %d water counters' % len(counter_water))
@@ -524,7 +516,7 @@ def main_new_site():
 	current_time = datetime.datetime.now().strftime('%d %H:%M:%S')
 	return render_template('main-new-mobile.html',
 						irrigation_mode=irrigation_mode, 
-						faucets=faucets, 
+						faucet_data=faucet_data,  # Pass structured data instead of HTML
 						water_data=water_data, 
 						computer_name = get_computer_name(), 
 						version='V0.3',

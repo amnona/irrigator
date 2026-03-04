@@ -72,8 +72,53 @@
       background-color: #ffffff;
     }
     
-    /* Mobile-friendly buttons */
-    button {
+    /* Status styling */
+    .status-open {
+      background-color: #d4edda !important;
+      color: #155724;
+      font-weight: 600;
+    }
+    
+    .status-closed {
+      background-color: #cce7ff !important;
+      color: #004085;
+      font-weight: 600;
+    }
+    
+    .status-error {
+      background-color: #f8d7da !important;
+      color: #721c24;
+      font-weight: 600;
+    }
+    
+    .faucet-remote {
+      text-decoration: line-through;
+      opacity: 0.7;
+    }
+    
+    /* Status styling */
+    .status-open {
+      background-color: #d4edda !important;
+      color: #155724;
+      font-weight: 600;
+    }
+    
+    .status-closed {
+      background-color: #cce7ff !important;
+      color: #004085;
+      font-weight: 600;
+    }
+    
+    .status-error {
+      background-color: #f8d7da !important;
+      color: #721c24;
+      font-weight: 600;
+    }
+    
+    .faucet-remote {
+      text-decoration: line-through;
+      opacity: 0.7;
+    }
       padding: 8px 16px;
       margin: 2px;
       border: none;
@@ -109,6 +154,17 @@
     
     .open-btn:hover {
       background-color: #218838;
+    }
+    
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background-color: #6c757d !important;
+    }
+    
+    button:disabled:hover {
+      background-color: #6c757d !important;
+      transform: none;
     }
     
     /* Water counter cards */
@@ -246,7 +302,25 @@ faucet name, duration, status, last irrigation time, next irrigation time and 2 
                     </tr>
                 </thead>
                 <tbody>
-                    {{ faucets | safe }}
+                    {% for faucet in faucet_data %}
+                    <tr>
+                        <td class="{% if not faucet.is_local %}faucet-remote{% endif %}">{{ faucet.name }}</td>
+                        <td>{{ faucet.duration }}</td>
+                        <td class="{% if faucet.status == 'Open' %}status-open{% elif faucet.status == 'Closed' %}status-closed{% else %}status-error{% endif %}">
+                            {{ faucet.status }}
+                        </td>
+                        <td>{{ faucet.last_irrigation }}</td>
+                        <td>{{ faucet.next_irrigation }}</td>
+                        <td>
+                            <button class="open-btn" type="button" onclick="open_faucet('{{ faucet.name }}')" {% if faucet.is_open %}disabled{% endif %}>
+                                Open
+                            </button>
+                            <button class="close-btn" type="button" onclick="close_faucet('{{ faucet.name }}')" {% if not faucet.is_open %}disabled{% endif %}>
+                                Close
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
