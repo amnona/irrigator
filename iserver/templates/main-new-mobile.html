@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Irrigator</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      margin: 0;
+      padding: 10px;
+      line-height: 1.4;
+    }
+    
+    h2 {
+      font-size: 1.2em;
+      margin: 10px 0;
+      word-wrap: break-word;
+    }
+    
+    .flex-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin: 15px 0;
+    }
+
+    .flex-container > div {
+      flex: 1;
+      min-width: 300px;
+      margin: 0;
+      text-align: center;
+    }
+    
+    /* Table Container for horizontal scroll */
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    table {
+      width: 100%;
+      min-width: 600px;
+      border-collapse: collapse;
+      font-size: 0.9em;
+    }
+    
+    th, td {
+      padding: 12px 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      white-space: nowrap;
+    }
+    
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    /* Alternating row colors for table */
+    table tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    
+    table tbody tr:nth-child(odd) {
+      background-color: #ffffff;
+    }
+    
+    /* Mobile-friendly buttons */
+    button {
+      padding: 8px 16px;
+      margin: 2px;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      min-height: 44px;
+      min-width: 60px;
+      touch-action: manipulation;
+    }
+    
+    button:hover {
+      background-color: #0056b3;
+    }
+    
+    button:active {
+      transform: translateY(1px);
+    }
+    
+    .close-btn {
+      background-color: #dc3545;
+    }
+    
+    .close-btn:hover {
+      background-color: #c82333;
+    }
+    
+    .open-btn {
+      background-color: #28a745;
+    }
+    
+    .open-btn:hover {
+      background-color: #218838;
+    }
+    
+    /* Water counter cards */
+    .water-counter {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+    }
+    
+    .water-counter h3 {
+      margin-top: 0;
+      font-size: 1.1em;
+    }
+    
+    .water-counter img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      margin: 5px 0;
+    }
+    
+    /* Mobile-specific styles */
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+        font-size: 14px;
+      }
+      
+      h2 {
+        font-size: 1.1em;
+        text-align: center;
+      }
+      
+      .flex-container > div {
+        min-width: 100%;
+      }
+      
+      table {
+        font-size: 0.8em;
+      }
+      
+      th, td {
+        padding: 8px 4px;
+      }
+      
+      button {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-width: 50px;
+      }
+      
+      .water-counter {
+        padding: 10px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      body {
+        padding: 2px;
+      }
+      
+      h2 {
+        font-size: 1em;
+        margin: 5px 0;
+      }
+      
+      .flex-container {
+        gap: 10px;
+      }
+      
+      table {
+        font-size: 0.75em;
+      }
+      
+      th, td {
+        padding: 6px 2px;
+      }
+      
+      button {
+        padding: 4px 8px;
+        font-size: 11px;
+        margin: 1px;
+      }
+    }
+    </style>
+</head>
+<script>
+	// auto reload every 10 seconds
+	setTimeout(function() {window.location.reload(1);}, 10000);
+
+	function close_faucet(faucet_name) {
+        $.ajax({ 
+            type:"GET", 
+            url:"/manual_close/" + faucet_name,
+            success:function(data){ 
+                alert('faucet '+faucet_name+' closed\n'+data);
+                setTimeout(function() {window.location.reload(1);}, 2000);
+            },
+            cache: false
+        });		
+	}
+	function open_faucet(faucet_name) {
+        $.ajax({ 
+            type:"GET", 
+            url:"/manual_open/" + faucet_name,
+            success:function(data){ 
+                alert('faucet '+faucet_name+' opened\n'+data);
+                setTimeout(function() {window.location.reload(1);}, 2000);
+            },
+            cache: false
+        });		
+	}
+</script>
+<body>
+<h2>
+	Irrigator {{version}} - {{ computer_name }} - {{ current_time }}
+</h2>
+{{ irrigation_mode | safe }}
+<!-- add the fauvet list here as a table with a row for each faucet containing the columns:
+faucet name, duration, status, last irrigation time, next irrigation time and 2 buttons per row to open and close the faucet -->
+<div class="flex-container">
+    <div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Last</th>
+                        <th>Next</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ faucets | safe }}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- add the water log graph here for each water counter using the list water_data that contains 1 entry per counter, with the fields image, current water and current flow
+ using a loop over all entries in water_data -->
+<div class="flex-container">
+    {% for counter in water_data %}
+    <div class="water-counter">
+        <h3>Counter: {{ counter.name }}</h3>
+        <p><strong>Water:</strong> {{ counter.current_water }} <strong>Flow:</strong> {{ counter.current_flow }}</p>
+        <img src="{{ counter.water_image | safe }}" alt="Water data for {{ counter.name }}">
+        <img src="{{ counter.flow_image | safe }}" alt="Flow data for {{ counter.name }}">
+    </div>
+    {% endfor %}
+</div>
+
+
+</body>
+</html>

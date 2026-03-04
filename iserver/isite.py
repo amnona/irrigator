@@ -522,7 +522,7 @@ def main_new_site():
 		water_data.append(new_data)
 
 	current_time = datetime.datetime.now().strftime('%d %H:%M:%S')
-	return render_template('main-new.html',
+	return render_template('main-new-mobile.html',
 						irrigation_mode=irrigation_mode, 
 						faucets=faucets, 
 						water_data=water_data, 
