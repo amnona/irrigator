@@ -7,6 +7,6 @@ cd /home/pi/git/irrigator
 source ./secrets.sh >> /home/pi/logs/run_server_out.txt 2>> /home/pi/logs/run_server_err.txt
 
 export FLASK_APP=iserver/iserver.py
-flask run >> /home/pi/logs/run_server_out.txt 2>> /home/pi/logs/run_server_err.txt
+flask run --host=0.0.0.0 >> /home/pi/logs/run_server_out.txt 2>> /home/pi/logs/run_server_err.txt
 echo 'finished' >> /home/pi/logs/run_server_out.txt 2>> /home/pi/logs/run_server_err.txt
 
