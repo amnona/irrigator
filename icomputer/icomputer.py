@@ -453,20 +453,18 @@ class IComputer:
 		This file contains commands that are always applied (not deleted).
 		This includes disabling/enabling computer / lines, changing irrigation durations by percentage, disbaling/enabling fertilization, etc.
 
-		commands are tab separated between arguments, newline between commands.
-		can include:
-		'#' - comment line
-		disable_computer computer_name(str)
+		File format is INI parsed with configparser.
+		Supported keys in the [state_commands] section:
+		disable_computer = computer_name(str)
 			move computer to "disable" mode (close all faucets and don't turn any on until enable)
-		set_percent percent(number+'%'')
+		set_percent = percent(number+'%'')
 			change all irrigation times by percent compared to the real program (100% - original, <100% less, 200% twice long irrigations...)
-		disable_line line_name(str)
+		disable_line = line_name1,line_name2,...
 			skip all irrigations for this line
-		disable_fertilization fertilization_pump(str)
+		disable_fertilization = fertilization_pump1,fertilization_pump2,...
 			disable all fertilization by this pump
-		force_fertilization fertilization_pump(str)
-			force fertilization for all lines using this pump
-		mode manual/auto
+		monitor_leaks = true/false
+		mode = manual/auto
 			'manual' - Ignore all automatic (timer) open commands, open only using manual commands (and automatically close)
 			'auto' - Use the timers
 
@@ -484,73 +482,75 @@ class IComputer:
 			if not os.path.exists(state_commands_file):
 				with open(state_commands_file, 'w'):
 					logger.warning('irrigation state commands file %s does not exist, create' % state_commands_file)
-			with open(state_commands_file) as cf:
-				for cline in cf:
-					cline = cline.strip()
-					if len(cline) == 0:
-						continue
-					cline = cline.split('\t')
-					if len(cline) == 0:
-						continue
-					ccommand = cline[0].lower()
-					if len(cline) > 1:
-						param = cline[1].lower()
+			parser = configparser.ConfigParser()
+			parser.read(state_commands_file)
 
-					# if comment - next line
-					if ccommand[0] == '#':
-						continue
+			if not parser.has_section('state_commands'):
+				logger.info('No [state_commands] section in %s' % state_commands_file)
+				return
 
-					if ccommand == 'disable_computer':
-						computer_name = param
-						logger.debug('manual disable computer %s' % computer_name)
-						if computer_name == self.computer_name:
-							self.disabled = True
-							logger.info('computer %s disabled from state_commands_file' % computer_name)
-							# close all currently open faucets
-							self.close_all()
-							# and delete the manual timers
-							delete_list = []
-							for ctimer in self.timers:
-								if not isinstance(ctimer, SingleTimer):
-									continue
-								if not ctimer.is_manual:
-									continue
-								delete_list.append(ctimer)
-							self.delete_timers(delete_list)
-						else:
-							logger.debug('cannot disable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
-					elif ccommand == 'monitor_leaks':
-						logger.info('Change to monitor state %s' % param)
-						if param == 'True':
-							self.monitor_leaks = True
-						else:
-							self.monitor_leaks = False
-					elif ccommand == 'disable_line':
-						logger.info('disable line %s' % param)
-						self.disabled_faucets.add(param)
-					elif ccommand == 'disable_fertilization':
-						self.disable_fertilization.add(param)
-					elif ccommand == 'set_percent':
-						if param[-1] != '%':
-							logger.warning('set_percent in state-commands file needs to end with "%"')
+			state_cfg = parser['state_commands']
+
+			def _split_list(raw_value):
+				if raw_value is None:
+					return []
+				parts = []
+				for cpart in raw_value.replace('\n', ',').split(','):
+					cpart = cpart.strip().lower()
+					if cpart:
+						parts.append(cpart)
+				return parts
+
+			computer_name = state_cfg.get('disable_computer', '').strip().lower()
+			if computer_name:
+				logger.debug('manual disable computer %s' % computer_name)
+				if computer_name == self.computer_name:
+					self.disabled = True
+					logger.info('computer %s disabled from state_commands_file' % computer_name)
+					# close all currently open faucets
+					self.close_all()
+					# and delete the manual timers
+					delete_list = []
+					for ctimer in self.timers:
+						if not isinstance(ctimer, SingleTimer):
 							continue
-						try:
-							percent = float(param[:-1])
-						except Exception as err:
-							logger.warning('failed to convert to float set_percent in state-commands file: error %s' % err)
+						if not ctimer.is_manual:
 							continue
+						delete_list.append(ctimer)
+					self.delete_timers(delete_list)
+				else:
+					logger.debug('cannot disable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
+
+			self.monitor_leaks = state_cfg.getboolean('monitor_leaks', fallback=False)
+			logger.info('Change to monitor state %s' % self.monitor_leaks)
+
+			for cfaucet in _split_list(state_cfg.get('disable_line', '')):
+				logger.info('disable line %s' % cfaucet)
+				self.disabled_faucets.add(cfaucet)
+
+			for cpump in _split_list(state_cfg.get('disable_fertilization', '')):
+				self.disable_fertilization.add(cpump)
+
+			param = state_cfg.get('set_percent', '').strip()
+			if param:
+				if param[-1] != '%':
+					logger.warning('set_percent in state-commands file needs to end with "%"')
+				else:
+					try:
+						percent = float(param[:-1])
+					except Exception as err:
+						logger.warning('failed to convert to float set_percent in state-commands file: error %s' % err)
+					else:
 						if percent < 0 or percent > 1000:
 							logger.warning('set_percent in state-commands supplied percent (%f) too small or too big' % percent)
-							continue
-						self.duration_correction = percent / 100
-						logger.info('percent irrigation updated to %f' % percent)
-					elif ccommand == 'mode':
-						mode = param
-						logger.info('changing mode to %s' % param)
-						self.mode = mode
-					else:
-						logger.warning('Manual command %s not recognized' % cline)
-						continue
+						else:
+							self.duration_correction = percent / 100
+							logger.info('percent irrigation updated to %f' % percent)
+
+			mode = state_cfg.get('mode', '').strip().lower()
+			if mode:
+				logger.info('changing mode to %s' % mode)
+				self.mode = mode
 		except Exception as err:
 			logger.warning('Error reading state command file %s.\n%s' % (state_commands_file, err))
 		self.state_commands_file = state_commands_file

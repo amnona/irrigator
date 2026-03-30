@@ -1,17 +1,21 @@
+[state_commands]
 # state commands affecting all timers/faucets in all computers and are not deleted after read
-# NOTE: command and parameters need to be separated by TAB
 
 # disable a specific computer
-# disable_computer	COMPUTERNAME
+# disable_computer = COMPUTERNAME
 
-# increasre/decrease irrigation times for all timers by a given percent. needs to end with %
-# set_percent	100%
+# set leak monitoring mode (true/false)
+# monitor_leaks = false
 
-# disable a single irrigation line
-# disable_line	LINE_NAME
+# increase/decrease irrigation times for all timers by a given percent. needs to end with %
+# set_percent = 100%
 
-# disable a fertilization pump for all lines
-# disable_fertilization	PUMP_NAME
+# disable one or more irrigation lines (comma-separated)
+# disable_line = LINE_NAME1,LINE_NAME2
 
-# force fertilization for all lines using the pump
-# force_fertilization	PUMP_NAME
+# disable one or more fertilization pumps (comma-separated)
+# disable_fertilization = PUMP_NAME1,PUMP_NAME2
+
+# set to manual mode or auto mode
+# in manual mode, we ignore the weekly timers and just use manual commands
+# mode = manual
