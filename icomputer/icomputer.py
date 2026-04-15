@@ -69,6 +69,10 @@ class IComputer:
 			self.status_file = os.path.join('actions', self.computer_name + '_status.txt')
 		if self.commands_file is None:
 			self.commands_file = os.path.join('actions', self.computer_name + '_commands.txt')
+		# check if the commands file exists, and if not create it (empty file)
+		if not os.path.exists(self.commands_file):
+			logger.info('commands file %s does not exist, creating' % self.commands_file)
+			open(self.commands_file, 'a').close()
 		# for the manual commands file, do not read it if already exists - just the updates
 		try:
 			self.commands_file_timestamp = os.stat(self.commands_file).st_mtime
