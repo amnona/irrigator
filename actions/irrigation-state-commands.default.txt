@@ -7,8 +7,8 @@
 # set leak monitoring mode (true/false)
 # monitor_leaks = false
 
-# increase/decrease irrigation times for all timers by a given percent. needs to end with %
-# set_percent = 100%
+# increase/decrease irrigation times for all timers by a given percent. (between 1 and 1000) (number without % sign)
+# set_percent = 100
 
 # disable one or more irrigation lines (comma-separated)
 # disable_line = LINE_NAME1,LINE_NAME2

@@ -477,73 +477,71 @@ class IComputer:
 
 		:return:
 		'''
-		# try:
-		logger.debug('read state commands from file %s' % state_commands_file)
-		# first reset all state parameters (since we're reloading the state file)
-		self.init_state_params()
-		# if state commands file doesn't exist, create it
-		# (should be copied from irrigation-state-commands.default.txt)
-		if not os.path.exists(state_commands_file):
-			with open(state_commands_file, 'w'):
-				logger.warning('irrigation state commands file %s does not exist, create' % state_commands_file)
-		parser = configparser.ConfigParser()
-		parser.read(state_commands_file)
+		try:
+			logger.debug('read state commands from file %s' % state_commands_file)
+			# first reset all state parameters (since we're reloading the state file)
+			self.init_state_params()
+			# if state commands file doesn't exist, create it
+			# (should be copied from irrigation-state-commands.default.txt)
+			if not os.path.exists(state_commands_file):
+				with open(state_commands_file, 'w'):
+					logger.warning('irrigation state commands file %s does not exist, create' % state_commands_file)
+			parser = configparser.ConfigParser()
+			parser.read(state_commands_file)
 
-		if not parser.has_section('state_commands'):
-			logger.info('No [state_commands] section in %s' % state_commands_file)
-			return
+			if not parser.has_section('state_commands'):
+				logger.info('No [state_commands] section in %s' % state_commands_file)
+				return
 
-		state_cfg = parser['state_commands']
+			state_cfg = parser['state_commands']
 
-		def _split_list(raw_value):
-			if raw_value is None:
-				return []
-			parts = []
-			for cpart in raw_value.replace('\n', ',').split(','):
-				cpart = cpart.strip().lower()
-				if cpart:
-					parts.append(cpart)
-			return parts
+			def _split_list(raw_value):
+				if raw_value is None:
+					return []
+				parts = []
+				for cpart in raw_value.replace('\n', ',').split(','):
+					cpart = cpart.strip().lower()
+					if cpart:
+						parts.append(cpart)
+				return parts
 
-		computer_name = state_cfg.get('disable_computer', '').strip().lower()
-		if computer_name:
-			logger.debug('manual disable computer %s' % computer_name)
-			if computer_name == self.computer_name:
-				self.disabled = True
-				logger.info('computer %s disabled from state_commands_file' % computer_name)
-				# close all currently open faucets
-				self.close_all()
-				# and delete the manual timers
-				delete_list = []
-				for ctimer in self.timers:
-					if not isinstance(ctimer, SingleTimer):
-						continue
-					if not ctimer.is_manual:
-						continue
-					delete_list.append(ctimer)
-				self.delete_timers(delete_list)
-			else:
-				logger.debug('cannot disable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
+			computer_name = state_cfg.get('disable_computer', '').strip().lower()
+			if computer_name:
+				logger.debug('manual disable computer %s' % computer_name)
+				if computer_name == self.computer_name:
+					self.disabled = True
+					logger.info('computer %s disabled from state_commands_file' % computer_name)
+					# close all currently open faucets
+					self.close_all()
+					# and delete the manual timers
+					delete_list = []
+					for ctimer in self.timers:
+						if not isinstance(ctimer, SingleTimer):
+							continue
+						if not ctimer.is_manual:
+							continue
+						delete_list.append(ctimer)
+					self.delete_timers(delete_list)
+				else:
+					logger.debug('cannot disable computer %s since not this computer (%s)' % (computer_name, self.computer_name))
 
-		self.monitor_leaks = state_cfg.getboolean('monitor_leaks', fallback=False)
-		logger.info('Change to monitor state %s' % self.monitor_leaks)
+			self.monitor_leaks = state_cfg.getboolean('monitor_leaks', fallback=False)
+			logger.info('Change to monitor state %s' % self.monitor_leaks)
 
-		for cfaucet in _split_list(state_cfg.get('disable_line', '')):
-			logger.info('disable line %s' % cfaucet)
-			self.disabled_faucets.add(cfaucet)
+			for cfaucet in _split_list(state_cfg.get('disable_line', '')):
+				logger.info('disable line %s' % cfaucet)
+				self.disabled_faucets.add(cfaucet)
 
-		for cpump in _split_list(state_cfg.get('disable_fertilization', '')):
-			self.disable_fertilization.add(cpump)
+			for cpump in _split_list(state_cfg.get('disable_fertilization', '')):
+				self.disable_fertilization.add(cpump)
 
-		param = state_cfg.get('set_percent', '').strip()
-		if param:
-			if param[-1] != '%':
-				logger.warning('set_percent in state-commands file needs to end with "%"')
-			else:
+			param = state_cfg.get('set_percent', '').strip()
+			if param:
 				try:
-					percent = float(param[:-1])
+					percent = float(param)
 				except Exception as err:
-					logger.warning('failed to convert to float set_percent in state-commands file: error %s' % err)
+					exc_type, exc_obj, exc_tb = sys.exc_info()
+					logger.warning('failed to convert to float set_percent in state-commands file: error %s line %s' % (err, exc_tb.tb_lineno))
 				else:
 					if percent < 0 or percent > 1000:
 						logger.warning('set_percent in state-commands supplied percent (%f) too small or too big' % percent)
@@ -551,12 +549,13 @@ class IComputer:
 						self.duration_correction = percent / 100
 						logger.info('percent irrigation updated to %f' % percent)
 
-		mode = state_cfg.get('mode', '').strip().lower()
-		if mode:
-			logger.info('changing mode to %s' % mode)
-			self.mode = mode
-		# except Exception as err:
-		# 	logger.warning('Error reading state command file %s.\n%s' % (state_commands_file, err))
+			mode = state_cfg.get('mode', '').strip().lower()
+			if mode:
+				logger.info('changing mode to %s' % mode)
+				self.mode = mode
+		except Exception as err:
+			exc_type, exc_obj, exc_tb = sys.exc_info()
+			logger.warning('Error reading state command file %s.\n%s\n(line %s)' % (state_commands_file, err, exc_tb.tb_lineno))
 		self.state_commands_file = state_commands_file
 		self.state_commands_file_timestamp = os.stat(state_commands_file).st_mtime
 
@@ -925,7 +924,8 @@ class IComputer:
 					logger.debug('Loading manual commands file')
 					self.read_manual_commands(self.commands_file)
 			except Exception as err:
-				logger.warning('manual commands file %s load failed. error: %s' % (self.commands_file, err))
+				exc_type, exc_obj, exc_tb = sys.exc_info()
+				logger.warning('manual commands file %s load failed. error: %s\n(line %s)' % (self.commands_file, err, exc_tb.tb_lineno))
 				logger.warning(traceback.format_exc())
 				self.commands_file_timestamp = int(time.time())
 			# check for state commands change (disable computer etc.)
