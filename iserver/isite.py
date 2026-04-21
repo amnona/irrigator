@@ -516,6 +516,7 @@ def main_new_site():
 	current_time = datetime.datetime.now().strftime('%d %H:%M:%S')
 	return render_template('main-new-mobile.html',
 						irrigation_mode=irrigation_mode, 
+						duration_correction=round(icomputer.duration_correction, 3),
 						faucet_data=faucet_data,  # Pass structured data instead of HTML
 						water_data=water_data, 
 						computer_name = get_computer_name(), 
@@ -594,7 +595,8 @@ def get_status_json():
 		'water_data': water_status,
 		'current_time': current_time,
 		'irrigation_mode': irrigation_mode_text,
-		'is_manual_mode': icomputer.mode == 'manual'
+		'is_manual_mode': icomputer.mode == 'manual',
+		'duration_correction': round(icomputer.duration_correction, 3)
 	})
 
 

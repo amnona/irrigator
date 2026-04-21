@@ -262,6 +262,8 @@
 		} else {
 			$('#irrigation-mode').html('');
 		}
+
+    $('#duration-correction').text(`Duration correction: ${data.duration_correction}`);
 		
 		// Update faucet table rows
 		data.faucets.forEach(function(faucet) {
@@ -343,6 +345,7 @@
 	Irrigator {{version}} - {{ computer_name }} - {{ current_time }}
 </h2>
 <div id="irrigation-mode">{{ irrigation_mode | safe }}</div>
+<div id="duration-correction">Duration correction: {{ duration_correction }}</div>
 <!-- add the fauvet list here as a table with a row for each faucet containing the columns:
 faucet name, duration, status, last irrigation time, next irrigation time and 2 buttons per row to open and close the faucet -->
 <div class="flex-container">
