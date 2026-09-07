@@ -1107,22 +1107,32 @@ def faucetlog(line):
 		water.append(caction['water'])
 		times.append(caction['date'].strftime("%d/%m"))
 	logger.debug('generating graphs')
-	fig = draw_barchart_fig(flows, times, 'flow (Liter/Hour)')
-	if fig is None:
+	flow_fig = draw_barchart_fig(flows, times, 'flow (Liter/Hour)')
+	if flow_fig is None:
 		logger.warning('error when drawing flow barchart')
 		return 'error when drawing flow barchart'
-	# save the figure to a BytesIO object
-	buf = BytesIO()
-	plt.savefig(buf, format='png')
-	buf.seek(0)  # rewind the buffer to the beginning
-	
-	# encode the image as base64
-	img_data = base64.b64encode(buf.read()).decode('utf-8')
-	img_tag = "data:image/png;base64,{}".format(img_data)
-	
-	plt.close(fig)  # close the figure to free memory
+	water_fig = draw_barchart_fig(water, times, 'total water (Liter)')
+	if water_fig is None:
+		logger.warning('error when drawing water barchart')
+		plt.close(flow_fig)
+		return 'error when drawing water barchart'
 
-	return render_template('test.html', img_data=img_tag)
+	flow_buf = BytesIO()
+	flow_fig.savefig(flow_buf, format='png')
+	flow_buf.seek(0)
+	flow_img_data = base64.b64encode(flow_buf.read()).decode('utf-8')
+	flow_img_tag = "data:image/png;base64,{}".format(flow_img_data)
+
+	water_buf = BytesIO()
+	water_fig.savefig(water_buf, format='png')
+	water_buf.seek(0)
+	water_img_data = base64.b64encode(water_buf.read()).decode('utf-8')
+	water_img_tag = "data:image/png;base64,{}".format(water_img_data)
+
+	plt.close(flow_fig)
+	plt.close(water_fig)
+
+	return render_template('test.html', flow_img_data=flow_img_tag, water_img_data=water_img_tag)
 	# flow_bars = draw_barchart(flows, times, 'flow (Liter/Hour)')
 	# water_bars = draw_barchart(water, times, 'total water (Liter)')
 	# logger.debug('finished')

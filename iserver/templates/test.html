@@ -55,8 +55,19 @@
 
 <div class="flex-container">
 	<div id="mpld3-figure">
-		<img src="{{ img_data | safe }}" alt="Dynamic Image" style="max-width: 100%; height: auto;">
+    {% if flow_img_data is defined %}
+    <h3>Flow (Liter/Hour)</h3>
+    <img src="{{ flow_img_data | safe }}" alt="Flow graph" style="max-width: 100%; height: auto;">
+    {% else %}
+    <img src="{{ img_data | safe }}" alt="Dynamic Image" style="max-width: 100%; height: auto;">
+    {% endif %}
+  </div>
+  {% if water_img_data is defined %}
+  <div id="mpld3-figure">
+    <h3>Total water (Liter)</h3>
+    <img src="{{ water_img_data | safe }}" alt="Total water graph" style="max-width: 100%; height: auto;">
 	</div>
+  {% endif %}
 </div>
 
 </body>
