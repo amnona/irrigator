@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import argparse
 from flask import Flask
 from .isite import Site_Main_Flask_Obj
 from logging import getLogger
@@ -11,19 +10,21 @@ logger = getLogger('iserver')
 logger.setLevel('INFO')
 
 ISERVER_VERSION = 'V0.4'
+DEFAULT_PORT = 5000
 
 app = Flask(__name__)
 app.register_blueprint(Site_Main_Flask_Obj)
-
-parser = argparse.ArgumentParser(description='Run the irrigator iserver')
-parser.add_argument('--port', type=int, default=5000, help='Port to listen on')
-args = parser.parse_args()
-
-port = args.port
 app.config['ISERVER_VERSION'] = ISERVER_VERSION
-logger.debug('debug msg')
-logger.info('starting iserver on port %d' % port)
-print('starting iserver on port %d version %s' % (port, ISERVER_VERSION), file=sys.stderr)
 
 if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Run the irrigator iserver')
+    parser.add_argument('--port', type=int, default=DEFAULT_PORT, help='Port to listen on')
+    args = parser.parse_args()
+
+    port = args.port
+    logger.debug('debug msg')
+    logger.info('starting iserver on port %d' % port)
+    print('starting iserver on port %d version %s' % (port, ISERVER_VERSION), file=sys.stderr)
     app.run(host='0.0.0.0', port=port)
