@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Irrigator</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <style>
+    .flex-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .flex-container > div {
+      margin: 10px;
+      text-align: center;
+      flex: 1;
+      min-width: 300px;
+      max-width: 800px;
+    }
+
+    #mpld3-figure {
+      width: 100%;
+      height: 60vh;
+      min-height: 400px;
+      border: 1px dashed #ccc;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    /* Mobile responsive adjustments */
+    @media (max-width: 768px) {
+      .flex-container {
+        padding: 5px;
+      }
+      
+      .flex-container > div {
+        margin: 5px;
+        min-width: unset;
+      }
+      
+      #mpld3-figure {
+        height: 50vh;
+        min-height: 300px;
+        padding: 10px;
+      }
+    }
+    </style>
+</head>
+<body>
+<h2>
+	Irrigator v0.3
+</h2>
+
+<div class="flex-container">
+	<div id="mpld3-figure">
+		<img src="{{ img_data | safe }}" alt="Dynamic Image" style="max-width: 100%; height: auto;">
+	</div>
+</div>
+
+</body>
+</html>
