@@ -20,6 +20,8 @@ import base64
 import urllib
 import mpld3
 
+from flask import current_app
+
 from icomputer import IComputer
 
 
@@ -28,6 +30,10 @@ from icomputer import IComputer
 logger = getLogger('iserver')
 
 Site_Main_Flask_Obj = Blueprint('Site_Main_Flask_Obj', __name__)
+
+
+def get_iserver_version():
+	return current_app.config.get('ISERVER_VERSION', 'V0.3')
 
 
 def get_last_lines(filename, num_lines, max_line_len=200):
@@ -385,7 +391,7 @@ def main_site():
 		print(action_time_str)
 
 	skip_remote = False
-	wpage = render_template('main.html')
+	wpage = render_template('main.html', version=get_iserver_version())
 	if icomputer.mode == 'manual':
 		wpage += '<h2 style="background-color:red;">Manual mode</h2><br>'
 	wpage += '<table>'
@@ -521,7 +527,7 @@ def main_new_site():
 						faucet_data=faucet_data,  # Pass structured data instead of HTML
 						water_data=water_data, 
 						computer_name = get_computer_name(), 
-						version='V0.3',
+						version=get_iserver_version(),
 						current_time=current_time)
 
 
@@ -702,7 +708,7 @@ def schedule():
 		# for i in range(np.ceil(cduration / 60)):
 		for i in range(round((cduration + 30) / 60)):
 			schedule[days[cday]][cstart_hour + i].append(ctimer)
-	wpage = render_template('main.html')
+	wpage = render_template('main.html', version=get_iserver_version())
 	wpage += '<div>'
 	wpage += '<table border="3px solid purple">'
 	wpage += '<thead><tr>'
