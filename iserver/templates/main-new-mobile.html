@@ -316,16 +316,20 @@
 	});
 
 	function close_faucet(faucet_name) {
-        $.ajax({ 
-            type:"GET", 
-            url:"/manual_close/" + faucet_name,
-            success:function(data){ 
-                alert('faucet '+faucet_name+' closed\n'+data);
-                // Update status immediately instead of full reload
-                setTimeout(updateStatus, 1000);
-            },
-            cache: false
-        });		
+    $.ajax({ 
+      type:"GET", 
+      url:"/manual_close/" + faucet_name,
+      success:function(data){ 
+        alert('faucet '+faucet_name+' closed\n'+data);
+        // Update status immediately instead of full reload
+        setTimeout(updateStatus, 1000);
+      },
+      cache: false
+    });		
+	}
+
+	function open_faucet_log(faucet_name) {
+		window.location.href = '/faucetlog/' + encodeURIComponent(faucet_name);
 	}
 	function open_faucet(faucet_name) {
         $.ajax({ 
@@ -373,6 +377,9 @@ faucet name, duration, status, last irrigation time, next irrigation time and 2 
                             <button class="close-btn" type="button" onclick="close_faucet('{{ faucet.name }}')" {% if not faucet.is_open %}disabled{% endif %}>
                                 Close
                             </button>
+                          <button class="stats-btn" type="button" onclick="open_faucet_log('{{ faucet.name }}')">
+                            Stats
+                          </button>
                         </td>
                         <td class="status-cell {% if faucet.status == 'Open' %}status-open{% elif faucet.status == 'Closed' %}status-closed{% else %}status-error{% endif %}">
                             {{ faucet.status }}

@@ -421,6 +421,7 @@ def main_site():
 		# wpage += '<td>%s</td>' % cstatus
 		wpage += '<td><button id=".button-test" type="button" onclick="open_faucet(\'%s\')">open</button></td>' % cname
 		wpage += '<td><button id=".button-test" type="button" onclick="close_faucet(\'%s\')">close</button></td>' % cname
+		wpage += '<td><button id=".button-test" type="button" onclick="open_faucet_log(\'%s\')">stats</button></td>' % cname
 		wpage += '</tr>'
 	wpage += '</tbody></table>'
 	wpage += 'Water:<br>'
